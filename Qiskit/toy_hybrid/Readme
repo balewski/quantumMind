@@ -1,0 +1,33 @@
+Example code structure for submiting hybrid jobs against IBMQ
+
+Them job submitter is:
+
+*** 1_submit_IBMServerless.py
+
+Two examples of 'patterns' (aka  self-contained Qiskit list of jobs) are
+
+****  pattern1_sampler.py
+Uses:
+  sampler = Sampler(session=session, options=options)
+  job = sampler.run(circuit)
+  probs= job.result().quasi_dists
+
+
+**** pattern2_estimator.py
+Uses:
+  estimator = Estimator(backend)
+  job=estimator.run(circuit, observable)
+  EVs = job.result().values.tolist()
+
+**** pattern3_backRun.py
+Uses:
+   provider = IBMProvider() 
+   backend = provider.get_backend(args['backend'])
+   qcT=transpile(...)
+   job = backend.run(qcT,shots=..
+   counts=result.get_counts(ic)
+
+Circuit contains classical controll:
+     with qc.if_test((qc.cregs[0], 1)): qc.h(2)  # NEW
+    #qc.h(2).c_if(qc.cregs[0], 1)  # OLD
+ 

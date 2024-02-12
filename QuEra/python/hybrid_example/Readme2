@@ -1,0 +1,13 @@
+More cumbersome 
+ example of packaging of a hybrid job which run on Quera or AWS simulator
+
+The main macro is hybrid_submit.py
+
+The whole task code is in sub-dir
+task_code/  main2_task.py  toolbox
+
+The main difference vs. main1_task.py & Readme1 is:
+
+* a handfull of hyperparams set in hybrid_submit2.py will be passed to main_task:execute_task()  as run-time arguments and are accessed  NOT in main but in the function
+
+and it stopped working ????

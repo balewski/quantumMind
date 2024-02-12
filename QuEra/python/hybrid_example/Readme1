@@ -1,0 +1,36 @@
+This is example of packaging of a hybrid job which run on Quera or AWS simulator
+
+The main macro is hybrid_submit.py  need to be setup to use:
+ entry_point="task_code.main_task1" #  hyperparam  avaliable via env SM_TRAINING_ENV, Running Code As Subprocess,
+
+The whole task code is in sub-dir
+task_code/  main1_task.py  toolbox
+
+main1_task.py runs the task, also locally
+it uses arbitrary task modules
+task_code/toolbox/ Util1.py    Util2.py
+
+The S3 bucket was created once with:
+RAND=$(od -An  -N8 -d /dev/random | sed -e 's| ||g' -e 's|\(.\{11\}\).*|\1|') 
+aws s3api create-bucket --bucket amazon-braket-balewski-${RAND}
+
+Features:
+* S3 bucket is used for both input and output of the hybrid task.
+* the code is only on laptop in task_code/ and is tarb-balled automatically when hybrid_submit2.py is executed.
+* a handfull of hyperparams set in hybrid_submit1.py will be passed to main_taskvia env SM_TRAINING_ENV     
+
+Execution 1:  locally, on the laptop
+~/hybrid_example$ ./task_code/main1_task.py
+
+Execution 2:  as true hybrid job :
+~/hybrid_example$ ./hybrid_submit.py
+* it will first print various local paths for the code & data
+* it will save JSON output which should be persistent on S3
+
+JSON can be copied back from S3  with:
+BUCKET_NAME='amazon-braket-balewski-13977183483'
+aws s3api get-object --bucket  ${BUCKET_NAME} --key dir-5/output/output.tar.gz  output.tar.gz
+tar -zxf output.tar.gz
+
+ cat ahs_task2.aquila.json
+{"rgrggrgrgrg": 1, "rgrggrgrggr": 10, "rgrgrgrgrgr": 13, "rggrgrgrggr": ...

@@ -1,0 +1,13 @@
+Production quality  code exercissing readout error correction for arbitrary circuit.
+INP: ghz_5qm.qasm
+
+1) transpile_circuit.py   OUT: transp.ghz_5qm.v10.yaml  (fixed v10)
+
+2) submit_measureReadoutMitig.py  OUT: subInfo.yaml (fixed name)
+
+3) retr_measureReadoutmitig.py   OUT: measMitg.ghz_5qm.v10-j423467.yaml
+
+4) submit_ciruitArray.py    OUT: subInfo.yaml (fixed name)
+
+5) retr_ciruitArray.py      OUT:  TBD
+

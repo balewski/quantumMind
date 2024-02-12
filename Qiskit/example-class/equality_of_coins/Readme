@@ -1,0 +1,37 @@
+
+Do coins A and B have the same bias?
+
+Based on:
+Classifying and diagnosing crosstalk in quantum information processors
+Kenneth Rudinger, 1513744.pdf, Sandia NL
+
+sim_Coins.py
+ - simu coin heads for coin A,B
+ - compute log-likelihood ratio score
+ - repat and do histogram vs. p-value
+
+
+Formulas:
+
+Let N - number of trails,
+H - number of heads
+p - true  probability of heads
+ps = H/N   - estimated probability fo heads
+
+bias of composite estimator:  Hab=Ha+Hb, psab=Hab/Nab
+
+log-likelihood of measuring H heads given N trials is given by the formula:
+LogL(H,N)= ln[ ps^H * (1-ps)^(N-H) ] =
+     H*ln(H) - N*ln(N) + (N-H)*ln(N-H)
+
+Likelihood Ratio Test:
+for a pair of coins A,B   score is defined as
+  score= -2 *( LogL(A+B) -  LogL(A) - LogL(B) )
+
+if H0: p_A==p_B (coins are identical) then score has chi2(dof=1) distribution
+One can compute p=value of H0
+
+
+p-value is given by 
+scipy.stats.chi2.cdf(Score,k=1.)
+General case k=(# of outcomes-1)(# of datasets – 1)

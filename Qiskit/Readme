@@ -1,0 +1,7 @@
+start Jupyter notebook in the background and open it in local browser using ssh-tunnel
+ssh  -i ~/.ssh/qubic.pem  -A  -Y -L localhost:9992:localhost:9992 balewski@campbell109.dyn.berkeley.edu  -p 8844
+cd quantumMind/True-Q
+jupyter-notebook --no-browser --port=9992
+Or copy and paste one of these URLs:
+        http://localhost:9992/?token=89fbb946ce88615dcce
+

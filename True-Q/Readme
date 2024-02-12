@@ -1,0 +1,34 @@
+Docs:
+https://trueq.quantumbenchmark.com/
+
+
+Ask for help at
+ trueq support: support@quantumbenchmark.com
+
+To display circuit w/o Notebook:
+print('M:',fig)
+fig.save('ff1.svg') 
+
+Next start web-server  WITHOUT JUPYTER to view it in a browser and inspect gates
+ssh  -i ~/.ssh/qubic.pem  -A  -Y -L localhost:9990:localhost:9990 balewski@campbell109.dyn.berkeley.edu  -p 8844
+python3 -m http.server -d wrk1/xtalkmitigation/  9990
+pkill python3
+
+--- 
+Alternatively, start Jupyter notebook in the background and open it in local browser using ssh-tunnel
+
+ssh  -i ~/.ssh/qubic.pem  -A  -Y -L localhost:9992:localhost:9992 balewski@campbell109.dyn.berkeley.edu  -p 8844
+cd quantumMind/True-Q
+jupyter-notebook --no-browser --port=9992
+
+Or copy and paste one of these URLs:
+        http://localhost:9992/?token=89fbb946ce88615dcce
+
+ pkill jupyter
+pkill  jupyter-notebook
+
+ - - -  shorter version using default port 8888 - - - 
+Laptop:  ssh qubic2-jn
+cd quantumMind/True-Q
+jupyter-notebook --no-browser 
+

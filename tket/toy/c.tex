@@ -1,0 +1,10 @@
+\documentclass[tikz]{standalone}
+\usetikzlibrary{quantikz}
+\begin{document}
+\begin{quantikz}
+\lstick{q[0]} & \gate[1]{\text{$H$}} & \gate[1]{\text{$R_Z$(0.25)}} & \targ{} & \meter{} \vcw{2} & \qw & \qw \\
+\lstick{q[1]} & \qw & \qw & \ctrl{-1} & \qw & \meter{} \vcw{2} & \qw \\
+\lstick{c[0]} & \cw & \cw & \cw & \cw & \cw & \cw \\
+\lstick{c[1]} & \cw & \cw & \cw & \cw & \cw & \cw \\
+\end{quantikz}
+\end{document}

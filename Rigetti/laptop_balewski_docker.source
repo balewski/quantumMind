@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# after mac reboot activate XQuartz
+xhost + 127.0.0.1 
+
+echo This instance allows to work on Rigetti, Jupyter-NB
+echo you are launching Docker image ...  remeber to exit
+
+JNB_PORT=' '
+WORK_DIR=/quantumMind/Rigetti
+echo "The number of arguments is: $#"
+#  encoded variables:   jnb
+for var in "$@"; do
+  echo "The length of argument '$var' is: ${#var}"
+  if [[ "jnb" ==  $var ]];  then
+     JNB_PORT="    --publish 8844:8844 "
+     echo added  $JNB_PORT
+     echo sudo balewski
+     echo cd /quantumMind/Rigetti/notebooks/
+     echo jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8844
+  fi
+done
+echo cd /qcrank_wrk/qiskit_examples/QBArt/stable/
+
+#    --workdir $WORK_DIR \
+#     --publish 8844:8844  \
+# --user="$(id -u):$(id -g)" 
+
+docker run -it  \
+    -e DISPLAY=host.docker.internal:0 \
+    -e QCrank_dataVault=/dataVault/dataQCrank_august16 \
+    -e QBArt_dataVault=/dataVault/dataQBArt_sep7 \
+    -e QCS_SETTINGS_FILE_PATH=/dataVault/rigetti_creds/settings.toml \
+    -e QCS_SECRETS_FILE_PATH=/dataVault/rigetti_creds/secrets.toml \
+    --volume /Users/balewski/docker_volumes/dataVault:/dataVault \
+    --volume /Users/balewski/docker_volumes/qcrank_wrk:/qcrank_wrk \
+    --volume /Users/balewski/docker_volumes/quantumMind:/quantumMind \
+    --volume /Users/balewski/docker_volumes/quantumMind/Rigetti/inc:/inc \
+    $JNB_PORT \
+    docker.io/balewski/deb10-rigetti:v3 /bin/bash 
+
+#            --user balewski \
+#
+
+#/src/pyquil/entrypoint.sh
+# test JNB
+# cd    /qtuum_wrk/hqs-api-examples/notebooks
+# jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port 8844
+# apt install   texlive texlive-latex-extra texlive-fonts-recommended dvipng

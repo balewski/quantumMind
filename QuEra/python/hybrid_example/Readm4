@@ -1,0 +1,16 @@
+Re: [amazon-braket/amazon-braket-examples] mounting persistent S3 to hybrid job (Issue #347)
+
+Hi Jan,
+
+We recently added some helper functions for getting the input/result directories inside a job. Otherwise, we have some documentation for how to use environment variables to get these locations.
+
+https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/src/braket/jobs/environment_variables.py
+
+https://docs.aws.amazon.com/braket/latest/developerguide/braket-jobs-inputs-and-outputs.html#braket-jobs-environmental-variables
+
+
+Hope that helps,
+Milan
+
+
+

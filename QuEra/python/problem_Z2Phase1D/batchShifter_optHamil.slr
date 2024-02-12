@@ -1,0 +1,42 @@
+#!/bin/bash -l
+#SBATCH --time=11:50:00  -J optHam -q regular
+#-SBATCH --time=20:00  -J optHam_deb
+#SBATCH -C cpu
+#SBATCH --image=registry.services.nersc.gov/balewski/ubu22-braket-quera:v1
+# - - - E N D    O F    SLURM    C O M M A N D S
+
+#CONF=" --chain_shape   line 13 --conf  line13hole6 "
+ CONF=" --chain_shape   uturn 13 --conf  uturn13mis "
+# CONF=" --chain_shape   uturn 15 --conf  uturn15hole8 "
+# CONF=" --chain_shape   uturn 17 --conf  uturn17mis "
+# CONF=" --chain_shape   uturn 19 --conf  uturn19mis "
+# CONF=" --chain_shape   chain 21 --conf  chain21hole10 "
+
+jobId=${SLURM_JOBID}
+wrkDir0=$SCRATCH/tmp_quantumMind/z2phase
+wrkDir=$wrkDir0/opt/$jobId
+CFSH=/global/cfs/cdirs/mpccc/balewski/2023-quantDataVault
+  
+codeList="  *.py  toolbox/ batchShifter_optHamil.slr  opt_conf/  "
+
+outPath=$wrkDir/out
+mkdir -p $outPath
+cp -rp $codeList  $wrkDir
+cd  $wrkDir
+mkdir jobs ana  # empty but needed???
+echo S:PWD=`pwd`
+
+ENGINE=" shifter    \
+     --volume ${CFSH}:/dataVault \
+     -e QuEra_dataVault=$wrkDir \
+     "
+#     --image=registry.services.nersc.gov/balewski/ubu22-braket-quera:v1"
+
+export CMD=" python3  -u ./optHamiltonianZ2Phase.py  $CONF "
+
+#spare:  --epochs $epochs 
+
+echo CMD=$CMD
+time srun -n 1  $ENGINE  $CMD  # >& log.opt
+echo S:train-done
+date

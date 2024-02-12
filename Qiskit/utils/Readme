@@ -1,0 +1,40 @@
+URL for most used Qiskit classes
+https://qiskit.org/documentation/_modules/
+
+
+https://qiskit.org/documentation/api/qiskit.circuit.QuantumCircuit.html
+https://qiskit.org/documentation/api/qiskit.dagcircuit.DAGNode.html
+https://qiskit.org/documentation/_modules/qiskit/converters/dag_to_circuit.html#dag_to_circuit
+
+for qreg in self.qregs:
+https://qiskit.org/documentation/api/qiskit.circuit.QuantumRegister.html
+
+for qbit in qreg
+https://qiskit.org/documentation/_modules/qiskit/circuit/quantumregister.html#Qubit
+https://qiskit.org/documentation/api/qiskit.circuit.Qubit.html
+https://github.com/Qiskit/qiskit-terra/blob/master/qiskit/circuit/bit.py
+
+https://qiskit.org/documentation/api/qiskit.providers.BaseBackend.html
+
+https://qiskit.org/documentation/api/qiskit.visualization.plot_gate_map.html
+
+https://qiskit.org/documentation/_modules/qiskit/compiler/transpile.html
+
+
+https://qiskit.org/documentation/api/qiskit.qobj.QasmQobj.html
+
+https://qiskit.org/documentation/api/qiskit.visualization.plot_circuit_layout.html
+
+
+https://qiskit.org/documentation/api/qiskit.dagcircuit.DAGCircuit.html
+
+ http://research.classcat.com/quantum/category/qiskit/page/6/
+
+RB:
+https://qiskit.org/documentation/_modules/qiskit/ignis/verification/randomized_benchmarking/circuits.html#randomized_benchmarking_seq
+
+RB- fitter
+https://qiskit.org/documentation/_modules/qiskit/ignis/verification/randomized_benchmarking/fitters.html
+
+https://github.com/Qiskit/qiskit-ignis/blob/master/qiskit/ignis/verification/randomized_benchmarking/rb_utils.py
+

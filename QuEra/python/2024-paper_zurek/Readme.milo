@@ -1,0 +1,85 @@
+Updated 2023-11-4
+
+The synthetic bitstrings for  the 58-atoms chain  were generated and saved in the hd5.
+
+a) Each hd5 file contains 2k shots for a different 'true' distribution of bit patterns, shown in yellow.
+The average domain wall density is marked as the red diamond.
+The SPAM-corrupted  histogram is shown in green, average is the blue circle.
+I used Aquila SPAM values (see below).
+
+b) The SPAM-uncorrupted (ideal) bitstrings  are saved in this pair of records in hd5:
+ranked_counts_ideal int32
+ranked_hexpatt_ideal  <class 'numpy.ndarray'>
+The provided function:
+  flatten_ranked_hexpatt_array(countsV,hexpattV,nAtom)
+ unpacks this pair into a plain list of 58-character binary strings
+
+c) I assumed SPAM probability  s0m1: 0.01   s1m0: 0.08 and apply it the ideal bitstrings in the randomized fashion.
+ The 'corrupted' bitstrings are saved in the 2nd pair of hd5 records:
+ranked_counts  int32
+ranked_hexpatt   <class 'numpy.ndarray'>
+
+c) for convenience/crosscheck  I also provide the histograms of the domain wall density and mean & std of those in this 2 records
+domain_wall_dens_histo (2, 59) float64
+domain_wall_dens_moments (2, 5) float64
+
+The provided code illustrates how to read in the hd5, unpack it and dump some values. Execute it as this:
+ ./apply_mitWall.py --expName ideal_o58pf0.01.zneWall.h5
+Expect output like this:
+…
+read data from hdf5: /dataVault/dataQuEra_2023julyA/rezne/ideal_o58pf0.01.zneWall.h5
+read obj: SPAM_scale (2,) float64
+read obj: atoms_xy (58, 2) float64
+read obj: domain_wall_dens_histo (2, 59) float64
+read obj: domain_wall_dens_moments (2, 5) float64
+read str: graph.JSON 1 <class 'numpy.ndarray'>
+read obj: hamilt_drive (4, 7) float64
+read str: meta.JSON 1 <class 'numpy.ndarray'>
+read obj: ranked_counts (1569,) int32
+read obj: ranked_counts_ideal (256,) int32
+read str: ranked_hexpatt 1569 <class 'numpy.ndarray'>
+read str: ranked_hexpatt_ideal 256 <class 'numpy.ndarray'>
+ done h5, num rec:10  elaT=0.0 sec
+M:assumed SPAM probability  s0m1: 0.01   s1m0: 0.08
+total shots 2000
+M:dump data for ideal measurement
+dump bitpattL: 2000 ['1010101010101010101010101010101010101010101010101010101010', '1010101010101010101010101010101010101010101010101010101010', '1010101010101010101010101010101010101010101010101010101010']
+domain wall density  mean=1.06 +/-0.03, std=1.45  +/-0.02
+M:dump data for ideal+SPAM
+dump bitpattL: 2000 ['1010101010101010101010101010101010101010101010101010101010', '1010101010101010101010101010101010101010101010101010101010', '1010101010101010101010101010101010101010101010101010101010']
+domain wall density  mean=5.98 +/-0.07, std=3.22  +/-0.05
+M: now apply SPAM correction...
+
+Those would be the next logical steps.
+    a) apply SPAM correction bitpattL from SPAM distorted bitsrings (i=1)
+    b) compute domain wall density histogram
+    c) compute mean & std
+    d) compare with ground truth (momentV[0])
+    e) save SPAM correction bitpattL in hd5
+    f) update & save meta data
+
+Milo, I'm assuming you will take care  of (a). The rest we can split - I have code for everything else.
+
+I realize we have different software education and style, so I did not attempt to make this code stand alone. Rather, please copy this 3 files:
+https://bitbucket.org/balewski/quantummind/src/master/QuEra/python/2023-zurek-paper/apply_mitWall.py
+https://bitbucket.org/balewski/quantummind/src/master/QuEra/python/toolbox/Util_H5io4.py
+https://bitbucket.org/balewski/quantummind/src/master/QuEra/python/toolbox/UAwsQuEra_job.py
+and arrange the code as you like.
+I'll share the hd5  below
+ 4milo/
+ideal_o58pf0.01.zneWall.h5  ideal_o58pf0.05.zneWall.h5	ideal_o58pf0.15.zneWall.h5  ideal_o58pf0.25.zneWall.h5
+ideal_o58pf0.02.zneWall.h5  ideal_o58pf0.10.zneWall.h5	ideal_o58pf0.20.zneWall.h5
+
+
+One of is missed sth. I picked one of the inputs I gave you. This is wall density I compute using SEM formula above
+dataset ideal_o58pf0.05.zneWall.h5
+M: ground truth
+   mean=5.65 +/-0.07
+M: SPAM included
+   mean=9.91 +/-0.09
+This is your output
+{'walls_tot': 9.91,
+ 'walls_tot_err': 0.536,
+ 'walls_tot_mit': 5.77,
+ 'walls_tot_mit_err': 0.409}
+My 'SPAM include'  err=0.09 is yours 'wall_tot_err' =0.53  - this is factor of 8 difference, why?

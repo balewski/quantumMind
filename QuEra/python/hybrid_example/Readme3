@@ -1,0 +1,14 @@
+Example of packaging of a hybrid job which run on Quera or AWS simulator
+which  runs actual Aquila task , or emulator task
+
+
+All measurement saved as JSON can be copied back from S3  with:
+BUCKET_NAME='amazon-braket-balewski-13977183483'
+aws s3api get-object --bucket  ${BUCKET_NAME} --key dir-5/output/output.tar.gz  output.tar.gz
+tar -zxf output.tar.gz
+
+----Inspect end-of-job  head=out/
+ahs_task_conf.aquila.json
+ahs_task1.aquila.json
+ahs_task2.aquila.json
+ahs_task0.aquila.json

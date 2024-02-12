@@ -1,0 +1,29 @@
+#!/bin/bash
+#  salloc -q interactive -C cpu -t 4:00:00  --image=registry.services.nersc.gov/balewski/ubu22-braket-quera:v1
+
+# first load my AWS credentials 
+
+#echo load my QuEra-AWS creds
+#1source /Users/balewski/.ssh/quera_aws.credentials
+#env |grep QUERA_AWS  # activate to see the creds
+
+IMG=balewski/ubu22-braket-quera:v1
+SIMG=registry.services.nersc.gov/$IMG
+CFSH=/global/cfs/cdirs/mpccc/balewski/2023-quantDataVault
+# v1 is also copied to PM
+
+echo launch image $SIMG
+echo you are launching Shifter image ...  remeber to exit
+
+cd python
+#
+shifter \
+    --volume ${CFSH}:/dataVault \
+    -e QuEra_dataVault=/dataVault/dataQuEra_2023julyA \
+    --image=$SIMG \
+    bash
+
+#
+#    -e AWS_ACCESS_KEY_ID=$QUERA_AWS_ACCESS_KEY_ID \
+#    -e AWS_SECRET_ACCESS_KEY=$QUERA_AWS_SECRET_ACCESS_KEY \
+#    -e AWS_DEFAULT_REGION=$QUERA_AWS_REGION \

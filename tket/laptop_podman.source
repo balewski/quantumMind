@@ -1,0 +1,47 @@
+#!/bin/bash
+# first load my Quantinumm credentials is to initialise a MemoryCredentialStorage with username and password both set
+
+echo load my QTUUM creds
+source /Users/balewski/.ssh/quantinuum.credentials
+#env |grep MY_QTUUM  # activate to see the creds
+
+IMG=balewski/ubu22-tket-qtuum:p3
+
+echo This instance allows to work on QPIXL,QCrank, Quantinuum, Jupyter-NB
+echo launch image $IMG
+echo you are launching Docker image ...  remeber to exit
+
+JNB_PORT=' '
+WORK_DIR=/quantumMind/tket
+echo "The number of arguments is: $#"
+#  encoded variables:  neqr  jnb
+for var in "$@"; do
+  echo "The length of argument '$var' is: ${#var}"
+  if [[ "jnb" ==  $var ]];  then
+     JNB_PORT="    --publish 8844:8844 "
+     echo added  $JNB_PORT
+     echo jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8844
+  fi
+  if [[ "neqr" ==  $var ]];  then
+     WORK_DIR=/neqr_wrk/qiskit_examples
+     echo WORK_DIR=$WORK_DIR
+  fi
+done
+
+#     --publish 8844:8844  \
+
+podman run -it \
+    -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
+    -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
+    -e QBArt_dataVault=/dataVault/dataQBArt_2023sep \
+    --volume /docker_volumes/dataVault:/dataVault \
+    --volume /docker_volumes/quantumMind:/quantumMind \
+    $JNB_PORT \
+    --workdir $WORK_DIR \
+    --user $(id -u):$(id -g) \
+    $IMG /bin/bash
+
+
+# test JNB
+# cd    /qtuum_wrk/hqs-api-examples/notebooks
+# jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port 8844

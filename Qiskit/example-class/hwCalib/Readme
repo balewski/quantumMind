@@ -1,0 +1,7 @@
+Set of tools to manipulate/query HW calibration
+
+1) showHWcalib.py  displays calibaration
+
+
+2) hwCalib_to_yaml.py saves calibration for current timeStamp=now in to yaml file
+

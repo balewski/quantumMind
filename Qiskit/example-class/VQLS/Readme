@@ -1,0 +1,87 @@
+# Variational Quantum Linear Solver
+# based on https://qiskit.org/textbook/ch-paper-implementations/vqls.html
+# VQLS paper: https://arxiv.org/abs/1909.05820
+
+= = = = = 
+1a) -  Hadamard Test for 1 qubit state vector.
+ Input:
+  |x> is random 1-qubit state
+  U is one of Pauli 3 matrices : x,y,z
+ Output: 
+    Re (  <x|U|x> )
+    Im (  <x|U|x> )
+
+= = = = = 
+1b) -  Hadamard Test for multi qubit state vector.
+ Input:
+  |x> is random m-qubit state
+  U is tensor product of all possible m-permutations of  Pauli matrices
+  E.g. for M=2 qubits: U={ xx,xy,xz,yx,yy,yz,zx,zy,zz }
+
+ Output: 
+    Re (  <psi|U|psi> )
+
+
+= = = = = 
+1c) -  Hadamard Test for multi qubit, shot based analysis.
+ Input:
+  |x> is random m-qubit state
+  U is tensor product of all possible m-permutations of  Pauli matrices
+
+
+= = = = = 
+1d) - Hadamard Test using  VQLS ansatz for multi qubit shot-based analysis.
+ can use FakeLime backend
+ VQLS ansatz is optimal for linear connectivity 
+
+ Input:
+  |psi> is random m-qubit state  defined by  VQLS ansatz
+  use hardware-efficient layered ansatz from https://arxiv.org/pdf/1909.05820.pdf
+
+  U is tensor product of all possible m-permutations of  Pauli matrices
+
+  E.g. for M=2 qubits: U={ xx,xy,xz,yx,yy,yz,zx,zy,zz }
+
+ Output: 
+    Re (  <psi|U|psi> )
+
+
+= = = = = 
+2a) -  Hadamard-overlap Test for 1 qubit state vector.
+ Input:
+  |a> is random 1-qubit state
+  |b> is another random 1-qubit state
+  
+  A,B are one of Pauli 3 matrices : x,y,z
+ Output: 
+    Re (  <a|A|a>*<b|B|b> )
+
+
+= = = = = 
+2b) -  Hadamard-overlap Test for multi qubit state vector.
+ Input:
+   |a> is random m-qubit state
+   |b> is another random m-qubit state
+
+  A,B are seqence  Pauli 3 matrices : 1,x,y,z, with identity on all other qubits
+  E.g. for M=2 qubits: Av=[xI,Iy], len(Av)=M
+  This is used by the  'local cost function'  which is more robust to barren plateaus
+
+   A single execution of Hadamard-overlap computes:  Re (  <a|A|a>*<b|B|b> )
+
+  The main code selects a speciffic order of 3*m Paulis, the same for A & B
+  E.g. for m=3
+  Av=[ x11,y11,z11, 1x1,1y1,1z1, 11x,11y,11z]
+  bv=Av
+
+  next it computes the vector of products, len(Ov)=3*m  , '3' because paulis have 3 falvores
+  Ov= [ Re (  <a|Ai|a>*<b|Bi|b> ) ]
+   
+
+= = = = = 
+2c) -  Hadamard-overlap Test for multi qubit, shot based analysis.
+ Input:
+   |a> is random m-qubit state
+   |b> is another random m-qubit state
+ ...all the same as for 2b)
+

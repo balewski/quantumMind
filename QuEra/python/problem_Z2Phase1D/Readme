@@ -1,0 +1,25 @@
+Selected use cases
+
+Meaning of raw data
+
+rawBitstr=json.loads(expD['counts_raw.JSON'][0])
+rawShots=json.loads(expD['shots_raw.JSON'][0])
+print('M:bigD[shots_raw]:',len(rawShots))  #   list of egr-strings
+print('M:bigD[counts_raw]:',len(rawBitstr)) #  dictionary of egr-strings counts
+
+= = = = = = = postproc of single measrement = = = = = =
+basePath=/dataVault/dataQuEra_2023paper_confA
+codePath=../problem_Z2Phase1D
+expN=zurek_qpu_At2.1o58a
+
+expN=zurek_qpu_At3.0o58aM4
+./postproc_Z2Phase.py  --expName ${expN} --basePath ${basePath}  -p r s e  d c m  f  -X 
+
+
+
+= = = = = = MERGING mutiple measurements = = = = = = =
+basePath=/dataVault/dataQuEra_2023paper_confA
+
+./merge_measZ2Phase.py  --basePath ${basePath}   --expName  zurek_qpu_At2.1o58a zurek_qpu_At2.1o58b zurek_qpu_At3.0o58c zurek_qpu_At3.0o58d 
+
+only merge post-heralding data, drop 'shots_raw.JSON'

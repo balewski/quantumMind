@@ -1,0 +1,15 @@
+TKet:
+platform for the development and execution of error-mitigation protocols. 
+
+Manual:
+https://cqcl.github.io/Qermit/manual/manual_intro.html
+
+My examples
+
+qermit_1_MitRes.py  -   checking software is installed
+
+qermit_2_MitRes.py  - short circuit packed as MitTask graph - no execution yet
+
+
+qermit_3_MitRes_Qtuum.py  -  simulate SPAM mitigation: NOT working, very expensive, see:
+https://docs.google.com/document/d/18Mj4hTIvi2_GQNxv761jTGYyWc-zUvyfck2b704GLT8/edit?usp=sharing

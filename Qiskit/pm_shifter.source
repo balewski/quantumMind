@@ -1,0 +1,30 @@
+#!/bin/bash
+# to find my image do:  shifterimg images |grep tket
+#  salloc -q interactive -C cpu -t 4:00:00  --image=registry.nersc.gov/dseg/balewski/ubu22-tket-qtuum:v4b
+
+echo load my Quantinuum creds
+source /global/homes/b/balewski/.ssh/quantinuum.credentials
+#env |grep QTUUM  # activate to see the creds
+
+IMG=ubu22-tket-qtuum:v4b
+SIMG=registry.nersc.gov/dseg/balewski/$IMG
+CFSH=/global/cfs/cdirs/mpccc/balewski/2023-quantDataVault
+# v1 is also copied to PM
+
+export OMP_NUM_THREADS=128
+
+echo launch image $SIMG
+echo you are launching Shifter image ...  remeber to exit
+
+#cd dna_jaccardAlternatives
+#cd quantup_counting
+cd primes
+
+#
+shifter \
+    -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
+    -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
+    --volume ${CFSH}:/dataVault \
+    -e QuantCount_dataVault=/dataVault/dataQuantCount_2023-08 \
+    --image=$SIMG  bash
+

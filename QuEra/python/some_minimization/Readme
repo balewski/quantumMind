@@ -1,0 +1,10 @@
+some old code, may not work at all
+3) = = = = = = = = = =
+opt_heqc_U3_label.py
+2 INPUTs with the same number of M data qubits
+* M parametrized U3
+* binary label, single value
+Action:  variational search of 2*M U3 parameters to minimize HEQC distance
+Use COBYLA
+
+

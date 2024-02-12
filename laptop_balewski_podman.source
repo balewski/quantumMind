@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# first load my Quantinuum credentials is to initialise a MemoryCredentialStorage with username and password both set
+
+echo load my QTUUM creds
+source /Users/balewski/.ssh/quantinuum.credentials
+#env |grep MY_QTUUM  # activate to see the creds
+
+IMG=balewski/ubu22-tket-qtuum:v5
+
+echo launch image $IMG
+echo you are launching Podman image ...  remeber to exit
+
+
+JNB_PORT=' '
+WORK_DIR=/quantumMind/Qiskit
+
+echo "The number of arguments is: $#"
+#  encoded variables:    jnb
+for var in "$@"; do
+  echo "The length of argument '$var' is: ${#var}"
+  if [[ "jnb" ==  $var ]];  then
+      #JNB_PORT="    --publish 8844:8844 "
+      JNB_PORT="    -p 8844:8844 "
+      echo added  $JNB_PORT
+      WORK_DIR=${WORK_DIR}/notebooks
+     echo "  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8844 "
+  fi
+  # ... more ...
+done
+    
+podman run -it \
+    -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
+    -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
+    -e QCloud_dataVault=/dataVault/dataQCloud_2023-03 \
+    --volume /docker_volumes/quantumPath:/quantumPath \
+    --volume /docker_volumes/qcrank_wrk:/qcrank_wrk \
+    --volume /docker_volumes/quantumMind:/quantumMind \
+    --volume /docker_volumes/dataVault:/dataVault \
+    --workdir $WORK_DIR \
+    $JNB_PORT \
+    --user $(id -u):$(id -g) \
+    $IMG /bin/bash
+
+
+# 
+# after start install QPIXL:  cd   /qpixl_wrk;   pip install -e .
+# setup IBMQ creds:           /dataVault/activate_ibmq.py 
+#test it works:    python3 -c 'import qpixl'
+# after FIRST start install Qtuum NB:
+#   cd /qtuum_wrk/hqs-api-examples/notebooks/qtuum/ ;  pip install   -r requirements.txt  --target  /qtuum_wrk/.local
+# test JNB
+# cd    /qtuum_wrk/hqs-api-examples/notebooks
+# jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port 8844

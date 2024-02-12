@@ -1,0 +1,19 @@
+
+Running on PM login node
+:/work/notebooks/qml# python3 simple_iris_samplerQNN_myAnzatz.py
+
+nParL: [0, 4, 9, 14, 19] 23
+icyc:0 qL:[]
+icyc:1 qL:[2]
+icyc:2 qL:[0]
+icyc:3 qL:[1]
+
+done: iteration:16  elaT=5 (min), speed 186.4 iter/h
+done: iteration:17  elaT=6 (min), speed 183.8 iter/h
+
+= = = = = = = = = = = 
+Running on PM CPU node node
+
+done: iteration:64  elaT=21.5 (min), speed 178.9 iter/h
+done: iteration:65  elaT=21.8 (min), speed 178.9 iter/h
+
