@@ -3,7 +3,7 @@
 echo load my IonQ creds
 source /Users/balewski/.ssh/ionq.credentials
 
-IMG=balewski/ubu22-qiskit-qml:p3e
+IMG=balewski/ubu22-qiskit-qml:p3e   # includes IonQ
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -26,8 +26,10 @@ done
     
 podman run -it \
     -e IONQ_API_KEY=$IONQ_API_KEY \
+    --volume /docker_volumes/escherHandsMath:/escherHands \
     --volume /docker_volumes/quantumMind/IonQ:/IonQ \
     --volume /docker_volumes/quantumMind:/quantumMind \
+    --volume /docker_volumes/qcrank_wrk:/daan_qcrank \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
     --volume /docker_volumes/dataVault:/dataVault \
       --workdir $WORK_DIR \
