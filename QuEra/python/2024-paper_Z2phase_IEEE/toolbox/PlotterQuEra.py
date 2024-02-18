@@ -66,7 +66,7 @@ class PlotterQuEra(PlotterBackbone):
             ax.plot([fovX,fovX+3],[0,-3],color='k',ls='--')
             ax.text(fovX+2,-8,'FOV',color='k',va='bottom')
         
-        ax.set(xlabel='X position (um)',ylabel='Y position (um)')
+        ax.set(xlabel='X position ($\mu$m)',ylabel='Y position ($\mu$m)')
   
         if self.venue=='prod':
             tit='job=%s'%(md['short_name'])

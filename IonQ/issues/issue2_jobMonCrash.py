@@ -7,7 +7,7 @@ AttributeError: 'IonQJob' object has no attribute 'queue_position'
 
 '''
 from pprint import pprint
-from time import time
+from time import time, sleep
 from qiskit import QuantumCircuit
 from qiskit_ionq import IonQProvider
 from qiskit.tools.monitor import job_monitor
@@ -32,10 +32,10 @@ qc=qc=par_bell_circ(10)
 print(qc)
 
 provider = IonQProvider()   # Remember to set env IONQ_API_KEY='....'
-print(provider.backends())  # Show all backends
 backend = provider.get_backend("ionq_simulator")
 
 job = backend.run(qc, shots=shots, noise_model='harmony-2')
+#sleep(10)  good for 30k shots
 job_monitor(job)
 counts = job.result().get_counts(0)
 print(counts)
