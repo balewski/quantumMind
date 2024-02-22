@@ -41,10 +41,10 @@ if __name__ == "__main__":
 
     machine = 'H1-1E'
     api=activate_qtuum_api()
-    backend = QuantinuumBackend(device_name=machine, _api_handler=api)
+    backend = QuantinuumBackend(device_name=machine, api_handler=api)
     print('machine=',machine)
-    print("status:", backend.device_state(device_name=machine, _api_handler=api))
-    print([x.device_name for x in backend.available_devices(_api_handler=api)])
+    print("status:", backend.device_state(device_name=machine, api_handler=api))
+    print([x.device_name for x in backend.available_devices(api_handler=api)])
 
     print('define Bell-state circ')
     qc = Circuit(2).H(0).CX(0,1).measure_all()
