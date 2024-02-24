@@ -35,7 +35,7 @@ def create_circ( N=1):  # TKET circ
 if __name__ == "__main__":
 
     machine = 'H1-1SC'  # cost estimator
-    #machine = 'H1-1E'  # emulator
+    machine = 'H1-1E'  # emulator
     api=activate_qtuum_api()
     backend = QuantinuumBackend(device_name=machine, api_handler=api)
     print('machine=',machine)
@@ -52,10 +52,11 @@ if __name__ == "__main__":
     for x in qcT.get_commands() :  print(x)
 
     assert machine!='H1-1'  #real HW
-    
+    assert machine not in ['H1-1','H2-1']  #real HW
+     
     jhandle = backend.process_circuit(qcT, n_shots= 10)
   
-    print('submitted qtuum %s job_id=%s'%(machine,jhandle[0]))
+    print('submitted qtuum %s job_id: %s'%(machine,jhandle[0]))
 
     time.sleep(2)  # give backend time to work
 

@@ -9,7 +9,7 @@ construct array of feed-forward circuits
 import numpy as np
 from pprint import pprint
 
-from qiskit.tools.visualization import circuit_drawer
+from qiskit.visualization import circuit_drawer
 from qiskit import  transpile
 from qiskit_ibm_runtime import QiskitRuntimeService
 

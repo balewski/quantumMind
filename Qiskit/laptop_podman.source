@@ -2,6 +2,7 @@
 
 IMG=balewski/ubu22-qiskit-qml:p2ch  # has my hack of Qiskit for feed-forward
 IMG=balewski/ubu22-qiskit-qml:p3e
+IMG=balewski/ubu22-qiskit1.0:p0f
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

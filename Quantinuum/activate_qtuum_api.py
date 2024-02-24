@@ -63,10 +63,14 @@ if __name__ == "__main__":
         
     # the map from qubits to the bits to which their measurement values were written
     print('M:qubit_to_bit_map',qcT.qubit_to_bit_map)
-
+    print('M: circuit NOT executed ')
+    
     exit(0)
     this_would_cost_you
-    h = backend.process_circuit(cT, 10)
+    # see toys$ ./2a_submit_one.py 
+    jhandle = backend.process_circuit(qcT, n_shots= 10)
+    print('submitted qtuum %s job_id: %s'%(machine,jhandle[0]))
+    
 
 
 

@@ -11,9 +11,10 @@ print('M: activate QiskitRuntimeService() ...')
 service = QiskitRuntimeService()    
   
 
-backName='ibm_osaka' # error: virtual_bit = final_layout_physical[i]
-backName='ibm_cairo' #  works 
-backName='ibm_torino' # works 
+backName='ibm_osaka' # ??? error: virtual_bit = final_layout_physical[i]
+#backName='ibm_cairo' #  works 
+#backName='ibm_torino' # works 
+#backName='ibm_hanoi'  #???
 #backName='ibmq_qasm_simulator' # works
 print('M: get backend:',backName)
 backend = service.get_backend(backName)
@@ -28,14 +29,14 @@ def ghz_circuit(n):
     qc.measure_all()
     return qc
 
-
+initial_layout=[41, 59, 53, 60, 43, 42, 40]
 
 # -------Create a Quantum Circuit 
 qc=ghz_circuit(7)
 
 print(qc.draw(output="text", idle_wires=False))
 print('\n transpile for ',backend)
-qcT = transpile(qc, backend=backend, optimization_level=3, seed_transpiler=12) #, scheduling_method="alap")
+qcT = transpile(qc, backend=backend, optimization_level=3, seed_transpiler=12,initial_layout=initial_layout) #, scheduling_method="alap")
 print(qcT.draw(output='text',idle_wires=False))  # skip ancilla
 
 if backName!="ibmq_qasm_simulator"  :
