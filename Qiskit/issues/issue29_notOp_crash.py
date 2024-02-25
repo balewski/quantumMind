@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''  transpiler crashes  on hw3N=expr.bit_not(hw3)
-
+  
 '''
 
 from qiskit import   QuantumCircuit
