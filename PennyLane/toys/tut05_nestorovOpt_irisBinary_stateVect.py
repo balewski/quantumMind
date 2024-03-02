@@ -90,7 +90,7 @@ def circuit(weights, x):  # decision made by meas Q0
 
 num_qubits = 2
 num_layers = 2
-num_u3_ang= 3  # const
+num_u3_ang= 3  # const, relates to U3 parametrization
 
 weights_init = 0.01 * np.random.randn(num_layers, num_qubits, num_u3_ang, requires_grad=True)
 bias_init = np.array(0.0, requires_grad=True)
@@ -101,7 +101,7 @@ print(qml.draw(circuit, decimals=2)(weights_init,ang), '\n')
 
 
 ######################################################################
-''' remaining classical functionality required for QML training 
+''' remaining classical functionality required for ML training 
 
 '''
 
@@ -120,7 +120,7 @@ def cost(weights, bias, X, Y):
     predictions = variational_classifier(weights, bias, X.T)
     return square_loss(Y, predictions)
     
-#  ACCURACY
+#  ACCURACY, for monitoring only
 def accuracy(labels, predictions):
     acc = sum(abs(l - p) < 1e-5 for l, p in zip(labels, predictions))
     acc = acc / len(labels)
@@ -184,7 +184,7 @@ print('\n train the variational classifier...')
 weights = weights_init
 bias = bias_init
 for it in range(steps):
-    # Update the weights by one optimizer step, use just one batch-size of data selected at random
+    # Update the weights by one optimizer step, use just one batch-size of data selected at random, so 1 step is NOT 1 epoch
     batch_index = np.random.randint(0, num_train, (batch_size,))
     feats_train_batch = feats_train[batch_index]
     Y_train_batch = Y_train[batch_index]
@@ -209,6 +209,7 @@ for it in range(steps):
         print('feats_train_batch sh:',feats_train_batch.shape)
         print('predictions_train sh:',predictions_train.shape,' predictions_val sh:',predictions_val.shape,' acc_train sh:', acc_train.shape)
 
+        
 ######################################################################
 print('\n INFER on val-data')
 #  define a function to make a predictions over multiple data points.
