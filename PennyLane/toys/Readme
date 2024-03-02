@@ -1,0 +1,8 @@
+JAXopt provides a broader suite of optimization algorithms, including support for non-differentiable problems and constrained optimization.
+
+
+Optax focuses specifically on gradient-based optimization with a strong emphasis on composability and customizability, making it particularly suited for deep learning applications.
+
+If you are working on quantum machine learning projects or hybrid models that involve quantum circuits, PennyLane's NesterovMomentumOptimizer offers a direct way to integrate classical optimization techniques within your quantum computing workflows.
+
+NesterovMomentumOptimizer from PennyLane, like other gradient-based optimization algorithms, fundamentally relies on the ability to compute gradients of the objective function with respect to its parameters. 

@@ -2,7 +2,8 @@
 
 IMG=balewski/ubu22-qiskit-qml:p2ch  # has my hack of Qiskit for feed-forward
 IMG=balewski/ubu22-qiskit-qml:p3e
-IMG=balewski/ubu22-qiskit1.0:p0f  # feed-forward works better
+IMG=balewski/ubu22-qiskit1.0:p1  # feed-forward works better
+
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -30,7 +31,7 @@ podman run -it \
     --volume /docker_volumes/quantumMind/Qiskit:/Qiskit \
     --volume /docker_volumes/quantumMind:/quantumMind \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
-    --volume /docker_volumes/dataVault:/dataVault \
+    --volume /docker_volumes/dataVault2024:/dataVault2024 \
       --workdir $WORK_DIR \
       --user $(id -u):$(id -g) \
       $JNB_PORT \

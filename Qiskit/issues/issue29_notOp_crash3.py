@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 '''  transpiler crashes  on hw3N=expr.bit_not(hw3)
-  
+  This code crashes on both  local simu & HW, FIXED
+
+Aziz: Qiskit is putting out if containing the bit_not operator on a single bit as if (~c[0]) for the backend side to read, but the backend side seems to not like the ~ on a single bit. We recommend you to use hw3N=expr.logic_not(hw3) since for the case of single bit they are often quite similar. It is important to keep in mind that qiskit expressions are different than hardware capabilities.
+In Aer, I asked if they can fix this issue but in the meantime you can use hw3N=expr.logic_not(hw3)or casting:
+from qiskit.circuit.classical import expr, types
+hw3N = expr.cast(expr.bit_not(expr.cast(hw3, types.Uint(1))), types.Bool())
+
+
+
 '''
 
 from qiskit import   QuantumCircuit
@@ -10,6 +18,7 @@ from qiskit.circuit.classical import expr
 
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, transpile
 
+#...!...!....................
 def feedF_circuit_hamming_weight(n=4, k=2):
     qr = QuantumRegister(n)
     cr = ClassicalRegister(n)
@@ -29,9 +38,9 @@ def feedF_circuit_hamming_weight(n=4, k=2):
     b01 = expr.bit_and(cr[0], cr[1])  # Bitwise AND of cr[0] and cr[1]
     b02 = expr.bit_and(cr[0], cr[2])  # Bitwise AND of cr[0] and cr[2]
     b12 = expr.bit_and(cr[1], cr[2])  # Bitwise AND of cr[1] and cr[2]
-    hw3= expr.bit_or(b01, cr[2])
-    hw3N=expr.bit_not(hw3)  <== CULPRIT
-    
+    hw3= expr.bit_and(b01, cr[2])
+    #hw3N=expr.bit_not(hw3) # <== CULPRIT
+    hw3N=expr.logic_not(hw3)
     
     # Intermediate ORs
     b01_or_b02 = expr.bit_or(b01, b02)  # Bitwise OR of b01 and b02
@@ -59,14 +68,29 @@ def feedF_circuit_hamming_weight(n=4, k=2):
 qc=feedF_circuit_hamming_weight()
 
 print(qc)
+shots=4000
 
-from qiskit_aer import AerSimulator
-backend = AerSimulator()
-
-job =  backend.run(qc,shots=1000)
+if 1:  # do HW
+    print('M: access QiskitRuntimeService()...')
+    from qiskit_ibm_runtime import QiskitRuntimeService
+    service = QiskitRuntimeService()
+    backN="ibm_cusco"
+    backend = service.get_backend(backN)
+    if "if_else" not in backend.target:
+        from qiskit.circuit import IfElseOp
+        backend.target.add_instruction(IfElseOp, name="if_else")
+    print('M: transpiling for ...',backend)
+    qcT = transpile(qc, backend=backend, optimization_level=3, seed_transpiler=42)
+    print('M: executing ...')
+    job=backend.run(qcT,shots=shots, dynamic=True)
+else:
+    from qiskit_aer import AerSimulator
+    backend = AerSimulator()
+    job =  backend.run(qc,shots=shots)
+    
 result = job.result()
 counts=result.get_counts(0)
 print('M: counts:', counts)
 
-print('M:ok')
+print('M:ok',backend)
 
