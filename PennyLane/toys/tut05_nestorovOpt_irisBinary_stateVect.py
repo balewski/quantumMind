@@ -8,6 +8,19 @@ Variational Classifier: iris 4 features --> binary class
 Based on 
 INPUT: 2 real-valued vectors Based on https://pennylane.ai/qml/demos/tutorial_variational_classifier/
 
+= = = = =  Embeding circuit = = = = = 
+0: ──RY(0.94)─╭●────────────╭●──X────────╭●────────────╭●──X────────┤  State
+1: ───────────╰X──RY(-0.96)─╰X──RY(0.96)─╰X──RY(-0.98)─╰X──RY(0.98)─┤  State 
+
+
+= = = = =  Full circuit = = = = = 
+0: ──RY(0.94)─╭●────────────╭●──X────────╭●────────────╭●──X─────────Rot(0.00,0.01,-0.01)─╭●
+1: ───────────╰X──RY(-0.96)─╰X──RY(0.96)─╰X──RY(-0.98)─╰X──RY(0.98)──Rot(0.00,0.02,-0.01)─╰X
+
+───Rot(0.01,0.01,-0.01)──╭●─┤  <Z>
+───Rot(-0.00,-0.00,0.01)─╰X─┤      
+
+
 """
 
 import pennylane as qml
