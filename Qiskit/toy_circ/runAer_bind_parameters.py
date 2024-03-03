@@ -2,18 +2,6 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-
-Execute Qasm-defined circuit on local simulator
-
-required INPUT:
---circName: ghz_5qm
-
-'''
-#!/usr/bin/env python3
-__author__ = "Jan Balewski"
-__email__ = "janstar1122@gmail.com"
-
 # demonstrate  qc.bind_parameters(param_values)
 
 import qiskit
