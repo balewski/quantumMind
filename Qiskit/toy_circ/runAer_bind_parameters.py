@@ -6,7 +6,7 @@ __email__ = "janstar1122@gmail.com"
 
 import qiskit
 print('Qiskit ver',qiskit.__version__)  # 1.0.1
-
+from qiskit_aer import AerSimulator
 from qiskit import  QuantumCircuit, transpile
 from qiskit.circuit import Parameter
 
@@ -40,10 +40,11 @@ backend = AerSimulator()
 bound_qc.measure_all()
 
 # Transpile the circuit for the simulator
-transpiled_qc = transpile(bound_qc, backend)
+qcT = transpile(bound_qc, backend)
+#print('ll',qcT._layout.final_index_layout(filter_ancillas=True))
 
 # Execute the circuit
-job =   backend.run(transpiled_qc, shots=1024)
+job =   backend.run(qcT, shots=1024)
 
 # Get the results
 result = job.result()
