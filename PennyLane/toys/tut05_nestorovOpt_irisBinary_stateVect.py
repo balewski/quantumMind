@@ -9,8 +9,8 @@ Based on
 INPUT: 2 real-valued vectors Based on https://pennylane.ai/qml/demos/tutorial_variational_classifier/
 
 = = = = =  Embeding circuit = = = = = 
-0: ──RY(0.94)─╭●────────────╭●──X────────╭●────────────╭●──X────────┤  State
-1: ───────────╰X──RY(-0.96)─╰X──RY(0.96)─╰X──RY(-0.98)─╰X──RY(0.98)─┤  State 
+0: ──RY(0.94)─╭●────────────╭●──X────────╭●────────────╭●──X────────┤  <Z>
+1: ───────────╰X──RY(-0.96)─╰X──RY(0.96)─╰X──RY(-0.98)─╰X──RY(0.98)─┤      
 
 
 = = = = =  Full circuit = = = = = 
@@ -30,7 +30,7 @@ from pennylane.optimize import NesterovMomentumOptimizer
 n_wire=2
 dev = qml.device("default.qubit", wires=n_wire)  # state-vector
 
-# dev = qml.device("default.qubit", wires=n_wire,  shots=10000)
+#dev = qml.device("default.qubit", wires=n_wire,  shots=1000)
 
 
 ######################################################################
@@ -70,7 +70,7 @@ ang = get_angles(x)
 @qml.qnode(dev)
 def test(angles):
     state_preparation(angles)
-    return qml.state()
+    return qml.expval(qml.PauliZ(0))
 
 print('\nM: test encoding via UCR')
 state = test(ang)
@@ -106,9 +106,8 @@ num_layers = 2
 num_u3_ang= 3  # const, relates to U3 parametrization
 
 weights_init = 0.01 * np.random.randn(num_layers, num_qubits, num_u3_ang, requires_grad=True)
-bias_init = np.array(0.0, requires_grad=True)
 print('QML dims  qubits=%d  ansatz layers=%d'%(num_qubits,num_layers))
-print('weights sh:',weights_init.shape,' bias sh:',bias_init.shape,'\n full circ:')
+print('weights sh:',weights_init.shape,'\n full circ:')
 
 print(qml.draw(circuit, decimals=2)(weights_init,ang), '\n')
 
@@ -118,20 +117,15 @@ print(qml.draw(circuit, decimals=2)(weights_init,ang), '\n')
 
 '''
 
-# bias is added classically
-def variational_classifier(weights, bias, x):
-    return circuit(weights, x) + bias
-
 #  loss-function
 def square_loss(labels, predictions):
     # We use a call to qml.math.stack to allow subtracting the arrays directly
     return np.mean((labels - qml.math.stack(predictions)) ** 2)
 
-def cost(weights, bias, X, Y):
-    # Transpose the batch of input data in order to make the indexing
-    # in state_preparation work
-    predictions = variational_classifier(weights, bias, X.T)
-    return square_loss(Y, predictions)
+def cost(weights,  X, Y):
+    # Transpose the batch of input data in order to match the expected dims
+    pred = circuit(weights,  X.T)
+    return square_loss(Y, pred)
     
 #  ACCURACY, for monitoring only
 def accuracy(labels, predictions):
@@ -189,33 +183,37 @@ we minimize the cost, using the imported optimizer.
 
 '''
 
-opt = NesterovMomentumOptimizer(0.01)
+# https://openqaoa.entropicalabs.com/optimizers/pennylane-optimizers/
+# needs gradient 
+opt = NesterovMomentumOptimizer(0.2)
+
 batch_size = 8
-steps = 70
+steps = 50
 
 print('\n train the variational classifier...')
 weights = weights_init
-bias = bias_init
+
 for it in range(steps):
     # Update the weights by one optimizer step, use just one batch-size of data selected at random, so 1 step is NOT 1 epoch
     batch_index = np.random.randint(0, num_train, (batch_size,))
     feats_train_batch = feats_train[batch_index]
     Y_train_batch = Y_train[batch_index]
-    weights, bias, _, _ = opt.step(cost, weights, bias, feats_train_batch, Y_train_batch)
-
+    
+    weights = opt.step(lambda p: cost(p, feats_train_batch, Y_train_batch), weights)
+ 
     # Compute predictions on train and validation set
-    predictions_train = np.sign(variational_classifier(weights, bias, feats_train.T))
-    predictions_val = np.sign(variational_classifier(weights, bias, feats_val.T))
+    predictions_train = np.sign(circuit(weights,  feats_train.T))
+    predictions_val = np.sign(circuit(weights,  feats_val.T))
 
     # Compute accuracy on train and validation set
     acc_train = accuracy(Y_train, predictions_train)
     acc_val = accuracy(Y_val, predictions_val)
 
     if (it + 1) % 5 == 0:
-        _cost = cost(weights, bias, features, Y)
+        _cost = cost(weights,  features, Y)
         print(
-            f"Iter: {it + 1:5d} | Cost: {_cost:0.7f} | "
-            f"Acc train: {acc_train:0.7f} | Acc validation: {acc_val:0.7f}"
+            f"Iter: {it + 1:5d} | Cost: {_cost:0.4f} | "
+            f"Acc train: {acc_train:0.4f} | Acc validation: {acc_val:0.4f}"
         )
 
     if it==0:
@@ -227,7 +225,7 @@ for it in range(steps):
 print('\n INFER on val-data')
 #  define a function to make a predictions over multiple data points.
 
-preds_val = np.sign(variational_classifier(weights, bias, feats_val.T))
+preds_val = np.sign(circuit(weights,  feats_val.T))
 
 print('\npred_val:',preds_val,type(preds_val))
 print('targets:',Y_val,type(Y_val))
@@ -235,3 +233,5 @@ res=preds_val - Y_val
 print('L2:',res**2)
 loss = square_loss(Y_val, preds_val)
 print('loss:',loss,'ndata:',preds_val.shape)
+
+print('end-weight:',weights)
