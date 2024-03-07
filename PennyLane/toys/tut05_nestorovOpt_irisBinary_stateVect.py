@@ -3,23 +3,12 @@ __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
 """
-Variational Classifier: iris 4 features --> binary class
+Variational Classifier: 2 features --> binary class
+The case of non-linearly separable 
+Input 2D input data which are non-linearly separable
 
 Based on 
 INPUT: 2 real-valued vectors Based on https://pennylane.ai/qml/demos/tutorial_variational_classifier/
-
-= = = = =  Embeding circuit = = = = = 
-0: ──RY(0.94)─╭●────────────╭●──X────────╭●────────────╭●──X────────┤  <Z>
-1: ───────────╰X──RY(-0.96)─╰X──RY(0.96)─╰X──RY(-0.98)─╰X──RY(0.98)─┤      
-
-
-= = = = =  Full circuit = = = = = 
-0: ──RY(0.94)─╭●────────────╭●──X────────╭●────────────╭●──X─────────Rot(0.00,0.01,-0.01)─╭●
-1: ───────────╰X──RY(-0.96)─╰X──RY(0.96)─╰X──RY(-0.98)─╰X──RY(0.98)──Rot(0.00,0.02,-0.01)─╰X
-
-───Rot(0.01,0.01,-0.01)──╭●─┤  <Z>
-───Rot(-0.00,-0.00,0.01)─╰X─┤      
-
 
 """
 
@@ -28,8 +17,8 @@ from pennylane import numpy as np
 from pennylane.optimize import NesterovMomentumOptimizer
 
 n_qubits=3
-shots=5000
-# pick one device
+
+#...... pick one device
 #dev = qml.device('default.qubit', wires=n_qubits)  # works
 dev = qml.device('default.qubit', wires=n_qubits, shots=5000)  # FixMe
 
