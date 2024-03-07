@@ -27,104 +27,116 @@ import pennylane as qml
 from pennylane import numpy as np
 from pennylane.optimize import NesterovMomentumOptimizer
 
-n_wire=2
-dev = qml.device("default.qubit", wires=n_wire)  # state-vector
-
-#dev = qml.device("default.qubit", wires=n_wire,  shots=1000)
-
+n_qubits=3
+shots=5000
+# pick one device
+#dev = qml.device('default.qubit', wires=n_qubits)  # works
+dev = qml.device('default.qubit', wires=n_qubits, shots=5000)  # FixMe
 
 ######################################################################
-''' Encoding
-we will work with data from the positive subspace, so that we can ignore signs
+print('input 2D circle binary data and pre-process') 
+XY = np.load("../notebooks/data/circ2d_bin.npy")
+# Separate the data and labels
+X = XY[:,:-1]
+Y = XY[:,-1]
+print('X sh:', X.shape, Y.shape)
 
-The circuit is coded according to the scheme in Möttönen, et al. (2004), or—as presented for positive vectors only—in Schuld and Petruccione (2018). We also decomposed controlled Y-axis rotations into more basic gates, following Nielsen and Chuang (2010). UCR encoding
-'''
+print(f"First X sample (original)  : {X[0]}, shape:",X.shape)
 
-def get_angles(x): # maps 4 real>0 --> 5 Ry angles 
-    beta0 = 2 * np.arcsin(np.sqrt(x[1] ** 2) / np.sqrt(x[0] ** 2 + x[1] ** 2 + 1e-12))
-    beta1 = 2 * np.arcsin(np.sqrt(x[3] ** 2) / np.sqrt(x[2] ** 2 + x[3] ** 2 + 1e-12))
-    beta2 = 2 * np.arcsin(np.linalg.norm(x[2:]) / np.linalg.norm(x))
+print('Labels sample',Y[::10])
+print(' Warning: data were not shuffled yet')
 
-    return np.array([beta2, -beta1 / 2, beta1 / 2, -beta0 / 2, beta0 / 2])
+# Split data on train/test subsets
+np.random.seed(0)
+num_data = Y.shape[0]
+num_train = int(0.7 * num_data)
+index = np.random.permutation(range(num_data))
+X_train = X[index[:num_train]]
+Y_train = Y[index[:num_train]]
+X_val = X[index[num_train:]]
+Y_val = Y[index[num_train:]]
 
-def state_preparation(a):
+# We need these later for plotting
+X_train = X[index[:num_train]]
+X_val = X[index[num_train:]]
+
+print('train labels sample',Y_train[:10])
+print('train X sample',X_train[:3])
+print('val labels sample',Y_val)
+
+
+    
+######################################################################
+#  Encoding
+
+def state_preparation(x):
+    a=np.arccos(x)
     qml.RY(a[0], wires=0)
-
-    qml.CNOT(wires=[0, 1])
     qml.RY(a[1], wires=1)
-    qml.CNOT(wires=[0, 1])
-    qml.RY(a[2], wires=1)
-
-    qml.PauliX(wires=0)
-    qml.CNOT(wires=[0, 1])
-    qml.RY(a[3], wires=1)
-    qml.CNOT(wires=[0, 1])
-    qml.RY(a[4], wires=1)
-    qml.PauliX(wires=0)
-
-
-#........ test encoding circuit 
-x = np.array([0.53896774, 0.79503606, 0.27826503, 0.4], requires_grad=False)
-ang = get_angles(x)
 
 @qml.qnode(dev)
 def test(angles):
     state_preparation(angles)
     return qml.expval(qml.PauliZ(0))
 
-print('\nM: test encoding via UCR')
-state = test(ang)
-print("x               : ", np.round(x, 4))
-print("angles          : ", np.round(ang, 4))
-print("amplitude vector: ", np.round(np.real(state), 4))
-
-print(qml.draw(test, decimals=2)(ang), '\n')
+print(qml.draw(test, decimals=2)(X[0]), '\n')
 
 ######################################################################
-'''  Define QML layers, as   2-qubit variational layer
+# Define the EfficientSU2 ansatz
 
-define the variational quantum circuit as this state preparation routine, followed by a repetition of the layer structure.
-'''
-def layer(layer_weights):
-    for wire in range(2):
-        qml.Rot(*layer_weights[wire], wires=wire)
-    qml.CNOT(wires=[0, 1])
+def efficient_su2_ansatz(params):
+    """
+    EfficientSU2 ansatz for 3 qubits.
+    Parameters should have a shape of (layers, n_qubits, 3),
+    where layers is the number of ansatz layers,
+    n_qubits is the number of qubits (3 in this case),
+    and 3 represents the rotation angles for RX, RY, and RZ gates.
+    """
+    # Number of layers
+    layers = params.shape[0]
 
+    for layer in range(layers): # Apply rotational gates to each qubit
+        qml.Barrier()
+        for qubit in range(n_qubits):
+            qml.RX(params[layer, qubit, 0], wires=qubit)
+            qml.RY(params[layer, qubit, 1], wires=qubit)
+            qml.RZ(params[layer, qubit, 2], wires=qubit)
+        
+        # Apply CNOTs for entanglement, forming a ring of qubits
+        for qubit in range(n_qubits):
+            qml.CNOT(wires=[qubit, (qubit + 1) % n_qubits])
+
+
+# Define a QNode that uses the ansatz
 @qml.qnode(dev)
-def circuit(weights, x):  # decision made by meas Q0
-    state_preparation(x)
-    for layer_weights in weights:
-        layer(layer_weights)
-
-    return qml.expval(qml.PauliZ(0))
-
+def circuit(params,x):
+    state_preparation(x)  
+    efficient_su2_ansatz(params)
+    return qml.expval(qml.PauliZ(2))
 
 #........ test full circuit 
-
-num_qubits = 2
-num_layers = 2
+# Example usage
+layers = 2
 num_u3_ang= 3  # const, relates to U3 parametrization
+weights_init = 0.2 * np.random.random(size=(layers, n_qubits, num_u3_ang))
 
-weights_init = 0.01 * np.random.randn(num_layers, num_qubits, num_u3_ang, requires_grad=True)
-print('QML dims  qubits=%d  ansatz layers=%d'%(num_qubits,num_layers))
+print('QML dims  qubits=%d  EfficientSU2 ansatz, layers=%d'%(n_qubits,layers))
 print('weights sh:',weights_init.shape,'\n full circ:')
 
-print(qml.draw(circuit, decimals=2)(weights_init,ang), '\n')
-
+print(qml.draw(circuit, decimals=2)(weights_init,X[0]), '\n')
 
 ######################################################################
-''' remaining classical functionality required for ML training 
-
-'''
-
+# remaining classical functionality required for ML training
 #  loss-function
 def square_loss(labels, predictions):
     # We use a call to qml.math.stack to allow subtracting the arrays directly
     return np.mean((labels - qml.math.stack(predictions)) ** 2)
 
 def cost(weights,  X, Y):
+    global function_calls
+    function_calls += X.shape[0]
     # Transpose the batch of input data in order to match the expected dims
-    pred = circuit(weights,  X.T)
+    pred = circuit(weights,  X.T) # circuit is vectorized
     return square_loss(Y, pred)
     
 #  ACCURACY, for monitoring only
@@ -133,105 +145,60 @@ def accuracy(labels, predictions):
     acc = acc / len(labels)
     return acc
 
-######################################################################
-#- - - - - - - -
-print('input Iris data and pre-process') 
 
 
-data = np.loadtxt("../notebooks/data/iris_classes1and2_scaled.txt")
-X = data[:, 0:2]
-print(f"First X sample (original)  : {X[0]}, shape:",X.shape)
-
-# pad the vectors to size 2^2=4 with constant values
-padding = np.ones((len(X), 2)) * 0.1
-X_pad = np.c_[X, padding]
-print(f"First X sample (padded)    : {X_pad[0]}")
-
-# normalize each input
-normalization = np.sqrt(np.sum(X_pad**2, -1))
-X_norm = (X_pad.T / normalization).T
-print(f"First X sample (normalized): {X_norm[0]}, shape:",X_norm.shape)
-
-# the angles for state preparation are the features
-features = np.array([get_angles(x) for x in X_norm], requires_grad=False)
-print(f"First features sample      : {features[0]}  <-- input to UCR encoding")
-
-Y = data[:, -1]  # labels
-print('Labels sample',Y[::10])
-print(' Warning: data were not shuffled')
-
-# Split data on train/test subsets
-np.random.seed(0)
-num_data = len(Y)
-num_train = int(0.80 * num_data)
-index = np.random.permutation(range(num_data))
-feats_train = features[index[:num_train]]
-Y_train = Y[index[:num_train]]
-feats_val = features[index[num_train:]]
-Y_val = Y[index[num_train:]]
-
-# We need these later for plotting
-X_train = X[index[:num_train]]
-X_val = X[index[num_train:]]
-
-print('train labels sample',Y_train[:10])
-print('train feature sample',feats_train[:3])
 
 ######################################################################
-''' Optimization
-we minimize the cost, using the imported optimizer.
-
-'''
-
-# https://openqaoa.entropicalabs.com/optimizers/pennylane-optimizers/
+# Optimization  https://openqaoa.entropicalabs.com/optimizers/pennylane-optimizers/
 # needs gradient 
 opt = NesterovMomentumOptimizer(0.2)
 
-batch_size = 8
-steps = 50
-
 print('\n train the variational classifier...')
+shots=5000
+steps = 80
+batch_size = 10
 weights = weights_init
 
+if 1:  # initial accuracy
+    pred_val = np.sign(circuit(weights,  X_val.T))
+    acc_val = accuracy(Y_val, pred_val)
+
+function_calls = 0
 for it in range(steps):
     # Update the weights by one optimizer step, use just one batch-size of data selected at random, so 1 step is NOT 1 epoch
     batch_index = np.random.randint(0, num_train, (batch_size,))
-    feats_train_batch = feats_train[batch_index]
-    Y_train_batch = Y_train[batch_index]
+    X_batch = X_train[batch_index]
+    Y_batch = Y_train[batch_index]
     
-    weights = opt.step(lambda p: cost(p, feats_train_batch, Y_train_batch), weights)
- 
+    weights = opt.step(lambda p: cost(p, X_batch, Y_batch), weights)
     # Compute predictions on train and validation set
-    predictions_train = np.sign(circuit(weights,  feats_train.T))
-    predictions_val = np.sign(circuit(weights,  feats_val.T))
+    pred_val = np.sign(circuit(weights,  X_val.T))
+    acc_val = accuracy(Y_val, pred_val)
+    pred_train = np.sign(circuit(weights,  X_train.T))
 
     # Compute accuracy on train and validation set
-    acc_train = accuracy(Y_train, predictions_train)
-    acc_val = accuracy(Y_val, predictions_val)
+    acc_train = accuracy(Y_train, pred_train)
 
-    if (it + 1) % 5 == 0:
-        _cost = cost(weights,  features, Y)
+    if (it + 1) % 10 == 0 or it<10:
+        _cost = cost(weights,  X_train,Y_train)
         print(
-            f"Iter: {it + 1:5d} | Cost: {_cost:0.4f} | "
+            f"Iter: {it + 1:5d} | train Cost: {_cost:0.4f} | "
             f"Acc train: {acc_train:0.4f} | Acc validation: {acc_val:0.4f}"
         )
-
-    if it==0:
-        print('feats_train_batch sh:',feats_train_batch.shape)
-        print('predictions_train sh:',predictions_train.shape,' predictions_val sh:',predictions_val.shape,' acc_train sh:', acc_train.shape)
-
         
 ######################################################################
 print('\n INFER on val-data')
 #  define a function to make a predictions over multiple data points.
-
-preds_val = np.sign(circuit(weights,  feats_val.T))
-
-print('\npred_val:',preds_val,type(preds_val))
+pred_val = np.sign(circuit(weights,  X_val.T))
+acc_val = accuracy(Y_val, pred_val)
+print('\npred_val:%s  acc_val=%.3f'%(pred_val,acc_val))
 print('targets:',Y_val,type(Y_val))
-res=preds_val - Y_val
+res=pred_val - Y_val
 print('L2:',res**2)
-loss = square_loss(Y_val, preds_val)
-print('loss:',loss,'ndata:',preds_val.shape)
+loss = square_loss(Y_val, pred_val)
+print('loss:',loss,'ndata:',pred_val.shape)
 
 print('end-weight:',weights)
+print("Total number of cost function calls:", function_calls)
+
+print('end')
