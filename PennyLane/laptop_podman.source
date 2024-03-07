@@ -7,6 +7,7 @@ echo you are launching Podman image ...  remeber to exit
 
 JNB_PORT=' '
 WORK_DIR=/PennyLane
+DATA_VAULT=/docker_volumes/dataVault2024
 
 echo "The number of arguments is: $#"
 #  encoded variables:    jnb
@@ -27,15 +28,13 @@ podman run -it \
     --volume /docker_volumes/quantumMind:/quantumMind \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
     --volume /docker_volumes/dataVault:/dataVault \
-      --workdir $WORK_DIR \
-      --user $(id -u):$(id -g) \
-      $JNB_PORT \
+    --volume $DATA_VAULT:/dataVault2024 \
+    -e PennyLane_dataVault=/dataVault2024/dataPennyLane_tmp \
+    --workdir $WORK_DIR \
+    --user $(id -u):$(id -g) \
+    $JNB_PORT \
     $IMG /bin/bash
 
-#
-
-#     -e QuEra_dataVault=/dataVault/dataQuEra_2023julyA \
-#     -e AWS_ACCESS_KEY_ID=$QUERA_AWS_ACCESS_KEY_ID \
 #    -e AWS_SECRET_ACCESS_KEY="$QUERA_AWS_SECRET_ACCESS_KEY" \
 #    -e AWS_DEFAULT_REGION=$QUERA_AWS_REGION \
 
