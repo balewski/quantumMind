@@ -1,0 +1,41 @@
+
+* = = = = = = = = = = = = 
+
+To generate data sample
+ ./gen_sample.py
+
+saving data as hdf5: /dataVault2024/dataPennyLane_tmp/input/circle2d2c.h5
+h5-write : data_X (300, 2) float64
+h5-write : data_Y (300,) int64
+
+Balanced data sets:
+ x0=[0., -0.] ; Rcut=0.8  300 samples: cirle2d2c_i300
+ ./gen_sample.py --dataName circle2d2c --numSample 1000
+
+./gen_sample.py --dataName corner2d2c --numSample 1000
+ x0=[0.6, -0.3] ; Rcut=0.9  1k samples 
+
+
+* = = = = = = = = = = = = 
+
+Train binary classifier :
+- select data set
+- select encoding
+- select Ansatz
+
+train_dichotomy.py
+
+
+
+
+* = = = = = = = = = = = = 
+
+
+
+
+
+
+
+
+* = = = = = = = = = = = = 
+

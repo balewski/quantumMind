@@ -1,0 +1,19 @@
+exp_name: su2_nonLin-bin
+comment: efficient SU2 ansatz applied for binary classification of data that is not linearly separable 
+
+#ansatz_name: CPhase # fails
+ansatz_name: EffiSU2  # works
+ansatz_layers: 2
+
+optimizer_name:  NesterovMomentum
+batch_size: 50
+max_steps: 100  # caps Optimizer run time
+initial_step_size: 0.07  # for Nestorov
+
+lr_schedule:   # see class LearningRateScheduler
+    lr_reduction_factor: 0.6
+    acc_improvement_threshold: 0.03
+    steps_skip: 5  
+    steps_cool: 35 
+    max_num_reduction: 5 
+    
