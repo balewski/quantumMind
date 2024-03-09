@@ -18,13 +18,13 @@ def summary_column(md):
     cmd=md['circuit']
     ocf=md['opt_conf']
     
-    txt='train job '+md['short_name']
-    txt+='\ntest acc: %.3f'% bmd['test_acc']
-    txt+='\nbest val acc:%.3f   steps:%d  fcnt:%d'%( bmd['val_acc'],bmd['steps'],bmd['fcnt'])
+    txt='train job: '+md['short_name']
+    txt+='\ntest acc: %.3f '% (bmd['test_acc'])
+    txt+='\nbest val acc: %.3f   steps: %d  fcnt: %d'%( bmd['val_acc'],bmd['steps'],bmd['fcnt'])
     txt+='\nbatchsize: %d'% tmd['batch_size']
-    txt+='\nsamples %d'%tmd['tot_sampl']
-    txt+='\nqubits: %d  params: %s'%(cmd['num_qubit'],cmd['param_shape'])
-    txt+='\nanstaz: %s  layers:%d'%(ocf['ansatz_name'],ocf['ansatz_layers'])
+    txt+='\ntot samples: %d  data: %s'%(tmd['tot_sampl'], md['data']['short_name'])
+    txt+='\nqubits: %d   params: %d'%(cmd['num_qubit'],np.prod(cmd['param_shape']))
+    txt+='\nanstaz: %s   layers: %d'%(ocf['ansatz_name'],ocf['ansatz_layers'])
     return txt
   
   
@@ -75,6 +75,7 @@ class Plotter(PlotterBackbone):
         bmd=md['train']['best']
         lgTit='%s acc=%.3f   best: steps=%d  fcnt=%d'%(dom, bmd[dom+'_acc'],bmd['steps'],bmd['fcnt'])
         ax.legend(loc='upper center', title=lgTit,bbox_to_anchor=(0.5, 1.18), ncol=2)
+
         return ax
         
 #...!...!....................
@@ -106,7 +107,7 @@ class Plotter(PlotterBackbone):
         fig=self.plt.figure(figId,facecolor='white', figsize=(12,4.5))
         ax = self.plt.subplot(nrow,ncol,1)
 
-        stepV,trainAcc,valAcc,lrV=bigD['train_hist'].T
+        stepV,trainAcc,valAcc,lrV,momV=bigD['train_hist'].T
         print('sss',stepV.shape)
          
         # Plot y1 on the left axis
@@ -131,11 +132,11 @@ class Plotter(PlotterBackbone):
 
         line2 = axr.plot(stepV,lrV , 'g--', label='learing rate')
         axr.set_ylabel('lr step size', color='g')
+        axr.tick_params(axis='y', labelcolor='g')
         axr.set_yscale('log')
 
         # Set the y-axis label colors to match the data colors
-        #ax.tick_params(axis='y', labelcolor=line1[0].get_color())
-        axr.tick_params(axis='y', labelcolor=line2[0].get_color())
+        #axr.tick_params(axis='y', labelcolor=line2[0].get_color())
 
         #ax1.set_xticks([0,1,2])
         #ax1.set_xticklabels(['0','1','2'])

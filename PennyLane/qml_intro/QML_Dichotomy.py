@@ -16,19 +16,19 @@ from time import time
 #............................
 #............................
 class LearningRateScheduler:
-#...!...!..................
-    def __init__(self, initial_step_size, lr_reduction_factor, acc_improvement_threshold, steps_cool,max_num_reduction, **vargs):
+    def __init__(self, initial_step_size, initial_momentum, lr_reduction_factor, acc_improvement_threshold, steps_cool, max_num_reduction, momentum_reduction_factor, **vargs):
         self.step_size = initial_step_size
         self.lr_reduction_factor = lr_reduction_factor
+        self.momentum = initial_momentum
+        self.momentum_reduction_factor = momentum_reduction_factor
         self.improvement_threshold = acc_improvement_threshold
-        self.steps_cool = steps_cool  # Minimum steps between reductions
-        self.max_num_reduction = max_num_reduction  # Maximum number of LR reductions before early stopping
-        self.reduction_count = 0  # Track the number of times LR has been reduced
- 
+        self.steps_cool = steps_cool
+        self.max_num_reduction = max_num_reduction
+        self.reduction_count = 0
+        
         self.last_reduction_step = 0
         self.best_val_accuracy = 0
 
-#...!...!..................
     def should_reduce_lr(self, accuracy, current_step):
         if accuracy > self.best_val_accuracy:
             self.best_val_accuracy = accuracy
@@ -38,20 +38,22 @@ class LearningRateScheduler:
             return True
         return False
 
-#...!...!..................
-    def adjust_learning_rate(self):
-        self.step_size *= self.lr_reduction_factor
+    def adjust_learning_rate_and_momentum(self):
+        if self.reduction_count%2==0:
+            self.step_size *= self.lr_reduction_factor
+        else:
+            self.momentum *= self.momentum_reduction_factor
         self.reduction_count += 1
-        print("  %d reducing step size to %.4f "%(self.reduction_count,self.step_size))
-        return self.step_size
+        print("  %d reducing step size to %.4f and momentum to %.4f" % (self.reduction_count, self.step_size, self.momentum))
+        return self.step_size, self.momentum
     
-#...!...!..................
     def check_early_stopping(self):
-        earlyStop=self.reduction_count >= self.max_num_reduction
+        earlyStop = self.reduction_count >= self.max_num_reduction
         if earlyStop:
-            print("Early stopping triggered after {} LR reductions.".format(self.max_num_reduction))
+            print("Early stopping triggered after {} LR and momentum reductions.".format(self.max_num_reduction))
         return earlyStop
-    
+
+
 #............................
 #............................
 #............................
@@ -78,9 +80,9 @@ class TrainingMonitor:
         self.circuit_executions += 1
 
 #...!...!..................
-    def log_accuracy(self, step, train_accuracy, val_accuracy,lr):
-        rec=[float(step), float(train_accuracy), float(val_accuracy),float(lr)]
-        print('rec:',rec)
+    def log_accuracy(self, step, train_accuracy, val_accuracy,lr,momentum):
+        rec=[float(step), float(train_accuracy), float(val_accuracy),float(lr),float(momentum)]
+        #print('rec:',rec)
         self.history.append(rec)
         print(f"Step: {step} | Executions: {self.circuit_executions} | Train Acc: {train_accuracy:.4f} | Val Acc: {val_accuracy:.4f} | lr: {lr:.4f}")
 
@@ -96,7 +98,6 @@ class TrainingMonitor:
 
         trainer.bigD['best_weights']=self.best_params
         xx=np.array(self.history)
-
         trainer.bigD['train_hist']=cnp.array(xx)
          
 
@@ -118,7 +119,9 @@ class Trainer_Dichotomy():
         self.monitor = TrainingMonitor()
         
         ocf=md['opt_conf']
-        self.lr_scheduler = LearningRateScheduler(ocf['initial_step_size'],**ocf['lr_schedule'])
+        #self.lr_scheduler = LearningRateScheduler(ocf['initial_step_size'],**ocf['lr_schedule'])
+        
+        self.lr_scheduler = LearningRateScheduler(ocf['initial_step_size'],ocf['initial_momentum'],**ocf['lr_schedule'])
 
 #...!...!....................
     def summary(self):
@@ -181,25 +184,6 @@ class Trainer_Dichotomy():
                 qml.CNOT(wires=[qubit, (qubit + 1) % n_qubits])
                 if n_qubits<3: break  # ring requires at least 3 nodes
 
-
-#...!...!....................
-    def test_encoding(self):
-        @qml.qnode(self.device)
-        def qnode(x):
-            self.state_prep_circ(x)     
-            return qml.expval(qml.PauliZ(0))
- 
-        x=self.X_train[0]
-        print('\nDICH encoder circ:',x.shape)
-        print(qml.draw(qnode)(x))
-    
-        if 0:  # just printing
-            x=self.X_train[0]
-            cmd=self.meta['circuit'] 
-            params=np.random.random(size=cmd['param_shape'])
-            print('\nDICH full circ:',params.shape,x.shape)
-            print(qml.draw(qnode)(params,x))
-                    
 #...!...!....................
     def circuit(self, params):
         ansatzN=self.meta['opt_conf']['ansatz_name']
@@ -221,24 +205,14 @@ class Trainer_Dichotomy():
     def cost_function(self, params, X, Y):  # vectorized code
         predictions = np.array([self.circuit(params)(x) for x in X])        
         cost = np.mean((Y - predictions) ** 2) # square_loss(labels, predictions)
-        return cost, predictions # 2 values to save 
+        return cost
 
 #...!...!..................
-    def accuracy_metric(self, predictions, Y):
-        # Adjusting for binary classification
-        predicted_classes = [1 if p > 0 else -1 for p in predictions]
-        correct = np.mean(np.array(predicted_classes) == Y)
+    def accuracy_metric(self, params,X, Y):  # for binary classification        
+        pred = self.circuit(params)(  X.T)
+        pred_classes = [1 if p > 0 else -1 for p in pred]
+        correct = np.mean(np.array(pred_classes) == Y)
         return correct
-
-#...!...!..................
-    def adjust_learning_rate(self, step, step_size, lr_reduction_factor, steps_since_last_reduction, M):
-        # Check if at least M steps have passed since the last reduction
-        if step - steps_since_last_reduction >= M:
-            step_size *= lr_reduction_factor
-            print(f"Step {step}: Reducing step size to {step_size:.4f}")
-            steps_since_last_reduction = step
-            return step_size, steps_since_last_reduction, True
-        return step_size, steps_since_last_reduction, False
    
 #...!...!....................
     def train(self):
@@ -248,34 +222,29 @@ class Trainer_Dichotomy():
         ocf=self.meta['opt_conf']
         lrcf=ocf['lr_schedule']
 
-        opt = NesterovMomentumOptimizer(ocf['initial_step_size'], momentum=0.90)
+        opt = NesterovMomentumOptimizer(stepsize=ocf['initial_step_size'], momentum=ocf['initial_momentum'])
         params=np.random.random(size=cmd['param_shape'])
-        #print('pp1',params.shape,type(params))
-        steps_since_last_reduction = 0  # Initialize step counter for LR reduction
-       
+        nSample=self.X_train.shape[0]
         T0=time()
         for it in range(tmd['num_step']):
-            idxL = np.random.choice(range(len(self.X_train)), size=ocf['batch_size'], replace=False)
-            X_batch, Y_batch = self.X_train[idxL], self.Y_train[idxL]
-            #params, _ = opt.step_and_cost(lambda p: self.cost_function(p, X_batch, Y_batch)[0], params)
-            params = opt.step(lambda p: self.cost_function(p, X_batch, Y_batch)[0], params)
+            idxL = np.random.choice(range(nSample), size=ocf['batch_size'], replace=False)
+            X_batch, Y_batch = self.X_train[idxL], self.Y_train[idxL]            
+            params = opt.step(lambda p: self.cost_function(p, X_batch, Y_batch), params)
 
             if it % lrcf['steps_skip'] == 0:
-                _, val_predictions = self.cost_function(params, self.X_val, self.Y_val)
-                val_accuracy = self.accuracy_metric(val_predictions, self.Y_val)
-                KK=10# sample only 1/KK of train data to speed it up
-                idxL = np.random.choice(range(len(self.X_train)), size=len(self.X_train)//KK, replace=False)                
+                val_acc = self.accuracy_metric(params, self.X_val, self.Y_val)
+                KK=8 # sample only 1/KK of train data to speed it up
+                idxL = np.random.choice(range(nSample), size=nSample//KK, replace=False)                
                 X_batch, Y_batch = self.X_train[idxL], self.Y_train[idxL]
-                train_predictions = self.infere(params, X_batch)
-                train_accuracy = self.accuracy_metric(train_predictions, Y_batch)
+                train_acc = self.accuracy_metric(params,X_batch , Y_batch)
                 
-                self.monitor.log_accuracy(it, train_accuracy, val_accuracy,self.lr_scheduler.step_size)
-                self.monitor.update_best_params(val_accuracy, params,it)
+                self.monitor.log_accuracy(it, train_acc, val_acc,self.lr_scheduler.step_size,self.lr_scheduler.momentum)
+                self.monitor.update_best_params(val_acc, params,it)
 
-
-                if self.lr_scheduler.should_reduce_lr(val_accuracy, it):
-                    self.lr_scheduler.adjust_learning_rate()
-                    opt = NesterovMomentumOptimizer(self.lr_scheduler.step_size)
+                if self.lr_scheduler.should_reduce_lr(val_acc, it):
+                    new_lr, new_momentum = self.lr_scheduler.adjust_learning_rate_and_momentum()
+                    opt = NesterovMomentumOptimizer(stepsize=new_lr, momentum=new_momentum)
+                    
             if self.lr_scheduler.check_early_stopping():                
                 break  # Exit the training loop
         T1=time()
@@ -289,12 +258,10 @@ class Trainer_Dichotomy():
 #...!...!....................
     def predict_test(self):
         params=self.bigD['best_weights']
-        #print('pp2',params.shape,type(params))
-        test_predictions = self.infere(params, self.X_test)
-        test_accuracy = self.accuracy_metric(test_predictions, self.Y_test)
-        print('\npredict: test_accuracy:%.3f\n'%(test_accuracy ))
+        test_acc = self.accuracy_metric(params, self.X_test, self.Y_test)
+        print('\npredict: test_accuracy:%.3f\n'%(test_acc ))
         bmd=self.meta['train']['best']
-        bmd['test_acc']=test_accuracy
+        bmd['test_acc']=float(test_acc)
         
 #............................
 #........E.N.D...............

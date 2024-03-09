@@ -47,7 +47,7 @@ def get_parser(backName="default"):
    
     #.... plotting
     parser.add_argument( "-Y","--noXterm", dest='noXterm',  action='store_false', default=True, help="enables X-term for interactive mode")
-    parser.add_argument("-p", "--showPlots",  default='a b c d t ', nargs='+',help="abc-string listing shown plots")
+    parser.add_argument("-p", "--showPlots",  default=' c d t ', nargs='+',help="abc-string listing shown plots")
 
     args = parser.parse_args()
     if 'env'==args.basePath: args.basePath= os.environ['PennyLane_dataVault']
@@ -101,7 +101,7 @@ def load_data(args,md):
     print('\nLoad_data: X,Y sh:', X.shape, Y.shape)    
     print('Labels inp sample',Y[::30])
 
-    frac_train=0.7; frac_valid=0.2
+    frac_train=0.8; frac_valid=0.1
     XY_TVT=split_domains(X, Y,frac_train, frac_valid, random_state=43)
 
     #... add infor to MD

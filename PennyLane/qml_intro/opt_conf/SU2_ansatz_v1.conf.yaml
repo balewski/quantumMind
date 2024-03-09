@@ -7,13 +7,15 @@ ansatz_layers: 2
 
 optimizer_name:  NesterovMomentum
 batch_size: 50
-max_steps: 100  # caps Optimizer run time
+max_steps: 250  # caps Optimizer run time
 initial_step_size: 0.07  # for Nestorov
+initial_momentum: 0.90  # for Nestorov
 
 lr_schedule:   # see class LearningRateScheduler
-    lr_reduction_factor: 0.6
+    lr_reduction_factor: 0.7
+    momentum_reduction_factor: 0.8
     acc_improvement_threshold: 0.03
     steps_skip: 5  
     steps_cool: 35 
-    max_num_reduction: 5 
+    max_num_reduction: 8 
     
