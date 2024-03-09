@@ -47,8 +47,8 @@ class Plotter(PlotterBackbone):
             ax = self.plt.subplot(nrow,ncol,1)
 
         ax.set_aspect(1.0) 
-        ax.scatter(X[:, 0][Y == 1], X[:, 1][Y == 1], c="b", marker="o", ec="k")
-        ax.scatter(X[:, 0][Y == -1], X[:, 1][Y == -1], c="r", marker="o", ec="k")
+        ax.scatter(X[:, 0][Y == 1], X[:, 1][Y == 1], c="r", marker="o", ec="k")
+        ax.scatter(X[:, 0][Y == -1], X[:, 1][Y == -1], c="b", marker="o", ec="k")
         inputN=md['data']['short_name']
         ax.set(title="input=%s, %s data "%(inputN,dom), xlabel='x0', ylabel='x1')
 
@@ -68,7 +68,7 @@ class Plotter(PlotterBackbone):
         ax.set(title="classified=%s, %s data "%(inputN,dom), xlabel='x0', ylabel='x1')
 
         # plot data
-        for color, label in zip(["b", "r"], [1, -1]):
+        for color, label in zip(["r", "b"], [1, -1]):
             plot_x = X[:, 0][Y == label]
             plot_y = X[:, 1][Y == label]
             ax.scatter(plot_x, plot_y, c=color, marker="o", label="%s class=%d"%(dom,label))
@@ -81,9 +81,9 @@ class Plotter(PlotterBackbone):
 #...!...!....................
     def expval_contour(self,md,bigD,figId=1,ax=None):
         if ax==None:
-            nrow,ncol=1,1
+            nrow,ncol=1,2
             figId=self.smart_append(figId)
-            fig=self.plt.figure(figId,facecolor='white', figsize=(8,6.5))
+            fig=self.plt.figure(figId,facecolor='white', figsize=(12,5.5))
             ax = self.plt.subplot(nrow,ncol,1)
         # plot decision regions
         xx=bigD['pred_contour_x0_bins']
@@ -96,7 +96,7 @@ class Plotter(PlotterBackbone):
         ax.contour(xx, yy, Z, levels=[0.0], colors=("black",), linestyles=("--",), linewidths=(0.8,))
         cbar=self.plt.colorbar(cnt, ticks=[-1, 0, 1])
         cbar.set_label('expectation value')  # Setting the label for the colorbar
-        return ax
+        return ax,self.plt.subplot(nrow,ncol,2)
     
 #...!...!....................
     def training_loss(self,task,figId=1):

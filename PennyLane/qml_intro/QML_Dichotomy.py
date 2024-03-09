@@ -8,98 +8,9 @@ This code demonstrates a quantum machine learning (QML) framework for binary cla
 '''
 import pennylane as qml
 from pennylane import numpy as np
-import numpy as cnp  # Use cnp (conventional numpy) for standard numpy operations
 from pennylane.optimize import NesterovMomentumOptimizer
 from time import time
-
-#............................
-#............................
-#............................
-class LearningRateScheduler:
-    def __init__(self, initial_step_size, initial_momentum, lr_reduction_factor, acc_improvement_threshold, steps_cool, max_num_reduction, momentum_reduction_factor, **vargs):
-        self.step_size = initial_step_size
-        self.lr_reduction_factor = lr_reduction_factor
-        self.momentum = initial_momentum
-        self.momentum_reduction_factor = momentum_reduction_factor
-        self.improvement_threshold = acc_improvement_threshold
-        self.steps_cool = steps_cool
-        self.max_num_reduction = max_num_reduction
-        self.reduction_count = 0
-        
-        self.last_reduction_step = 0
-        self.best_val_accuracy = 0
-
-    def should_reduce_lr(self, accuracy, current_step):
-        if accuracy > self.best_val_accuracy:
-            self.best_val_accuracy = accuracy
-        if (accuracy < self.best_val_accuracy - self.improvement_threshold and
-                current_step - self.last_reduction_step >= self.steps_cool):
-            self.last_reduction_step = current_step
-            return True
-        return False
-
-    def adjust_learning_rate_and_momentum(self):
-        if self.reduction_count%2==0:
-            self.step_size *= self.lr_reduction_factor
-        else:
-            self.momentum *= self.momentum_reduction_factor
-        self.reduction_count += 1
-        print("  %d reducing step size to %.4f and momentum to %.4f" % (self.reduction_count, self.step_size, self.momentum))
-        return self.step_size, self.momentum
-    
-    def check_early_stopping(self):
-        earlyStop = self.reduction_count >= self.max_num_reduction
-        if earlyStop:
-            print("Early stopping triggered after {} LR and momentum reductions.".format(self.max_num_reduction))
-        return earlyStop
-
-
-#............................
-#............................
-#............................
-class TrainingMonitor:
-#...!...!..................
-    def __init__(self):
-        self.best_val_accuracy = 0
-        self.best_step = 0
-        self.best_fcnt = 0
-        self.best_params = None
-        self.circuit_executions = 0
-        self.history=[]
-
-    def update_best_params(self, accuracy, params,step):
-        if accuracy > self.best_val_accuracy:
-            self.best_val_accuracy = accuracy
-            self.best_params = params.copy()
-            self.best_step=step
-            self.best_fcnt = self.circuit_executions
-            print("  best validation accuracy: %.4f  fcnt=%d" %( self.best_val_accuracy,self.circuit_executions))
-
-#...!...!..................
-    def log_circ_execution(self):
-        self.circuit_executions += 1
-
-#...!...!..................
-    def log_accuracy(self, step, train_accuracy, val_accuracy,lr,momentum):
-        rec=[float(step), float(train_accuracy), float(val_accuracy),float(lr),float(momentum)]
-        #print('rec:',rec)
-        self.history.append(rec)
-        print(f"Step: {step} | Executions: {self.circuit_executions} | Train Acc: {train_accuracy:.4f} | Val Acc: {val_accuracy:.4f} | lr: {lr:.4f}")
-
-#...!...!..................
-    def summary(self,trainer):
-        print('\nTrainingMonitor summary, best val_accuracy=%.3f '%self.best_val_accuracy)
-        
-        tmd=trainer.meta['train']
-        bmd={};  tmd['best']=bmd
-        bmd['steps']=self.best_step
-        bmd['val_acc']=float(self.best_val_accuracy)
-        bmd['fcnt']=self.best_fcnt
-
-        trainer.bigD['best_weights']=self.best_params
-        xx=np.array(self.history)
-        trainer.bigD['train_hist']=cnp.array(xx)
-         
+from Util_PennyLane_train import LearningRateScheduler, TrainingMonitor
 
 #............................
 #............................
@@ -151,9 +62,11 @@ class Trainer_Dichotomy():
         n_qubits = self.n_qubits
 
         for layer in range(layers):
+            qml.Barrier()
             # Apply single-qubit rotations
             for qubit in range(n_qubits):
-                qml.RZ(params[layer, qubit], wires=qubit)
+                qml.RX(params[layer, qubit], wires=qubit)
+                #qml.RZ(params[layer, qubit], wires=qubit)
             
             # Apply parameterized CZ gates between adjacent qubits
             for qubit in range(n_qubits - 1):
@@ -202,18 +115,21 @@ class Trainer_Dichotomy():
 
     
 #...!...!..................
-    def cost_function(self, params, X, Y):  # vectorized code
+    def cost_function(self, params, X, Y):  # used by back-prop,  vectorized
         predictions = np.array([self.circuit(params)(x) for x in X])        
         cost = np.mean((Y - predictions) ** 2) # square_loss(labels, predictions)
         return cost
 
+    
 #...!...!..................
-    def accuracy_metric(self, params,X, Y):  # for binary classification        
+    def accuracy_metric(self, params,X, Y): # only monitoring, not used by back-prop
         pred = self.circuit(params)(  X.T)
+        #...... for binary classification        
         pred_classes = [1 if p > 0 else -1 for p in pred]
         correct = np.mean(np.array(pred_classes) == Y)
         return correct
-   
+
+    
 #...!...!....................
     def train(self):
         #.... setup
@@ -224,11 +140,16 @@ class Trainer_Dichotomy():
 
         opt = NesterovMomentumOptimizer(stepsize=ocf['initial_step_size'], momentum=ocf['initial_momentum'])
         params=np.random.random(size=cmd['param_shape'])
+
+        cc=self.circuit(params)
+        print(qml.draw(cc, decimals=2)(self.X_train[0]), '\n')
+        
         nSample=self.X_train.shape[0]
         T0=time()
         for it in range(tmd['num_step']):
             idxL = np.random.choice(range(nSample), size=ocf['batch_size'], replace=False)
-            X_batch, Y_batch = self.X_train[idxL], self.Y_train[idxL]            
+            X_batch, Y_batch = self.X_train[idxL], self.Y_train[idxL]
+            # ..... this line does the brack-propagation:
             params = opt.step(lambda p: self.cost_function(p, X_batch, Y_batch), params)
 
             if it % lrcf['steps_skip'] == 0:

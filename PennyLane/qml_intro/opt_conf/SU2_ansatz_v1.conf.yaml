@@ -3,11 +3,11 @@ comment: efficient SU2 ansatz applied for binary classification of data that is 
 
 #ansatz_name: CPhase # fails
 ansatz_name: EffiSU2  # works
-ansatz_layers: 2
+ansatz_layers: 3
 
 optimizer_name:  NesterovMomentum
 batch_size: 50
-max_steps: 250  # caps Optimizer run time
+max_steps: 300  # caps Optimizer run time
 initial_step_size: 0.07  # for Nestorov
 initial_momentum: 0.90  # for Nestorov
 

@@ -207,12 +207,14 @@ if __name__ == "__main__":
         plot.classified_data('val',jobMD,jobD,figId=2)        
 
     if 'c' in args.showPlots:
-        ax=plot.expval_contour(jobMD,jobD,figId=3)
+        ax,ax2=plot.expval_contour(jobMD,jobD,figId=3)
         plot.classified_data('val',jobMD,jobD,ax=ax)        
+        plot.input_data('train',jobMD,jobD,ax=ax2)
 
     if 'd' in args.showPlots:
-        ax=plot.expval_contour(jobMD,jobD,figId=4)
-        plot.classified_data('test',jobMD,jobD,ax=ax)        
+        ax,ax2=plot.expval_contour(jobMD,jobD,figId=4)
+        plot.classified_data('test',jobMD,jobD,ax=ax)
+        plot.input_data('train',jobMD,jobD,ax=ax2)        
 
     if 't' in args.showPlots:
         ax=plot.training_loss(trainer,figId=0)
