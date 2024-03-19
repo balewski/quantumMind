@@ -47,8 +47,8 @@ class Plotter(PlotterBackbone):
             ax = self.plt.subplot(nrow,ncol,1)
 
         ax.set_aspect(1.0) 
-        ax.scatter(X[:, 0][Y == 1], X[:, 1][Y == 1], c="r", marker="o", ec="k")
-        ax.scatter(X[:, 0][Y == -1], X[:, 1][Y == -1], c="b", marker="o", ec="k")
+        ax.scatter(X[:, 0][Y == 1], X[:, 1][Y == 1], c="r", marker="o")
+        ax.scatter(X[:, 0][Y == -1], X[:, 1][Y == -1], c="b", marker="o")
         inputN=md['data']['short_name']
         ax.set(title="input=%s, %s data "%(inputN,dom), xlabel='x0', ylabel='x1')
 
