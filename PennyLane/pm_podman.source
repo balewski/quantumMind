@@ -3,6 +3,8 @@
 
 
 IMG=balewski/ubu22-pennylane:p2b
+#IMG=balewski/ubu22-qiskit1.0:p2b # + QML + IonQ +Braket + pytorch+PennyLane
+
 
 CFSH=/global/cfs/cdirs/mpccc/balewski/
 
@@ -12,7 +14,7 @@ echo you are launching Podman image ...  remeber to exit
 JNB_PORT=' '
 BASE_DIR=quantumMind   # here git has home
 WORK_DIR=$BASE_DIR/PennyLane
-DATA_VAULT=${CFSH}/2024-quantDataVault
+DATA_VAULT=${CFSH}/quantDataVault2024
 DATA_DIR=/dataPennyLane_tmp
 
 
@@ -36,11 +38,9 @@ podman-hpc run -it \
    --volume $CFSH/$WORK_DIR:/wrk \
    --volume ${DATA_VAULT}:/dataVault \
    --volume ${DATA_VAULT}/$DATA_DIR:/data_tmp \
+   -e HDF5_USE_FILE_LOCKING='FALSE' \
    -e PennyLane_dataVault=/data_tmp \
    --workdir /wrk \
    $IMG /bin/bash
 
 
-# test JNB
-# cd    /qtuum_wrk/hqs-api-examples/notebooks
-# jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port 8844
