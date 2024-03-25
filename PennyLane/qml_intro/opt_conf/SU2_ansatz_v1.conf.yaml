@@ -7,7 +7,7 @@ ansatz_layers: 2
 
 optimizer_name:  NesterovMomentum
 batch_size: 50
-max_steps: 200  # caps Optimizer run time
+max_steps: 20  # caps Optimizer run time
 initial_step_size: 0.07  # for Nestorov
 initial_momentum: 0.90  # for Nestorov
 

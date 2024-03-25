@@ -33,11 +33,13 @@ def get_parser(backName="default"):
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verb",type=int, help="increase debug verbosity", default=1)
     parser.add_argument("--basePath",default='env',help="head dir for set of experiments, or 'env'")
+    parser.add_argument("--outPath",default=None,help="alternative output path")
     parser.add_argument("--expName",  default=None,help='(optional) default is random string')
     
     parser.add_argument("--inputData",  default='circle2d2c',help='[.h5] input data ')
     parser.add_argument('--conf', default='SU2_ansatz_v1', help='[.conf.yaml] optimizer configuration')
-
+    parser.add_argument('--myRank',type=int,default=0, help="indexing for parallel execution")
+ 
     # .... quantum circuit
     parser.add_argument("--numQubit", default=3, type=int, help='size of circuit')
     #parser.add_argument('-i','--numSample', default=4, type=int, help='num of images packed in to the job')
@@ -52,7 +54,7 @@ def get_parser(backName="default"):
     args = parser.parse_args()
     if 'env'==args.basePath: args.basePath= os.environ['PennyLane_dataVault']
     args.dataPath=os.path.join(args.basePath,'input')
-    args.outPath=os.path.join(args.basePath,'model')
+    if args.outPath==None:  args.outPath=os.path.join(args.basePath,'model')
             
     for arg in vars(args):
         print( 'myArgs:',arg, getattr(args, arg))
@@ -170,7 +172,12 @@ def measure_expval_contour(args,trainer,bigD,md):
 #=================================
 if __name__ == "__main__":
     args=get_parser(backName='ibmq_qasm_simulator')
-         
+    
+    if args.myRank>0:
+        print("I'm rank:%d"%args.myRank)
+        # not used in this code
+ 
+    
     jobMD=buildTrainMeta(args)
     XY_TVT=load_data(args,jobMD)    
     pprint(jobMD)

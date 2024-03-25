@@ -1,0 +1,43 @@
+#!/bin/bash 
+#SBATCH  -N 1  -C cpu --exclusive -A nstaff --ntasks-per-node=2
+#SBATCH  --time=28:00 -q debug
+#-SBATCH --time 28:00  -q regular  -N 16
+#SBATCH  --licenses=scratch
+# - - - E N D    O F    SLURM    C O M M A N D S
+
+
+nprocspn=${SLURM_NTASKS_PER_NODE}
+#nprocspn=1  # special case for partial use of full node
+
+N=${SLURM_NNODES}
+G=$[ $N * $nprocspn ]
+jobId=${SLURM_JOBID}
+echo S:  G=$G  N=$N 
+
+# export OMP_NUM_THREADS=1 - makes no difference
+IMG=balewski/ubu22-pennylane:p3
+echo use image $IMG
+CODE_DIR=`pwd`
+logN=${SLURM_JOBID}
+outPath=$SCRATCH/tmp_pennylane_jobs/$logN
+echo outPath=$outPath
+mkdir -p $outPath
+cp -rp *.py  batchPodman.slr wrap_podman.sh opt_conf  $outPath
+cp -rp ../toolbox   $outPath/toolbox
+
+CFSH=/global/cfs/cdirs/mpccc/balewski/
+DATA_VAULT=${CFSH}/quantDataVault2024
+
+CMD="  ./train_dichotomy.py  --inputData  cake2d2cM4 --basePath /dataPennyLane_tmp --outPath . "
+
+cd $outPath
+
+#1( sleep 140; echo `hostname` ; date; free -g; top ibn1)&
+#G=1
+srun -n $G  ./wrap_podman.sh $IMG " $CMD "  $outPath  $DATA_VAULT
+
+echo S:done 
+date
+
+#Cancel all my jobs:
+#  squeue -u $USER -h | awk '{print $1}' | xargs scancel
