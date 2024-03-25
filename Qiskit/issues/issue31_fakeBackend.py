@@ -18,13 +18,6 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 
 from pprint import pprint
 
-#...!...!....................
-def create_ghz_circuit(n):
-    qc = qk.QuantumCircuit(n)
-    qc.h(0)
-    for i in range(1, n):  qc.cx(0, i)
-    qc.measure_all()
-    return qc
 
 #...!...!....................
 class BackendEncoder(json.JSONEncoder):
@@ -47,24 +40,26 @@ class BackendEncoder(json.JSONEncoder):
 class FakeBackend(fake_backend.FakeBackendV2):
     
     def __init__(self, backend):
-
         package_name = 'qiskit_ibm_runtime'
         package_dirs = site.getsitepackages()
+        
         backends_dir = None
         for dir in package_dirs:
             package_path = os.path.join(dir, package_name)
             if os.path.exists(package_path):
                 backends_dir = os.path.join(package_path, "fake_provider", "backends")
                 break
-
+        #print('bb1',backends_dir)
+        backends_dir = 'my_fake_provider/'
         backend_og_name = backend.name.split("_")[1]
         self.conf_filename = f"conf_{backend_og_name}.json" 
         self.props_filename = f"props_{backend_og_name}.json" 
         self.defs_filename = f"defs_{backend_og_name}.json"
         self.backend_name = f"fake_{backend_og_name}"
+        #print('pp,',backends_dir, backend_og_name)
         self.dirname = os.path.join(backends_dir, backend_og_name)
         if not os.path.exists(self.dirname):
-            os.mkdir(self.dirname)
+            os.makedirs(self.dirname, exist_ok=True)
             config = backend.configuration()
             props = backend.properties()
             defs = backend.defaults()
@@ -84,8 +79,13 @@ class FakeBackend(fake_backend.FakeBackendV2):
 
         super().__init__()
 
-
-
+#...!...!....................
+def create_ghz_circuit(n):
+    qc = qk.QuantumCircuit(n)
+    qc.h(0)
+    for i in range(1, n):  qc.cx(0, i)
+    qc.measure_all()
+    return qc
 
 #=================================
 if __name__ == "__main__":
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     fake_backend = FakeBackend(true_backend)
     
     print('M: constructed   backend:',fake_backend.name)
-    qc=create_ghz_circuit(8)
+    qc=create_ghz_circuit(5)
     print(qc)
 
     qcT = qk.transpile(qc, backend=fake_backend, optimization_level=3, seed_transpiler=44)
