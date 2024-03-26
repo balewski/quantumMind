@@ -1,8 +1,8 @@
 #!/bin/bash
 
-IMG=balewski/ubu22-pennylane:p2b  # PennyLane  0.34.0
-IMG=balewski/ubu22-qiskit1.0:p2b  # qiskit1.0 + QML + IonQ +Braket + pytorch+PennyLane_0.35.1
-IMG=balewski/ubu22-xx:p0
+IMG=balewski/ubu22-pennylane:p3  # PennyLane  0.34.0
+#IMG=balewski/ubu22-qiskit1.0:p2b  # qiskit1.0 + QML + IonQ +Braket + pytorch+PennyLane_0.35.1
+
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -17,9 +17,9 @@ for var in "$@"; do
   echo "The length of argument '$var' is: ${#var}"
   if [[ "jnb" ==  $var ]];  then
       WORK_DIR=/PennyLane/notebooks
-      JNB_PORT="    -p 8833:8833 "
+      JNB_PORT="    -p 8834:8834 "
      echo added  $JNB_PORT
-     echo "exec:  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833 "
+     echo "exec:  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8834 "
   fi
   # ... more ...
 done
@@ -36,9 +36,6 @@ podman run -it \
     --user $(id -u):$(id -g) \
     $JNB_PORT \
     $IMG /bin/bash
-
-#    -e AWS_SECRET_ACCESS_KEY="$QUERA_AWS_SECRET_ACCESS_KEY" \
-#    -e AWS_DEFAULT_REGION=$QUERA_AWS_REGION \
 
 # 
 # after start install QPIXL:  cd   /qpixl_wrk;   pip install -e .

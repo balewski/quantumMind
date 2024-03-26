@@ -1,4 +1,104 @@
-Usage of Podman container
+Usage of Podman container for PennyLane
 
 details are here
-https://docs.google.com/document/d/1LHYlTXtOyA5vZSrJF0IdZf3L88DcguMWXyHAPLV-MvU/edit?usp=sharing 
+https://docs.google.com/document/d/1LHYlTXtOyA5vZSrJF0IdZf3L88DcguMWXyHAPLV-MvU/edit?usp=sharing
+
+
+Summary:
+This is an instruction on how to build and use a Podman image. It consists of 3 parts:
+A)  building of the image, I have done it already on PM
+B) running image on PM in 3 ways:  simple interactive, advanced interactive, and run Slurm job which executes your code inside podman image
+C) running the same image on your laptop (you need to build it following A), then run is simple and advanced way
+
+
+
+= = = 
+A = = = = = = = = = =  building container (one time) = = = = = = = = =
+= = = 
+Dockerfile:  https://bitbucket.org/balewski/jannersc/src/master/dockerVaria/ubuntu/Dockerfile.ubu22-PennyLane
+Laptop: 
+    podman build -f Dockerfile.ubu22-PennyLane -t balewski/ubu22-pennylane:p3   .
+Perlmutter
+   podman-hpc build -f Dockerfile.ubu22-PennyLane -t balewski/ubu22-pennylane:p3   .
+   podman-hpc migrate   balewski/ubu22-pennylane:p3 
+   Note, image can't be overwritten, always advance the :version #
+
+
+
+= = = 
+B = = = = = = = = = =   Perlmutter @ NERSC = = = = = = = = =
+= = = 
+
+B.1  - - - - - -  simple interactive use  on a worker node - - - - - - - 
+
+ssh perlmutter
+cd  $SCRATCH/tmp
+salloc -q interactive -C cpu -t 4:00:00 -A nstaff
+podman-hpc run -it  balewski/ubu22-pennylane:p3 bash
+ python3 -c 'import pennylane'
+exit
+
+
+B.2  - - - - - -  advanced interactive use  on a worker node - - - - - - - 
+copy & customize  https://github.com/balewski/quantumMind/blob/main/PennyLane/pm_podman.source   
+to configure shortcuts to your liking
+
+ssh perlmutter
+salloc -q interactive -C cpu -t 4:00:00 -A nstaff
+source pm_podman.source 
+
+[ do your work ]
+
+exit  #from podman
+exit # from salloc
+
+
+
+B.3  - - - - - -  advanced : Slurm job with multiple task  using Podman image- - - - - - - 
+  copy and customize https://github.com/balewski/quantumMind/tree/main/PennyLane/qml_intro/
+batchPodman.slr
+wrap_podman.sh
+ 
+You will edit code stored  in CFS area but running job will read/write to SCRATCH using its copy.  Do NOT start Podman image manually
+
+ssh perlmutter
+ssh CFS  (to your area )
+sbatch batchPodman.slr
+
+
+B.4  - - - - - -  advanced : jupiter notebook on the laptop powered by Podman PennyLane image running on PM - - - - - - - 
+  Easy to do 
+
+
+
+
+= = = 
+C = = = = = = = = = =   Laptop = = = = = = = = =
+= = = 
+
+C.1  - - - - - -  simple interactive use  on a laptop - - - - - - - 
+$ podman run -it  balewski/ubu22-pennylane:p3 bash
+ python3 -c 'import pennylane'
+exit
+
+
+C.2  - - - - - -  advanced w/ predefined volume mounts on a laptop  - - - - - - - 
+copy & customize  https://github.com/balewski/quantumMind/blob/main/PennyLane/laptop_podman.source 
+to configure shortcuts to your liking
+
+source laptop_podman.source 
+
+[ do your work ]
+
+exit  #from podman
+
+If you need to reset podman, do :   source restart_podman.source
+
+
+C.4  - - - - - -  advanced : jupiter notebook on the laptop powered by Podman PennyLane image running on the laptop - - - - - - - 
+
+source laptop_podman.source jnb 
+(exec inside running image)  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833 
+copy http  string and paste into local browser , e.g:   http://127.0.0.1:8833/tree?token=7c5cdf5e5c4f1a9d2a616a739988132d59f1a7ca3f4c0779
+
+Troubleshooting: if JNB remains blank change port ID in  laptop_podman.source  and restart the image
