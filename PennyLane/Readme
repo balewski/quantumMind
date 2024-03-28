@@ -5,10 +5,11 @@ https://docs.google.com/document/d/1LHYlTXtOyA5vZSrJF0IdZf3L88DcguMWXyHAPLV-MvU/
 
 
 Summary:
-This is an instruction on how to build and use a Podman image. It consists of 3 parts:
-A)  building of the image, I have done it already on PM
-B) running image on PM in 3 ways:  simple interactive, advanced interactive, and run Slurm job which executes your code inside podman image
-C) running the same image on your laptop (you need to build it following A), then run is simple and advanced way
+This is an instruction on how to build and use a Podman image.
+The example consists of three parts:
+A) Building the image, which I've already completed on PM.
+B) Running the image on PM in three modes: simple interactive, advanced interactive, and a Slurm job that executes your code inside a podman image.
+C) Running the same image on your laptop. You'll need to build it as described in A), but then running it is straightforward.
 
 
 
@@ -59,7 +60,7 @@ B.3  - - - - - -  advanced : Slurm job with multiple task  using Podman image- -
 batchPodman.slr
 wrap_podman.sh
  
-You will edit code stored  in CFS area but running job will read/write to SCRATCH using its copy.  Do NOT start Podman image manually
+You will edit code stored  in CFS area but running job will read/write from/to SCRATCH using its copy.  Do NOT start Podman image manually
 
 ssh perlmutter
 ssh CFS  (to your area )

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 IMG=balewski/ubu22-pennylane:p3  # PennyLane  0.34.0
-#IMG=balewski/ubu22-qiskit1.0:p2b  # qiskit1.0 + QML + IonQ +Braket + pytorch+PennyLane_0.35.1
+IMG=balewski/ubu22-qiskit1.0:p2h  # qiskit1.0 + QML + IonQ +Braket + pytorch+PennyLane_0.35.1
 
 
 echo launch image $IMG
@@ -13,13 +13,14 @@ DATA_VAULT=/docker_volumes/dataVault2024
 
 echo "The number of arguments is: $#"
 #  encoded variables:    jnb
+PORT=8835
 for var in "$@"; do
   echo "The length of argument '$var' is: ${#var}"
   if [[ "jnb" ==  $var ]];  then
       WORK_DIR=/PennyLane/notebooks
-      JNB_PORT="    -p 8834:8834 "
+      JNB_PORT="    -p  ${PORT}:$PORT "
      echo added  $JNB_PORT
-     echo "exec:  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8834 "
+     echo "exec:  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $PORT "
   fi
   # ... more ...
 done

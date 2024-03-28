@@ -15,7 +15,7 @@ num_qubit=1 ; shots=1000
 dev = qml.device('default.qubit', wires=num_qubit,shots=shots)
 from time import time
 
-nReset=2
+nReset=21
 
 @qml.qnode(dev)
 def circuit(params):
@@ -42,7 +42,7 @@ def cost(params, target_value):
     return (circuit(params) - target_value) ** 2
 
 
-num_steps=3
+num_steps=10
 optimizer=qml.SPSAOptimizer(maxiter=num_steps)
 
 
