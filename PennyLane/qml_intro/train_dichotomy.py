@@ -16,7 +16,6 @@ Dependence: PennyLane
 
 '''
 import sys,os,hashlib
-import numpy as np
 from pprint import pprint
 from time import time, localtime
 import numpy as cnp  # Use cnp (conventional numpy) for standard numpy operations
@@ -150,17 +149,17 @@ def buildTrainMeta(args):
 def measure_expval_contour(args,trainer,bigD,md):
     print('measure_expval_contour...')
     # make data for decision regions
-    xx, yy = np.meshgrid(np.linspace(-1,1, 30), np.linspace(-1,1, 30))
-    X_grid = [np.array([x, y]) for x, y in zip(xx.flatten(), yy.flatten())]
+    xx, yy = cnp.meshgrid(cnp.linspace(-1,1, 30), cnp.linspace(-1,1, 30))
+    X_grid = [cnp.array([x, y]) for x, y in zip(xx.flatten(), yy.flatten())]
 
-    X_data = np.array([x for x in X_grid])
+    X_data = cnp.array([x for x in X_grid])
     #print('X_data:',X_data.shape,len(X_grid))
 
     params=bigD['best_weights']
     #print('pp3',params.shape,type(params))
     
     pred_expval = trainer.infere(params, X_data)
-    Z = np.reshape(pred_expval, xx.shape)
+    Z = cnp.reshape(pred_expval, xx.shape)
     bigD['pred_contour_x0_bins']=xx
     bigD['pred_contour_x1_bins']=yy
     bigD['pred_contour_expval']=cnp.array(Z)

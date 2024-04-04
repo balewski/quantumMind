@@ -7,6 +7,9 @@ __email__ = "janstar1122@gmail.com"
 minimal demonstrator on how to fit threshold of EV to binary classify data
 use batched training
 Important: labels must be in convention  +1/-1  for square_loss to work
+
+NO vectorized circuit
+
 '''
 import pennylane as qml
 from pennylane import numpy as np
@@ -26,7 +29,7 @@ dev = qml.device("default.qubit")
 
 @qml.qnode(dev)
 def circuit(params, x):
-    a=np.arccos(x)  # encoding of the input to [0,2pi]
+    a=cnp.arccos(x)  # encoding of the input to [0,2pi]
     qml.RY(a, wires=0)
     #qml.RY(params[0], wires=0)
     return qml.expval(qml.PauliZ(0)) 
@@ -56,9 +59,11 @@ def circ_to_label(params,  x):  # not used
 def circ_and_bias(params,  x):  # output is real number
     return circuit(params, x) - params[0]
 
-def cost(params,  x, y):   # vecorized
-    pred = circ_and_bias(params, x.T)
-    mse_loss= np.mean((y -pred) ** 2)   
+def cost(params,  xV, yV):   # vecorized x & y 
+    #NO: pred = circ_and_bias(params, x.T)  # vectorized
+    #NO:  mse_loss = np.mean((y -pred) ** 2)   
+    predL= [ circ_and_bias(params, x) for x in xV ]
+    mse_loss = np.mean((yV - qml.math.stack(predL)) ** 2)   
     return mse_loss
 
 def accuracy(labels, pred):  # vectorized
@@ -80,7 +85,7 @@ for it in range(steps):
     idxL = np.random.randint(0, len(XD), (batch_size,))
     X_batch = XD[idxL]
     Y_batch = YD[idxL]
-    params = opt.step(cost, params, x=X_batch, y=Y_batch)
+    params = opt.step(cost, params, xV=X_batch, yV=Y_batch)
 
     # Compute accuracy
     lab_pred = [np.sign(circ_and_bias(params,  x)) for x in XD]

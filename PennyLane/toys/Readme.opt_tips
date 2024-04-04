@@ -1,0 +1,57 @@
+NO vectorized circuit() & only common numpy pre/post processing
+(suggestion from PennyLane staff)
+
+To recap my understand, I should make 2 changes in any PennyLane code I write:
+
+- - - - - -  - - - - --
+a) never use vectorize input to a  QNode. This is bad:
+
+```
+from pennylane import numpy as np
+for it in range(steps):
+    idxL = np.random.randint(0, len(X), (batch_size,))
+    X_batch = X[idxL]
+    Y_batch = Y[idxL]
+    params = opt.step(cost, params, xV=X_batch, yV=Y_batch)
+....
+
+def cost(params,  x, y):   # vecorized x & y 
+    pred = circuit(params, x.T)  # vectorized  BAD
+    mse_loss = np.mean((y -pred) ** 2)   
+    return mse_loss
+```
+Instead, I should do this:
+```
+def cost(params,  xV, yV):   # vectorized x & y 
+    predL= [ circuit(params, x) for x in xV ]   # scalar input
+    mse_loss = np.mean((yV - qml.math.stack(predL)) ** 2)   
+    return mse_loss
+```
+A fun fact: the later version  was what ChatGPT told me to do when I asked for  an example PennyLane code - it was me who wanted to outsmart it be using vectorization everywhere. 
+
+- - - - - - - - - - - - 
+b) I should not pre/post process the pennylane.numpy objects inside QNode, and for the none optimized parameters use  the plain numpy. This is bad for the PennyLane optimizers:
+```
+from pennylane import numpy as np
+import numpy as cnp  # common numpy
+X = cnp.random.uniform(xLo, 1, size=(n_samples,))
+params = 0.3 * np.random.randn(1, requires_grad=True)
+
+@qml.qnode(dev)
+def circuit(params, x):
+    a=np.arccos(x)  BAD
+    qml.RY(a, wires=0)
+    return qml.expval(qml.PauliZ(0)) 
+
+circuit(params, Z[0])
+```
+
+and this is good:
+
+```
+@qml.qnode(dev)
+def circuit(params, x):
+    a=cnp.arccos(x)   # use common numpy for pre-processing
+    qml.RY(a, wires=0)
+    return qml.expval(qml.PauliZ(0))
+```
