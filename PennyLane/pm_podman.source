@@ -12,6 +12,7 @@ echo you are launching Podman image ...  remeber to exit
 JNB_PORT=' '
 BASE_DIR=/quantumMind   # here git has home
 WORK_DIR=$BASE_DIR/PennyLane
+WORK_DIR2=/pennylane-qml-benchmarks
 DATA_VAULT=${CFSH}/quantDataVault2024
 DATA_DIR=/dataPennyLane_tmp
 
@@ -33,6 +34,7 @@ podman-hpc run -it \
    --volume $HOME:/home \
    --volume $CFSH/$BASE_DIR:/$BASE_DIR \
    --volume $CFSH/$WORK_DIR:$WORK_DIR \
+   --volume $CFSH/$WORK_DIR2:$WORK_DIR2 \
    --volume ${DATA_VAULT}:/dataVault \
    --volume ${DATA_VAULT}/$DATA_DIR:/dataPennyLane_tmp \
    -e HDF5_USE_FILE_LOCKING='FALSE' \
