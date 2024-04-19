@@ -1,14 +1,12 @@
 #!/bin/bash
 
-IMG=balewski/ubu22-qiskit-qml:p2ch  # has my hack of Qiskit for feed-forward
 IMG=balewski/ubu22-qiskit-qml:p3e  # Qiskit 0.45
-IMG=balewski/ubu22-qiskit1.0:p1b  # feed-forward works better
 IMG=balewski/ubu22-qiskit1.0:p2h # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
 
-JNB_PORT=' '
+JNB_PORT=''
 WORK_DIR=/Qiskit
 
 echo "The number of arguments is: $#"
@@ -33,8 +31,7 @@ podman run -it \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
     --volume /docker_volumes/dataVault2024:/dataVault2024 \
       --workdir $WORK_DIR \
-      --user $(id -u):$(id -g) \
-      $JNB_PORT \
+      --user $(id -u):$(id -g)  $JNB_PORT  \
     $IMG /bin/bash
 
 #

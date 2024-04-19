@@ -7,7 +7,7 @@ IMG=balewski/ubu22-qiskit1.0:p2h  # qiskit1.0 + QML + IonQ +Braket + pytorch+Pen
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
 
-JNB_PORT=' '
+JNB_PORT=''
 WORK_DIR=/PennyLane
 WORK_DIR2=/pennylane-qml-benchmarks
 DATA_VAULT=/docker_volumes/dataVault2024
@@ -32,7 +32,6 @@ podman run -it \
     --volume /docker_volumes/quantumMind:/quantumMind \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
     --volume /docker_volumes/${WORK_DIR2}:$WORK_DIR2 \
-    --volume /docker_volumes/dataVault:/dataVault \
     --volume $DATA_VAULT:/dataVault2024 \
     -e PennyLane_dataVault=/dataVault2024/dataPennyLane_tmp \
     --workdir $WORK_DIR \
