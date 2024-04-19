@@ -30,11 +30,13 @@ from qiskit.pulse import Play
 # This Pulse module helps us build sampled pulses for common pulse shapes
 from qiskit.pulse import library as pulse_lib
 
-from qiskit import IBMQ
-IBMQ.load_account()
-provider = IBMQ.get_provider(hub='ibm-q', group='open', project='main')
-backName='ibmq_armonk'
-backend = provider.get_backend(backName)
+
+from qiskit_ibm_runtime import QiskitRuntimeService
+service = QiskitRuntimeService()
+backName="ibm_kyoto"
+#backName="ibm_hanoi"
+backend = service.get_backend(backName)
+
 
 # verify Pulse is enabled on the backend
 backend_config = backend.configuration()
@@ -50,12 +52,12 @@ print('\na) sampling time =%.3f ns'%(dt/ns))
 backend_defaults = backend.defaults()
 
 # We will find the qubit frequency for the following qubit.
-qubit = 0
+qubit = 22
 center_frequency_Hz = backend_defaults.qubit_freq_est[qubit]
 # The default frequency is given in Hz
 # warning: this will change in a future release
 
-print('center_frequency_MHz =%.3f'%(center_frequency_Hz/MHz))
+print(backend, 'Q:%d center_frequency_MHz =%.3f'%(qubit,center_frequency_Hz/MHz))
 
 # ADD printout code
 
@@ -147,7 +149,7 @@ plt.figure(figsize=(8, 6))
 # doc: https://qiskit.org/documentation/stubs/qiskit.pulse.Schedule.html#qiskit.pulse.Schedule.draw
 print('plot args:',schedule.draw.__code__.co_argcount ,schedule.draw.__code__.co_varnames)
 
-schedule.draw(label=True)
+schedule.draw()
 print('sched-draw takes 5 min to display ...')
 
 '''

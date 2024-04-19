@@ -28,11 +28,13 @@ from qiskit.pulse import Play
 # This Pulse module helps us build sampled pulses for common pulse shapes
 from qiskit.pulse import library as pulse_lib
 
-from qiskit import IBMQ
-IBMQ.load_account()
-provider = IBMQ.get_provider(hub='ibm-q', group='open', project='main')
-backName='ibmq_armonk'
-backend = provider.get_backend(backName)
+
+from qiskit_ibm_runtime import QiskitRuntimeService
+service = QiskitRuntimeService()
+backName="ibm_kyoto"
+#backName="ibm_hanoi"
+backend = service.get_backend(backName)
+
 
 # verify Pulse is enabled on the backend
 backend_config = backend.configuration()
@@ -48,14 +50,11 @@ print('\na) sampling time =%.3f ns'%(dt/ns))
 backend_defaults = backend.defaults()
 
 # We will find the qubit frequency for the following qubit.
-qubit = 0
+qubit = 22
 center_frequency_Hz = backend_defaults.qubit_freq_est[qubit]
 # The default frequency is given in Hz
 # warning: this will change in a future release
-
-print('center_frequency_MHz =%.3f'%(center_frequency_Hz/MHz))
-
-# ADD printout code
+print(backend, 'Q:%d center_frequency_MHz =%.3f'%(qubit,center_frequency_Hz/MHz))
 
 # - - - - - - Finding the qubit Frequency using a Frequency Sweep
 #  sweeping a range of frequencies and looking for signs of absorption using a tool known as a Network Analyzer.
@@ -95,7 +94,7 @@ print('Drive pulse, sigma: %.3f(us)  %d(tick), total len %d(tick), drive_amp=%.3
 drive_pulse = pulse_lib.gaussian(duration=drive_samples,
                 sigma=drive_sigma,amp=drive_amp,name='freq_sweep_excitation_pulse')
 print('\nM:produced drive_pulse',drive_pulse)
-drv_ampls=drive_pulse.samples
+drv_ampls=drive_pulse.samples  # <-- np.array
 print('drive_ampl:',drv_ampls.shape, drv_ampls.dtype,'\n',drv_ampls[::100])
 
 outD={'drive_amplitude':drv_ampls, 'time_step':dt}
@@ -105,3 +104,5 @@ write_data_hdf5(outD,outF,verb=1)
 xx=read_data_hdf5(outF,verb=1)
 dt=xx['time_step']
 print('end %s %.3g'%( type(dt),dt))
+
+#.....  run circuit on the hardware .....

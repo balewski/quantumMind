@@ -42,7 +42,7 @@ def query_cost( start_date, end_date,verb=1):
 
     #pprint(response)
     ResultsByTime=response['ResultsByTime']
-    print('num days',len(ResultsByTime))
+    print('num scanned  days:',len(ResultsByTime))
     sum=0
     outL=[]
     for rec in ResultsByTime:
@@ -52,20 +52,20 @@ def query_cost( start_date, end_date,verb=1):
         outL.append(amount)
         sum+=amount
         if amount <1.3 : continue
-        print('day:%s  %.2f %s  sum=%.2f'%(tEnd,amount,xx['Unit'],sum))
+        print('day:%s  %8.2f %s  sum=%8.2f'%(tEnd,amount,xx['Unit'],sum))
         #print('day:%s  %.2f %s  '%(tEnd,amount,xx['Unit']))
     print('SUM %d USD'%sum)
     return outL    
 
-# Example usage
+# Define time range
 start_date = '2023-04-01'
 end_date = '2024-04-10'
 costL=query_cost(start_date, end_date,verb=1)
 
-'''  convert daily cost in $$$ to shots, assume
-- daily use cost below $1.3 is due to some other service
-- about 3 jobs are run per day --> subtract $1.3  (~4 jobs)
-- convert remaining $$$ to shots at the rate $1=100 shots , based on
+'''  convert daily cost in USD to shots, assume
+- daily use cost below $1.3 is due to some other services
+- about 4 jobs are run per day --> subtract $1.3 
+- convert remaining USD to shots at the rate $1=100 shots , based on
 https://aws.amazon.com/braket/pricing/
 '''
 
@@ -74,7 +74,7 @@ for cost in costL:
     if cost <1.3: continue
     totShots+= 100*(cost-1.3)
 
-print('\ntotal shots %.1e over perido %s to  %s '%(totShots,start_date ,end_date))
+print('\ntotal shots %.1e over period: %s to  %s '%(totShots,start_date ,end_date))
 
 totSec=totShots/3  # assume 3 shots/sec
 print('total AWS time %.1f hours '%(totSec/3600)) 
