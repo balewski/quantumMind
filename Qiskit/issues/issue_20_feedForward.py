@@ -3,7 +3,7 @@ __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
 from qiskit import QuantumCircuit, transpile
-from qiskit.tools.visualization import circuit_drawer
+from qiskit.visualization import circuit_drawer
 from time import time
 import numpy as np
 
@@ -30,12 +30,12 @@ def sum2brick():
 if __name__ == "__main__":
 
     # ..... STEP 1 .....  construct 
-    nq=4
+    nq=3
     qc1=input(nq)
-    print(circuit_drawer(qc1, output='text',cregbundle=False))
+    #1print(circuit_drawer(qc1, output='text',cregbundle=False))
 
     qc2=sum2brick()
-    print(circuit_drawer(qc2, output='text',cregbundle=False))
+    #1print(circuit_drawer(qc2, output='text',cregbundle=False))
     #print(qc2)  # WORKS
     
     qc3= QuantumCircuit(nq,1)
@@ -50,12 +50,12 @@ if __name__ == "__main__":
     # print('use str()') ;    print(qc3)  # CRASH1 - low priority
 
     # ..... STEP 2 .....  run job
-    backendN="ibmq_qasm_simulator"    
-    #backendN="ibm_hanoi"    
-    
-    from qiskit_ibm_provider import IBMProvider
-    provider = IBMProvider()
-    backend=provider.get_backend(backendN)
+    #backendN="ibmq_qasm_simulator"    
+    backendN="ibm_hanoi"    
+
+    from qiskit_ibm_runtime import QiskitRuntimeService
+    service = QiskitRuntimeService()
+    backend = service.get_backend(backendN)
 
     print('Transpile for',backend)
     qcT = transpile(qc3, backend=backend, optimization_level=3, seed_transpiler=111)

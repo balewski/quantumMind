@@ -6,7 +6,7 @@
 import numpy as np
 from qiskit.circuit.classical import expr  # feed-forward
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, transpile
-from qiskit.tools.visualization import circuit_drawer
+from qiskit.visualization import circuit_drawer
 from time import time, sleep
 from qiskit.providers.jobstatus import JobStatus
 
