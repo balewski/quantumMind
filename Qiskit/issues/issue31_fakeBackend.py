@@ -82,9 +82,19 @@ class FakeBackend(fake_backend.FakeBackendV2):
 #...!...!....................
 def create_ghz_circuit(n):
     qc = qk.QuantumCircuit(n)
-    qc.h(0)
-    for i in range(1, n):  qc.cx(0, i)
-    qc.measure_all()
+    with qc.if_test((qc.cregs[0], 1)): qc.x(1)  # NEW
+    for i in range(1, n):  qc.cx(0, i)    
+    qc.measure(1, 0)
+
+    return qc
+
+#...!...!....................
+def feedForw_circuit():
+    qc = qk.QuantumCircuit(2,1,name='ansatz_circ')
+    for i in range(2): qc.rx(0.65,i)
+    qc.cx(1,0)
+    qc.measure(1, 0)
+    with qc.if_test((qc.cregs[0], 1)): qc.x(1) 
     return qc
 
 #=================================
@@ -94,13 +104,13 @@ if __name__ == "__main__":
     instance = service.instances()[0] # Or put your instance manually
     print(instance)
     backName="ibm_torino"
-    #backName="ibm_hanoi"
     
     true_backend = service.get_backend(backName)
     fake_backend = FakeBackend(true_backend)
     
     print('M: constructed   backend:',fake_backend.name)
-    qc=create_ghz_circuit(5)
+    #qc=create_ghz_circuit(5)
+    qc=feedForw_circuit()
     print(qc)
 
     qcT = qk.transpile(qc, backend=fake_backend, optimization_level=3, seed_transpiler=44)
