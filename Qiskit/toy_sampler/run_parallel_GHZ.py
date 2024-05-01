@@ -13,11 +13,11 @@ from qiskit.result.utils import marginal_distribution
 # https://qiskit.org/documentation/stubs/qiskit.visualization.circuit_drawer.html
 # https://qiskit.org/ecosystem/ibm-runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options
     
-from qiskit.tools.visualization import circuit_drawer
+from qiskit.visualization import circuit_drawer
 from time import time
 from pprint import pprint
 import numpy as np
-from qiskit.tools.monitor import job_monitor
+#from qiskit.tools.monitor import job_monitor
 from collections import Counter
 
 

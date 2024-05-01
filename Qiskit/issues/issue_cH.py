@@ -6,7 +6,7 @@ __email__ = "janstar1122@gmail.com"
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Options, Session
 from qiskit import QuantumCircuit, ClassicalRegister
-from qiskit.tools.visualization import circuit_drawer
+from qiskit.visualization import circuit_drawer
    
 
 from time import time, sleep
@@ -18,7 +18,7 @@ import argparse
 def commandline_parser():  # used when runing from command line
     parser = argparse.ArgumentParser()
     parser.add_argument('-n','--num_shot',type=int,default=1000, help="shots")
-    parser.add_argument('-b','--backend',default="ibmq_qasm_simulator", help="tasks")
+    parser.add_argument('-b','--backend',default="ibm_torino", help="tasks")
     args = parser.parse_args()
     for arg in vars(args):  print( 'myArg:',arg, getattr(args, arg))   
     return vars(args)
@@ -32,7 +32,8 @@ def circ_2q_nonlin(alpha,theta):
     qc.cx(1, 0)
     qc.measure(0, 0)  
     # Add a conditional H gate on qubit 1 depending on the classical bit 0
-    qc.h(1).c_if(qc.cregs[0], 1)
+    with qc.if_test((qc.cregs[0], 1)): qc.h(1)  # NEW
+
     # Measure qubit 1 into classical bit 1
     qc.measure(1, 1)
     return qc
@@ -48,10 +49,6 @@ if __name__ == "__main__":
     shots=args['num_shot']
     
     print('P:pattern1 start on',backendN)
-    assert backendN in ["ibmq_qasm_simulator",
-                        "ibmq_kolkata","ibmq_mumbai","ibm_algiers","ibm_hanoi", "ibm_cairo",# 27 qubits
-                        "ibm_brisbane","ibm_nazca" # 127 qubits
-                        ]
 
     service = QiskitRuntimeService()
  

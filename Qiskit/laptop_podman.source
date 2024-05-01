@@ -1,7 +1,7 @@
 #!/bin/bash
 
 IMG=balewski/ubu22-qiskit-qml:p3e  # Qiskit 0.45
-IMG=balewski/ubu22-qiskit1.0:p2h # + QML + IonQ +Braket + pytorch+PennyLane_0.35
+IMG=balewski/ubu22-qiskit1.0:p2k # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

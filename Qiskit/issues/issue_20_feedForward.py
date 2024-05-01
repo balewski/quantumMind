@@ -51,7 +51,8 @@ if __name__ == "__main__":
 
     # ..... STEP 2 .....  run job
     #backendN="ibmq_qasm_simulator"    
-    backendN="ibm_hanoi"    
+    backendN="ibm_cusco"    
+    backendN="ibm_torino"    
 
     from qiskit_ibm_runtime import QiskitRuntimeService
     service = QiskitRuntimeService()
