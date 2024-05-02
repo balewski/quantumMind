@@ -23,27 +23,21 @@ for var in "$@"; do
 done
     
 podman run -it \
-    -e AWS_ACCESS_KEY_ID=$QUERA_AWS_ACCESS_KEY_ID \
-    -e AWS_SECRET_ACCESS_KEY="$QUERA_AWS_SECRET_ACCESS_KEY" \
-    -e AWS_DEFAULT_REGION=$QUERA_AWS_REGION \
     --volume /docker_volumes/quantumMind/Qiskit:/Qiskit \
     --volume /docker_volumes/quantumMind:/quantumMind \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
     --volume /docker_volumes/dataVault2024:/dataVault2024 \
-      --workdir $WORK_DIR \
-      --user $(id -u):$(id -g)  $JNB_PORT  \
+    --workdir $WORK_DIR \
+    --user $(id -u):$(id -g)  $JNB_PORT  \
     $IMG /bin/bash
 
 #
+#    -e AWS_ACCESS_KEY_ID=$QUERA_AWS_ACCESS_KEY_ID \
+#    -e AWS_SECRET_ACCESS_KEY="$QUERA_AWS_SECRET_ACCESS_KEY" \
+#    -e AWS_DEFAULT_REGION=$QUERA_AWS_REGION \
+
 
 #     -e QuEra_dataVault=/dataVault/dataQuEra_2023julyA \
 
 # 
 # after start install QPIXL:  cd   /qpixl_wrk;   pip install -e .
-# XXXsetup IBMQ creds:           /dataVault/activate_ibmq.py 
-#test it works:    python3 -c 'import qpixl'
-# after FIRST start install Qtuum NB:
-#   cd /qtuum_wrk/hqs-api-examples/notebooks/qtuum/ ;  pip install   -r requirements.txt  --target  /qtuum_wrk/.local
-# test JNB
-# cd    /qtuum_wrk/hqs-api-examples/notebooks
-# jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port 8844
