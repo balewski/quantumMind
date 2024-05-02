@@ -68,7 +68,7 @@ if __name__ == "__main__":
     job = sampler.run(pub, shots=4000)
     result=job.result()[0]
     elaT=time()-T0
-   
+    
     print('job ended elaT=%.1f sec\n probs:'%(elaT))
     
     counts=result.data.c.get_counts()      
