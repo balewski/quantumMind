@@ -14,10 +14,9 @@ echo "The number of arguments is: $#"
 for var in "$@"; do
   echo "The length of argument '$var' is: ${#var}"
   if [[ "jnb" ==  $var ]];  then
-      #JNB_PORT="    --publish 8833:8833 "
-      JNB_PORT="    -p 8833:8833 "
-     echo added  $JNB_PORT
-     echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833 "
+      JNB_PORT="  -p 8833:8833 "
+      echo added  $JNB_PORT
+      echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833 "
   fi
   # ... more ...
 done

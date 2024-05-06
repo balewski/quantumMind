@@ -17,7 +17,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.fake_provider import fake_backend
 
 from pprint import pprint
-
+from qiskit.circuit import IfElseOp
 
 #...!...!....................
 class BackendEncoder(json.JSONEncoder):
@@ -107,6 +107,8 @@ if __name__ == "__main__":
     
     true_backend = service.get_backend(backName)
     fake_backend = FakeBackend(true_backend)
+    if "if_else" not in fake_backend.target:
+        fake_backend.target.add_instruction(IfElseOp, name="if_else")
     
     print('M: constructed   backend:',fake_backend.name)
     #qc=create_ghz_circuit(5)
