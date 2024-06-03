@@ -52,7 +52,7 @@ if __name__ == "__main__":
     from qiskit_aer import AerSimulator
     service = QiskitRuntimeService()
     
-    if 0:
+    if 1:
         backendN="ibm_torino" 
         backend = service.get_backend(backendN)
     else:
