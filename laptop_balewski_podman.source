@@ -7,6 +7,7 @@ source /Users/balewski/.ssh/quantinuum.credentials
 #env |grep MY_QTUUM  # activate to see the creds
 
 IMG=balewski/ubu22-tket-qtuum:v5
+IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -34,7 +35,7 @@ podman run -it \
     -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
     -e QCloud_dataVault=/dataVault/dataQCloud_2023-03 \
     --volume /docker_volumes/quantumPath:/quantumPath \
-    --volume /docker_volumes/qcrank_wrk:/qcrank_wrk \
+       --volume /docker_volumes/daan_qcrank:/daan_qcrank \
     --volume /docker_volumes/quantumMind:/quantumMind \
     --volume /docker_volumes/dataVault:/dataVault \
     --workdir $WORK_DIR \
