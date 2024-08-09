@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+__author__ = "Jan Balewski"
+__email__ = "janstar1122@gmail.com"
+
 from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister, transpile
 from qiskit_ibm_runtime import QiskitRuntimeService, Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler

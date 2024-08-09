@@ -3,6 +3,37 @@ __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
 from pprint import pprint
+from qiskit_ibm_experiment import IBMExperimentService
+
+# Get our backend
+backN='ibm_quebec'
+backN='ibm_kyiv'
+backN='ibm_nazca'
+
+print('connecting to IBM...')
+from qiskit_ibm_runtime import QiskitRuntimeService
+service1 = QiskitRuntimeService()
+print('got service1')
+backends = service1.backends()
+print(backends)
+backend = service1.get_backend(backN)
+print('\nM:Got QiskitRuntimeService backend:',backend)
+
+service2 = IBMExperimentService(local=True)
+
+print('got service2')
+# List all backends
+backends = service2.backends()
+print(backends)
+for i,backend in enumerate(backends): print(backend)
+
+backend = provider.get_backend(backN)
+
+print('\nM:Got IBM backend:',backend)
+
+
+
+xxxx
 from qiskit_ibm_provider import IBMProvider
 
 import os
