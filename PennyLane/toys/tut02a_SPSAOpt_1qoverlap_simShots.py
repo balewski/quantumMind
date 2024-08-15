@@ -11,7 +11,7 @@ from pennylane import numpy as np
 n_wires=1
 shots=1000
 # pick one device
-if 0:     # Initialize the FakeHanoi simulator
+if 1:     # Initialize the FakeHanoi simulator
     from qiskit.providers.aer import AerSimulator
     from qiskit.providers.fake_provider  import FakeHanoi
     fake_hanoi_backend = FakeHanoi()
@@ -19,7 +19,7 @@ if 0:     # Initialize the FakeHanoi simulator
     dev = qml.device('qiskit.aer', wires=n_wires, backend=aer_simulator, shots=shots)
 if 0:  # Set up the state vector sim  device
     dev = qml.device('default.qubit', wires=n_wires)
-if 1: # Set up a shot-based sim device.
+if 0: # Set up a shot-based sim device.
     dev = qml.device('default.qubit', wires=n_wires, shots=shots)
 
 # Define the quantum circuit (ansatz)
