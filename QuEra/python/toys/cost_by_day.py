@@ -58,8 +58,8 @@ def query_cost( start_date, end_date,verb=1):
     return outL    
 
 # Define time range
-start_date = '2023-04-01'
-end_date = '2024-04-10'
+start_date = '2024-05-01'
+end_date = '2024-08-27'
 costL=query_cost(start_date, end_date,verb=1)
 
 '''  convert daily cost in USD to shots, assume

@@ -6,7 +6,6 @@ env |grep IBM  # activate to see the creds
 IMG=balewski/ubu22-pennylane:p3  # PennyLane  0.34.0
 IMG=balewski/ubu22-qiskit1.0:p2h  # qiskit1.0 + QML + IonQ +Braket + pytorch+PennyLane_0.35.1
 
-
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
 

@@ -1,0 +1,16 @@
+https://pypi.org/project/bqskit/ 
+
+pip install --user bqskit
+ python3 -c 'from bqskit import compile, Circuit'
+
+from bqskit import compile, Circuit
+# Load a circuit from QASM
+circuit = Circuit.from_file("input.qasm")
+
+# Compile the circuit
+compiled_circuit = compile(circuit)
+
+# Save output as QASM
+compiled_circuit.save("output.qasm")
+
+
