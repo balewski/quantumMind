@@ -3,7 +3,7 @@ __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
 from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister, transpile
-from qiskit_ibm_runtime import QiskitRuntimeService, Session
+from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options.sampler_options import SamplerOptions
 from qiskit_aer import AerSimulator
@@ -61,8 +61,10 @@ print('counts:',counts)
 print('\n repeat on  fake backend ...')
 service = QiskitRuntimeService(channel="ibm_quantum")
 
-backName='ibm_torino'
-#backName='ibm_kyoto'
+backName='ibm_torino'  # EPLG=0.7%
+backName='ibm_kyiv'    # EPLG=1.4%
+backName='ibm_nazca'   # EPLG=3.2%
+
 noisy_backend = service.backend(backName)
 backend2 = AerSimulator.from_backend(noisy_backend)
 

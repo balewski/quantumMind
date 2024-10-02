@@ -1,8 +1,9 @@
 #!/bin/bash
 
-IMG=balewski/ubu22-qiskit-qml:p3e  # Qiskit 0.45
-IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
+#IMG=balewski/ubu22-qiskit-qml:p3e  # Qiskit 0.45
+#IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 # :p2m uses dowgraded qiskit-aer==0.14.0.1
+IMG=balewski/ubu24-qiskit:p3b
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
