@@ -12,6 +12,7 @@ from qiskit import  QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.quantum_info.operators import Operator
 from qiskit_aer import AerSimulator
 from pprint import pprint
+from bigEndianUnitary import print_complex_nice_vector
 
 # iSWAP matrix operator
 iswap_op = Operator([[1, 0, 0, 0],
@@ -37,13 +38,14 @@ qc.s(1)
 
 print(qc)
 
-backend = AerSimulator(method="statevector")
-print('job started,  nq=%d  at %s ...'%(qc.num_qubits,backend.name))
-
 # Statevector simulation method
-sim_statevector = AerSimulator(method='statevector')
-job = sim_statevector.run(qc)
+backend1 = AerSimulator(method="statevector")
+print('job started,  nq=%d  at %s ...'%(qc.num_qubits,backend1.name))
+
+job = backend1.run(qc)
 result = job.result() 
 #1pprint(result)
-print('state vect:',result.data())
+#1print('state vect:',result.data())
+vec1=result.data()['statevector']
+print_complex_nice_vector(vec1,label='out vec')
 print('probabilities', result.get_counts())

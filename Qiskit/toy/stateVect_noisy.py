@@ -12,6 +12,9 @@ from qiskit.quantum_info.operators import Operator
 from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit_aer.noise import NoiseModel
+
+from bigEndianUnitary import print_complex_nice_vector
 
 from pprint import pprint
 
@@ -30,7 +33,7 @@ qc.h(1)
 qc.sdg(0)
 qc.unitary(iswap_op, [0, 1], label='iswap')
 qc.sdg(0)
-qc.save_density_matrix()
+qc.save_statevector()
 qc.sdg(0)
 
 qc.unitary(iswap_op, [0, 1], label='iswap')
@@ -38,13 +41,18 @@ qc.s(1)
 
 print(qc)
 
-backend1 = AerSimulator(method="density_matrix")
+
+# Statevector simulation method
+backend1 = AerSimulator(method="statevector")
 print('job started,  nq=%d  at %s ...'%(qc.num_qubits,backend1.name))
 
 job = backend1.run(qc)
 result = job.result() 
-#!pprint(result)
-print('ideal density matrix:',result.data())
+#1pprint(result)
+#1print('state vect:',result.data())
+vec1=result.data()['statevector']
+print_complex_nice_vector(vec1,label='ideal out vec')
+print('probabilities', result.get_counts())
 
 
 print('\n repeat on  fake backend ...')
@@ -56,8 +64,9 @@ backName='ibm_nazca'   # EPLG=3.2%
 
 noisy_backend = service.backend(backName)
 print('use noisy_backend =', noisy_backend.name )
-backend2 = AerSimulator.from_backend(noisy_backend)
-print('aer primed',backend2.name)
+# Create noisy simulator backend
+noise_model = NoiseModel.from_backend(noisy_backend)
+backend2 = AerSimulator(method="statevector", noise_model=noise_model)
 
 pm = generate_preset_pass_manager(optimization_level=3, backend=backend2)
 qcT = pm.run(qc)
@@ -66,6 +75,7 @@ print(qcT.draw('text', idle_wires=False))
 
 job2 = backend2.run(qcT)
 result2 = job2.result() 
-#!pprint(result2)
-print('noisy density matrix:',result2.data())
+vec2=result2.data()['statevector']
+print_complex_nice_vector(vec2,label='noisy out vec')
+print('probabilities', result2.get_counts())
 

@@ -1,9 +1,11 @@
 #!/bin/bash
 
-#IMG=balewski/ubu22-qiskit-qml:p3e  # Qiskit 0.45
+# activate IBM creads
+source ~/.ssh/ibmq.credentials
+
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 # :p2m uses dowgraded qiskit-aer==0.14.0.1
-IMG=balewski/ubu24-qiskit:p3b
+IMG=balewski/ubu24-qiskit:p3c
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -13,24 +15,30 @@ WORK_DIR=/Qiskit
 
 echo "The number of arguments is: $#"
 #  encoded variables:    jnb
+PORT=8836
 for var in "$@"; do
   echo "The length of argument '$var' is: ${#var}"
   if [[ "jnb" ==  $var ]];  then
-      JNB_PORT="  -p 8833:8833 "
+      JNB_PORT=" -p  ${PORT}:${PORT}"
       echo added  $JNB_PORT
-      echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833 "
+      echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $PORT "
   fi
   # ... more ...
 done
-    
-podman run -it \
+
+#echo podman run -it  $JNB_PORT  $IMG /bin/bash
+
+
+eval podman run -it \
+    -e QISKIT_IBM_TOKEN=$QISKIT_IBM_TOKEN \
+    -e QISKIT_IBM_CHANNEL=$QISKIT_IBM_CHANNEL \
+    -e QISKIT_IBM_INSTANCE=$QISKIT_IBM_INSTANCE \
     --volume /docker_volumes/quantumMind/Qiskit:/Qiskit \
     --volume /docker_volumes/quantumMind:/quantumMind \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
     --volume /docker_volumes/dataVault2024:/dataVault2024 \
     --workdir $WORK_DIR \
-    --user $(id -u):$(id -g)  $JNB_PORT  \
-    $IMG /bin/bash
+    --user $(id -u):$(id -g) $JNB_PORT $IMG #/bin/bash
 
 #
 #    -e AWS_ACCESS_KEY_ID=$QUERA_AWS_ACCESS_KEY_ID \
