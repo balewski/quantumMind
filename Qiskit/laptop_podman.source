@@ -5,12 +5,13 @@ source ~/.ssh/ibmq.credentials
 
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 # :p2m uses dowgraded qiskit-aer==0.14.0.1
-IMG=balewski/ubu24-qiskit:p3c
+IMG=balewski/ubu24-qiskit:p3d
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
 
 JNB_PORT=''
+QCRANK=''
 WORK_DIR=/Qiskit
 
 echo "The number of arguments is: $#"
@@ -22,6 +23,10 @@ for var in "$@"; do
       JNB_PORT=" -p  ${PORT}:${PORT}"
       echo added  $JNB_PORT
       echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $PORT "
+  fi
+  if [[ "qcrank" ==  $var ]];  then
+      QCRANK=" --volume /docker_volumes/qcrank_light:/qcrank_light "
+      echo added  $QCRANK
   fi
   # ... more ...
 done
@@ -37,7 +42,7 @@ eval podman run -it \
     --volume /docker_volumes/quantumMind:/quantumMind \
     --volume /docker_volumes/prosty-waz:/prosty-waz \
     --volume /docker_volumes/dataVault2024:/dataVault2024 \
-    --workdir $WORK_DIR \
+    --workdir $WORK_DIR $QCRANK \
     --user $(id -u):$(id -g) $JNB_PORT $IMG #/bin/bash
 
 #
