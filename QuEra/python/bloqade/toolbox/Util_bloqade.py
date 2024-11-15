@@ -17,6 +17,7 @@ def append_state_energy(counts,atomPos_um,detune_rad2us, verb=0): # modiffies co
 
     # ..... sanity
     nAtom=len(detune_rad2us)
+
     assert atomPos_um.ndim==2
     assert atomPos_um.shape[0]==nAtom
     assert len (next(iter(counts))) ==nAtom #  bitstring len
@@ -45,7 +46,7 @@ def append_state_energy(counts,atomPos_um,detune_rad2us, verb=0): # modiffies co
         if verb>0:  print('Hamil: state=%s%s  energy(MHz): total=%7.1f    Rydb=%7.1f   Block=%7.1f   HW=%d'%(key,ctag,eneTot,eneRydb,eneBlock,hw))
         #.... (optional) add energy to OrderedDict
         if isinstance(counts, OrderedDict):
-            counts[key]= (counts[key], eneTot,eneRydb,eneBlock, hw)
+            counts[key]= (counts[key], float(eneTot),float(eneRydb),float(eneBlock), hw)
         else:
             assert verb >0 # no output
     if verb>0:

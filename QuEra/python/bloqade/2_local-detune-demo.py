@@ -15,7 +15,7 @@ from toolbox.Util_bloqade import invert_keys, append_state_energy
 
 
 # Define relevant parameters
-atomPos=np.array([(0,0),(5,0),(10,0)]) # (um)
+atomPos=np.array([(0,0),(5,0),(10,0),(2,5)]) # (um)
 register = start.add_position(atomPos)
 print(register)
 
@@ -25,8 +25,8 @@ delta_glob_max=124.  # (rad/us)
 delta_loc_max=62.  # (rad/us)
 
 # add local detuning
-atomLab=[0,1,2]  # atom names labeled by their placement order. Counting from 0?
-atomScale=[0.7,0.5,0.3]  # (range [0,1])  those are  modulations for the common local detune
+atomLab=[i for i in range(atomPos.shape[0]) ]  # atom names labeled by their placement order. Counting from 0?
+atomScale=[0.7,0.5,0.3, 0.2]  # (range [0,1])  those are  modulations for the common local detune
 nAtom=len(atomLab)
 detuneLast=[ delta_glob_max + atomScale[i]*delta_loc_max  for i in range(nAtom) ]
 print('detuneLast (rad/us):',detuneLast)
@@ -48,8 +48,9 @@ program = (
 emu_batch = program.bloqade.python().run(100)
 report = emu_batch.report()
 
-counts=invert_keys(report.counts)[0]   # '0'=ground,'1'=rydberg; take only 1st circuit
-print('\nCounts:',counts)
+print('\nM:Counts wired:',report.counts())
+counts=invert_keys(report.counts())[0]   # '0'=ground,'1'=rydberg; take only 1st circuit
+print('\nM:Counts:',counts)
 
 # compute energy for masured states
 append_state_energy(counts,atomPos,detuneLast,verb=1)
