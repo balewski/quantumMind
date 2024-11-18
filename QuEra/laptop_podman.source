@@ -44,12 +44,6 @@ eval podman run -it \
 
 
 # 
-# after start install QPIXL:  cd   /qpixl_wrk;   pip install -e .
-# XXXsetup IBMQ creds:           /dataVault/activate_ibmq.py 
-#test it works:    python3 -c 'import qpixl'
-# after FIRST start install Qtuum NB:
-#   cd /qtuum_wrk/hqs-api-examples/notebooks/qtuum/ ;  pip install   -r requirements.txt  --target  /qtuum_wrk/.local
-
 
 #  eval $(ssh-agent)
 #  ssh-add ./git-any 
