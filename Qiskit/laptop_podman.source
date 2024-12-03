@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # activate IBM creads
-source ~/.ssh/ibmq.credentials
+#source ~/.ssh/ibmq.credentials
+source ~/.ssh/ibm.credentials2
 
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
-# :p2m uses dowgraded qiskit-aer==0.14.0.1
-IMG=balewski/ubu24-qiskit:p3d
+IMG=balewski/ubu24-qiskit:p3f
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
