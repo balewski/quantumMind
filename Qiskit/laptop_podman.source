@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # activate IBM creads
-#source ~/.ssh/ibmq.credentials
-source ~/.ssh/ibm.credentials2
+source ~/.ssh/ibmq.credentials
 
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 IMG=balewski/ubu24-qiskit:p3f
