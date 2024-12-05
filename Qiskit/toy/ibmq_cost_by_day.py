@@ -49,8 +49,7 @@ def filter_and_process_jobs(jobs):
     for i,job in enumerate(jobs):
         # Check job status
         job_status = str(job.status())
-        if 'DONE' not in job_status:
-            continue
+        if 'DONE' not in job_status:  continue
 
         backend_name = job.backend().name
         backend_job_count[backend_name] += 1
