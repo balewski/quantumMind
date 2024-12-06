@@ -2,51 +2,67 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister, transpile
-from qiskit_ibm_runtime import QiskitRuntimeService, Session
-from qiskit_ibm_runtime import SamplerV2 as Sampler
-from qiskit_ibm_runtime.options.sampler_options import SamplerOptions
+from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister
+from qiskit_ibm_runtime.options.estimator_options import EstimatorOptions
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import EstimatorV2 as Estimator
+
+import argparse
+def commandline_parser():  # used when runing from command line
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v","--verbosity",type=int, help="increase output verbosity", default=1, dest='verb')
+
+    parser.add_argument('-q','--num_qubit',type=int,default=3, help="qubit count")
+    parser.add_argument('-n','--num_shot',type=int,default=2000, help="shots")
+    
+    args = parser.parse_args()
+    for arg in vars(args):  print( 'myArg:',arg, getattr(args, arg))
+    return args
 
 #...!...!....................
 def create_h_circuit(n):
     qr = QuantumRegister(n)
     cr = ClassicalRegister(n, name="c")
     qc = QuantumCircuit(qr, cr)
-
+    #qc.x(0) ; qc.x(1); return qc
     qc.h(0)
-    for i in range(1, n):  qc.x(i)
+    for i in range(1, n):  qc.cx(0,i)
     qc.barrier()
     for i in range(0,n):  qc.measure(i,i)
     return qc
 
-nq=3
-qc=create_h_circuit(nq)
-print(qc)
+#=================================
+#  M A I N
+#=================================
+if __name__ == "__main__":
+    args=commandline_parser()
+    #np.set_printoptions(precision=3)
 
-#obs = SparsePauliOp("I" * nq)  # ev=1
-obs = SparsePauliOp("IIZ") #  ev=0
-obs = SparsePauliOp("IZI") #  ev=-1.0
-obs = SparsePauliOp("ZZI") #  ev=1.0
-obs = SparsePauliOp("IZZ") #  ev=0.0 
-print('obs:',obs)
+    nq=args.num_qubit
+    qc=create_h_circuit(nq)
+    print(qc)
 
-backend = AerSimulator()
-print('job started,  nq=%d  at %s ...'%(qc.num_qubits,backend.name))
-options = SamplerOptions()
-options.default_shots=1000
-estimator = Estimator(backend) #, options=options)
+    obs = SparsePauliOp("I" * (nq-1)+"Z" ) # MSBF
+    #obs = SparsePauliOp("Z"+"I" * (nq-1))  
+    print('obs:',obs)
 
-pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
-isa_circuit = pm.run(qc)
-isa_observable = obs.apply_layout(isa_circuit.layout)
- 
-job = estimator.run([(isa_circuit, isa_observable)])
-result = job.result()
-rdata=result[0].data
-print("Expectation value: %.3f +/- %.3f "%(rdata.evs,rdata.stds))
-print("Metadata: ",result[0].metadata)
+    backend = AerSimulator()
+    print('job started,  nq=%d  at %s ...'%(qc.num_qubits,backend.name))
+    options = EstimatorOptions()
+    options.default_shots=args.num_shot
+    estimator = Estimator(backend,options=options)
+
+    pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
+    qcT = pm.run(qc)
+    obsT=obs.apply_layout(qcT.layout)
+
+    #job = estimator.run([(qc,obs)])  # works too
+    job = estimator.run([(qcT,obsT)])
+    
+    result = job.result()
+    rdata=result[0].data
+    print("Expectation value: %.3f +/- %.3f "%(rdata.evs,rdata.stds))
+    print("Metadata: ",result[0].metadata)
 
