@@ -4,7 +4,7 @@
 source ~/.ssh/ibmq.credentials
 
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
-IMG=balewski/ubu24-qiskit:p3f
+IMG=balewski/ubu24-qiskit:p4c
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -24,7 +24,7 @@ for var in "$@"; do
       echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $PORT "
   fi
   if [[ "qcrank" ==  $var ]];  then
-      QCRANK=" --volume /docker_volumes/qcrank_light:/qcrank_light "
+      QCRANK=" --volume /shared_volumes/qcrank_light:/qcrank_light "
       echo added  $QCRANK
   fi
   # ... more ...
@@ -37,10 +37,10 @@ eval podman run -it \
     -e QISKIT_IBM_TOKEN=$QISKIT_IBM_TOKEN \
     -e QISKIT_IBM_CHANNEL=$QISKIT_IBM_CHANNEL \
     -e QISKIT_IBM_INSTANCE=$QISKIT_IBM_INSTANCE \
-    --volume /docker_volumes/quantumMind/Qiskit:/Qiskit \
-    --volume /docker_volumes/quantumMind:/quantumMind \
-    --volume /docker_volumes/prosty-waz:/prosty-waz \
-    --volume /docker_volumes/dataVault2024:/dataVault2024 \
+    --volume /shared_volumes/quantumMind/Qiskit:/Qiskit \
+    --volume /shared_volumes/quantumMind:/quantumMind \
+    --volume /shared_volumes/prosty-waz:/prosty-waz \
+    --volume /shared_volumes/dataVault2024:/dataVault2024 \
     --workdir $WORK_DIR $QCRANK \
     --user $(id -u):$(id -g) $JNB_PORT $IMG #/bin/bash
 

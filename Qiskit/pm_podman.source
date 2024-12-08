@@ -3,7 +3,7 @@
 # working graphisc: podman-hpc run -it  -e DISPLAY  -e HOME   balewski/ubu22-qiskit-qml:p3  bash
 # to activate IBM run once:   /dataVault/activate_IBMProvider.py 
 
-IMG=balewski/ubu22-qiskit-qml:p3
+IMG=balewski/ubu24-qiskit:p4c
 CFSH=/global/cfs/cdirs/mpccc/balewski/
 
 echo launch image $IMG
