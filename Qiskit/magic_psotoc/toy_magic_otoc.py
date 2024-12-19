@@ -65,10 +65,21 @@ def commandline_parser():  # used when runing from command line
         if npar==3: args.rndU_nB=int(args.Utype[2])
         else: args.rndU_nB=1
     args.Utype=args.Utype[0]
-    assert args.Utype in ['rnd','qft','ang-enc','prob-enc']
+    assert args.Utype in ['rnd','qft','ang-enc','ev-enc','mcx']
     for arg in vars(args):  print( 'myArg:',arg, getattr(args, arg))
     return args
 
+
+#...!...!....................
+def prepU_MCX( n):
+    assert n>=2
+    from qiskit.circuit.library import MCXGate
+    qc = QuantumCircuit(n)
+    #qc.mcx(range(1,n), 0)
+    tgL=[i for i in range(1,n)]
+    qc.mcx(tgL, 0)
+    # theory : https://arxiv.org/pdf/1212.5069 
+    return qc,4*(n-2)
 
 #...!...!....................
 def prepU_angEnc( n): 
@@ -82,7 +93,7 @@ def prepU_angEnc( n):
     return qc,1
     
 #...!...!....................
-def prepU_probEnc( n): 
+def prepU_evEnc( n): 
     ''' prob encoding
     theta= arcos(x)  for x in [-1,1]
     '''
@@ -267,7 +278,8 @@ if __name__ == "__main__":
         qcU,trueTcnt=prepU_random(nqU,args.rndU_nT,args.rndU_nB)  # random U + some Tgates
     if args.Utype=='qft': qcU,trueTcnt=prepU_qft(nqU)
     if args.Utype=='ang-enc': qcU,trueTcnt=prepU_angEnc(nqU)
-    if args.Utype=='prob-enc': qcU,trueTcnt=prepU_probEnc(nqU)
+    if args.Utype=='ev-enc': qcU,trueTcnt=prepU_probEnc(nqU)
+    if args.Utype=='mcx': qcU,trueTcnt=prepU_MCX(nqU)
 
     
     # Convert the circuit to a gate

@@ -26,6 +26,7 @@ from collections import defaultdict
 from pprint import pprint
 from datetime import datetime
 from qiskit_ibm_runtime import QiskitRuntimeService
+from datetime import datetime, timedelta
 
 
 def fetch_jobs(service, start_date, end_date):
@@ -137,13 +138,23 @@ def validate_input(start_date, end_date):
     if start_date > end_date:
         raise ValueError("Start date cannot be later than end date.")
 
+#=================================
+#  M A I N
+#=================================
 
-def main():
+if __name__ == "__main__":
+        
+    today = datetime.today()  # Get today's date    
+    # Calculate the default start and end dates
+    default_end_date = default_end_date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+    default_start_date = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Process IBM Quantum jobs data.")
-    parser.add_argument("--start_date", type=str, default='2024-11-01', help="Start date in YYYY-MM-DD format.")
-    parser.add_argument("--end_date", type=str, default='2024-12-27', help="End date in YYYY-MM-DD format.")
+    parser.add_argument("--start_date", type=str, default=default_start_date, help="Start date in YYYY-MM-DD format.")
+    parser.add_argument("--end_date", type=str, default=default_end_date, help="End date in YYYY-MM-DD format.")
     args = parser.parse_args()
+    for arg in vars(args):  print( 'myArg:',arg, getattr(args, arg))
 
     # Convert string arguments to datetime
     start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
@@ -166,7 +177,3 @@ def main():
     
     print_backend_summary(backend_data, backend_job_count)
     print_monthly_summary(monthly_data)
-
-
-if __name__ == "__main__":
-    main()
