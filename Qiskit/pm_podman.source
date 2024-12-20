@@ -10,9 +10,9 @@ echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
 
 JNB_PORT=' '
-BASE_DIR=quantumMind   # here git has home
+BASE_DIR=/quantumMind   # here git has home
 WORK_DIR=$BASE_DIR/Qiskit
-DATA_VAULT=${CFSH}/2024-quantDataVault
+DATA_VAULT=${CFSH}/quantDataVault2024
 DATA_DIR=/dataQiskit_tmp
 
 
@@ -29,12 +29,12 @@ for var in "$@"; do
 done
 
 podman-hpc run -it \
-   --volume $CFSH/$BASE_DIR:/$BASE_DIR \
-   --volume $CFSH/$WORK_DIR:/wrk \
+   --volume $CFSH/$BASE_DIR:$BASE_DIR \
+   --volume $CFSH/$WORK_DIR:$WORK_DIR \
    --volume ${DATA_VAULT}:/dataVault \
    --volume ${DATA_VAULT}/$DATA_DIR:/data_tmp \
    -e Qiskit_dataVault=/data_tmp \
    -e DISPLAY  -v $HOME:$HOME -e HOME  \
-   --workdir /wrk \
+   --workdir $WORK_DIR \
    $IMG /bin/bash
 
