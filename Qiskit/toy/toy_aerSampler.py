@@ -61,11 +61,15 @@ print('counts:',counts)
 print('\n repeat on  fake backend ...')
 service = QiskitRuntimeService(channel="ibm_quantum")
 
-backName='ibm_torino'  # EPLG=0.7%
-backName='ibm_kyiv'    # EPLG=1.4%
-backName='ibm_nazca'   # EPLG=3.2%
+backName='ibm_torino'  # EPLG=0.7%  , q=2 T1/us=228.0 T2/us=151.7
+#backName='ibm_kyiv'    # EPLG=1.4% , q=2 T1/us=240.8 T2/us=105.8
 
-noisy_backend = service.backend(backName)
+noisy_backend = service.backend(backName)    
+T1_obj = noisy_backend.properties().t1
+T2_obj = noisy_backend.properties().t2
+Qid=2
+print('%s q=%d T1/us=%.1f T2/us=%.1f'%(noisy_backend.name,Qid,T1_obj(Qid)*1e6,T2_obj(Qid)*1e6))
+
 backend2 = AerSimulator.from_backend(noisy_backend)
 
 print('use noisy_backend =', noisy_backend.name )
