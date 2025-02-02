@@ -1,0 +1,46 @@
+#!/bin/bash
+#  salloc -q interactive -C cpu -t 4:00:00 -A m4916 #PI=Katie, NERSC Quantum Repo
+
+echo load my  creds
+source /global/homes/b/balewski/.ssh/quandela.credentials
+#env |grep QUANDELA  # activate to see the creds
+
+
+IMG=balewski/ubu24-perceval:p2c # has broken Qiskit interface
+CFSH=/global/cfs/cdirs/mpccc/balewski/
+
+echo launch image $IMG
+echo you are launching Podman image ...  remeber to exit
+
+BASE_DIR=/quantumMind   # here git has home
+WORK_DIR=$BASE_DIR/Quandela
+DATA_VAULT=${CFSH}/quantDataVault2025
+DATA_DIR=/dataPhotonic_tmp
+
+echo "The number of arguments is: $#"
+JNB_PORT=''
+#  encoded variables:    jnb
+PORT=9600
+for var in "$@"; do
+  echo "The length of argument '$var' is: ${#var}"
+  if [[ "jnb" ==  $var ]];  then
+      JNB_PORT=" -p  ${PORT}:${PORT}"
+      echo added  $JNB_PORT
+      echo "  cd toy;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $PORT "
+  fi
+  # ... more ...
+done
+
+eval podman-hpc run --gpu  -it \
+   -e MY_QUANDELA_TOKEN=$MY_QUANDELA_TOKEN \
+   --volume $CFSH/$BASE_DIR:/$BASE_DIR \
+   --volume ${DATA_VAULT}:/dataVault2025 \
+   --volume ${DATA_VAULT}/$DATA_DIR:/data_tmp \
+   -e QuantDyn_dataVault=/data_tmp \
+   -e DISPLAY  -v $HOME:$HOME -e HOME --net=host  \
+   -e HDF5_USE_FILE_LOCKING='FALSE' \
+   --workdir /$WORK_DIR   \
+   $IMG bash
+
+#  -e HDF5_USE... fixes error message:  'Unknown error 524'
+#podman-hpc run -it $IMG bash

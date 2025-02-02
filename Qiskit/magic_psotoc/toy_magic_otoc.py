@@ -79,7 +79,7 @@ def prepU_MCX( n):
     tgL=[i for i in range(1,n)]
     qc.mcx(tgL, 0)
     # theory : https://arxiv.org/pdf/1212.5069 
-    return qc,4*(n-2)
+    return qc,8*(n-2)
 
 #...!...!....................
 def prepU_angEnc( n): 
@@ -291,6 +291,10 @@ if __name__ == "__main__":
 
     backend = AerSimulator()
     print('job started,  nq=%d  at %s ...'%(nq,backend.name))
+    if 0:  # print transpiled U-circuit
+        pm1 = generate_preset_pass_manager(optimization_level=1, backend=backend, basis_gates=['h','u','t','cx'])
+        qcTU = pm1.run(qcU)
+        print(qcTU); aa
     options = EstimatorOptions()
     options.default_shots=args.num_shots
     estimator = Estimator(backend,options=options)
