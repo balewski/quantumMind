@@ -10,7 +10,7 @@ from qiskit import transpile, QuantumCircuit
 import qiskit.quantum_info as qi  # IMPORTANT for defining custom gates
 
 from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, amplitude_damping_error,  depolarizing_error, thermal_relaxation_error, ReadoutError
+from qiskit_aer.noise import NoiseModel, pauli_error,  depolarizing_error
 
 move_op = qi.Operator([[1, 0],
                         [0, 1]])
@@ -32,18 +32,17 @@ print(qc)
 
 assert 'unitary' in AerSimulator().configuration().basis_gates
 
-# qubit property???
-t1 = 50e-6  # 50 us
-t2 = 70e-6  # 70 us
 
 # Error parameters
-gate_time=10.e-9  # us
-p_depol2 = 0.03   # Two-qubit depolarizing error probability
+p_depol1 = 0.03   #  1q depolarizing error probability
+p_px,p_py,p_pz=0.02,0.03,0.04  # 1q Pauli errors
+p_id = 1 - (p_px + p_py + p_pz)
+
 
 # Construct the error
-thermal_error = thermal_relaxation_error(t1, t2, gate_time)
-depol_error = depolarizing_error(p_depol2, 1)
-combined_error = depol_error.compose(thermal_error)
+depol_error = depolarizing_error(p_depol1, 1)
+pauli_error = pauli_error([('I', p_id), ('X', p_px),('Y', p_py),('Z', p_pz)])
+combined_error = depol_error.compose(pauli_error)
 
 # Build the noise model by adding the error to the move-gate
 noise_model = NoiseModel()

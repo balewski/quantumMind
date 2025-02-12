@@ -4,13 +4,15 @@ echo load my QTUUM creds
 source /Users/balewski/.ssh/quantinuum.credentials
 #env |grep MY_QTUUM  # activate to see the creds
 
-IMG=balewski/ubu22-tket-qtuum:p3  # works in 2024
+#IMG=balewski/ubu22-tket-qtuum:p4d  # works in 2024
+IMG=balewski/ubu24-tket:p2
 echo launch image $IMG
 echo you are launching Docker image ...  remeber to exit
 
 
-JNB_PORT=' '
+JNB_PORT=''
 WORK_DIR=/qtuum
+DATA_VAULT=/shared_volumes/dataVault2025
 
 echo "The number of arguments is: $#"
 #  encoded variables:    jnb
@@ -30,20 +32,21 @@ done
 podman run -it \
     -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
     -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
-    -e Qtuum_dataVault=/dataVault/dataQtuum_2023julyA \
-    --volume /docker_volumes/quantumMind/Quantinuum:/qtuum \
-    --volume /docker_volumes/quantumPath:/quantumPath \
-    --volume /docker_volumes/qcrank_wrk:/qcrank_wrk \
-    --volume /docker_volumes/quantumMind:/quantumMind \
-    --volume /docker_volumes/dataVault:/dataVault \
-      --workdir $WORK_DIR \
-    $JNB_PORT \
+    --volume /shared_volumes/quantumMind/Quantinuum:$WORK_DIR \
+    --volume /shared_volumes/quantumMind:/quantumMind \
+    --volume /shared_volumes/qcrank_light:/qcrank_light \
+    --volume $DATA_VAULT:/dataVault2025 \
+    -e Qtuum_dataVault=/dataVault2025/dataQtuum_tmp \
+    --workdir $WORK_DIR  $JNB_PORT  \
     --user $(id -u):$(id -g) \
     $IMG /bin/bash
 
 
 # Warning:  QTUUM  tutorial JNB using Azure will NOT work with pyjwt=2.4
 # /qtuum_wrk/hqs-api-examples/notebooks  \
+#     --volume /docker_volumes/qcrank_wrk:/qcrank_wrk \
+#     --volume /shared_volumes/quantumPath:/quantumPath \
+
 
 # first time
 #

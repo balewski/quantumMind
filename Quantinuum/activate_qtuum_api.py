@@ -27,7 +27,8 @@ def activate_qtuum_api():
     MY_QTUUM_PASS=os.environ.get('MY_QTUUM_PASS')
     print('credentials MY_QTUUM_NAME=',MY_QTUUM_NAME)
     cred_storage = MemoryCredentialStorage()
-    cred_storage._save_login_credential(user_name=MY_QTUUM_NAME, password=MY_QTUUM_PASS)
+    cred_storage.save_user_name(user_name=MY_QTUUM_NAME) 
+    cred_storage._password=MY_QTUUM_PASS
     api = QuantinuumAPI(token_store = cred_storage)
     return api
 
