@@ -5,20 +5,20 @@ __email__ = "janstar1122@gmail.com"
 '''
 testing access to Quantinuum API
 
-Yao: QuantinuumBackend uses a memory based storage class (MemoryCredentialStorage) as the default credential storage.
-
 *) for better security, you should retrieve your username and password from a secured storage.
 *) available_devices() and and device_state() are the only two methods that require special handling because they are class methods. 
 
 '''
-
-from pytket.extensions.quantinuum import QuantinuumBackend
+import os
+import qnexus as qnx
 from pytket import Circuit
-from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
-
+from pprint import pprint
+from datetime import datetime
+from pathlib import Path
+from qnexus.client import get_nexus_client
 
 #...!...!....................
-def activate_qtuum_api():
+def activate_qtuum_api0():
     from pytket.extensions.quantinuum.backends.credential_storage import  MemoryCredentialStorage
     from pytket.extensions.quantinuum.backends.api_wrappers import QuantinuumAPI
     import os
@@ -33,45 +33,112 @@ def activate_qtuum_api():
     return api
 
 
+#...!...!....................
+def activate_qtuum_api():
+    
+    #return
+    import os
+    import qnexus as qnx
+    MY_QTUUM_NAME=os.environ.get('MY_QTUUM_NAME')
+    MY_QTUUM_PASS=os.environ.get('MY_QTUUM_PASS')
+    print('credentials MY_QTUUM_NAME=',MY_QTUUM_NAME)
+    client=get_nexus_client()
+    print(type(client))
+    client._request_tokens(MY_QTUUM_NAME,MY_QTUUM_PASS)
 #=================================
 #=================================
 #  M A I N 
 #=================================
 #=================================
 if __name__ == "__main__":
-
-    machine = 'H1-1E'
-    api=activate_qtuum_api()
-    backend = QuantinuumBackend(device_name=machine, api_handler=api)
-    print('machine=',machine)
-    print("status:", backend.device_state(device_name=machine, api_handler=api))
-    print([x.device_name for x in backend.available_devices(api_handler=api)])
-
-    print('define Bell-state circ')
-    qc = Circuit(2).H(0).CX(0,1).measure_all()
-    print(tk_to_qiskit(qc))
-    print('same as commands:\n',qc.get_commands())
-
-    print('commands for same circ transpiled for',machine)
-    # https://cqcl.github.io/pytket/manual/manual_compiler.html
-    qcT=backend.get_compiled_circuit(qc)
-    print(qcT.get_commands())
-    # the map from bit to position in the measured state
-    print('M:bit_readout',qcT.bit_readout)
-
-    # the map from qubit to position in the measured state
-    print('M:qubit_readout',qcT.qubit_readout)
+    
+    if 0:
+        qnx.login_with_credentials()
+        #okok
+        activate_qtuum_api()
+        bb
+        # List your saved credentials
+        my_credentials = qnx.credentials.get_all()
+        pprint(my_credentials)
+        exit(0)
         
-    # the map from qubits to the bits to which their measurement values were written
-    print('M:qubit_to_bit_map',qcT.qubit_to_bit_map)
-    print('M: circuit NOT executed ')
+    if 0: # List Quantinuum devices
+        xx=qnx.devices.get_all(
+            issuers=[qnx.devices.IssuerEnum.QUANTINUUM]
+        )
+        pprint(xx) # dumps details of all Qtuum devices - ~2 pages of text
+   
+    project = qnx.projects.get_or_create(name="test-feb-13")
+    qnx.context.set_active_project(project)
+    ooo
+    dateTag = datetime.now().strftime("%Y_%m_%d-%H-%M-%S")
+    print('define Bell-state circ')
+    qc1 = Circuit(2).H(0).CX(0,1).measure_all()
+    qc2 = Circuit(5).H(1).CX(0,1).measure_all()
     
+    print('circ1 as commands:\n',qc1.get_commands())
+    ref1 = qnx.circuits.upload(circuit=qc1, name="jan-circ4a_"+dateTag)
+    print('\nupload ref1:',type(ref1))
+    pprint(ref1)
+    ref2 = qnx.circuits.upload(circuit=qc2, name="jan-circ4b_"+dateTag)
+
+    config = qnx.QuantinuumConfig(device_name="H1-Emulator") # Noise-modelled emulator for Quantinuum’s H1 device, hosted in the cloud.
+    #config = qnx.QuantinuumConfig(device_name="H2-Emulator") 
+    #config = qnx.QuantinuumConfig(device_name="H1-1E")  # Noise-modelled emulator for Quantinuum’s H1 device, hosted on dedicated hardware.
+    #config = qnx.QuantinuumConfig(device_name="H1-1SC")  # syntax checker
+    #config = qnx.QuantinuumConfig(device_name="H2-1SC")  # syntax checker
+    #config = qnx.QuantinuumConfig(device_name="H1-1")  # QPU
+
+    
+    ref_compile_job = qnx.start_compile_job(
+        circuits=[ref1,ref2],
+        backend_config=config,
+        optimisation_level=2,
+        name="comp-job_"+dateTag
+    )
+
+    print('\nupload refT:')
+    pprint(ref_compile_job)
+
+    qnx.jobs.wait_for(ref_compile_job)
+    ref_compiled_circuit = qnx.jobs.results(ref_compile_job)[0].get_output()
+    print('\nupload refCC:')
+    pprint(ref_compiled_circuit)
+
+    print('submit to',config)
+    ref_execute_job = qnx.start_execute_job(
+        circuits=[ref_compiled_circuit],
+        n_shots=[200],
+        backend_config=config,
+        name="exec-job_"+dateTag
+    )
+
+    print('\nstatus1:',qnx.jobs.status(ref_execute_job))
+    
+    qnx.jobs.wait_for(ref_execute_job)
+    results = qnx.jobs.results(ref_execute_job)
+    nCirc=len(results)
+    for ic in range(nCirc):
+        result = results[i].download_result()
+        print('is=%d res:'%ic); pprint(result.get_counts())
+    print(config)
+
+    print('status2:',qnx.jobs.status(ref_execute_job))
+    
+    job_name = f"Job from {datetime.now()}"
+    qnx.filesystem.save(
+        ref=ref_execute_job,
+        path=Path.cwd() / "my_job_folder" / job_name,
+        mkdir=True,
+    )
+    my_job_ref = qnx.filesystem.load(
+        path=Path.cwd() / "my_job_folder" / job_name
+    )
+    print('\nstatus3:',qnx.jobs.status(my_job_ref))
+
     exit(0)
-    this_would_cost_you
-    # see toys$ ./2a_submit_one.py 
-    jhandle = backend.process_circuit(qcT, n_shots= 10)
-    print('submitted qtuum %s job_id: %s'%(machine,jhandle[0]))
     
+   
 
 
 

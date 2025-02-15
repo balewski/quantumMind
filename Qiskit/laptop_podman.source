@@ -4,7 +4,8 @@
 source ~/.ssh/ibmq.credentials
 
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
-IMG=balewski/ubu24-qiskit:p4c
+IMG=balewski/ubu24-qiskit:p4c  #works
+#IMG=balewski/ubu24-qiskit:p6b  #undefined symbol: omp_get_num_threads
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

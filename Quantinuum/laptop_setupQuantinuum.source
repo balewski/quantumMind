@@ -5,7 +5,8 @@ source /Users/balewski/.ssh/quantinuum.credentials
 #env |grep MY_QTUUM  # activate to see the creds
 
 #IMG=balewski/ubu22-tket-qtuum:p4d  # works in 2024
-IMG=balewski/ubu24-tket:p2
+IMG=balewski/ubu24-qtuum:p1f
+
 echo launch image $IMG
 echo you are launching Docker image ...  remeber to exit
 
