@@ -5,7 +5,7 @@ source ~/.ssh/ibmq.credentials
 
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 IMG=balewski/ubu24-qiskit:p4c  #works
-#IMG=balewski/ubu24-qiskit:p6b  #undefined symbol: omp_get_num_threads
+IMG=balewski/ubu24-qiskit:p6d 
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -38,20 +38,17 @@ eval podman run -it \
     -e QISKIT_IBM_TOKEN=$QISKIT_IBM_TOKEN \
     -e QISKIT_IBM_CHANNEL=$QISKIT_IBM_CHANNEL \
     -e QISKIT_IBM_INSTANCE=$QISKIT_IBM_INSTANCE \
+    -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
     --volume /shared_volumes/quantumMind/Qiskit:/Qiskit \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume /shared_volumes/prosty-waz:/prosty-waz \
     --volume /shared_volumes/dataVault2024:/dataVault2024 \
     --workdir $WORK_DIR $QCRANK \
-    --user $(id -u):$(id -g) $JNB_PORT $IMG #/bin/bash
+    --user $(id -u):$(id -g) \
+    $JNB_PORT $IMG #/bin/bash
 
+# note, LD_PRELOAD is needed for symbol: omp_get_num_threads
+#     -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
 #
-#    -e AWS_ACCESS_KEY_ID=$QUERA_AWS_ACCESS_KEY_ID \
-#    -e AWS_SECRET_ACCESS_KEY="$QUERA_AWS_SECRET_ACCESS_KEY" \
-#    -e AWS_DEFAULT_REGION=$QUERA_AWS_REGION \
-
-
-#     -e QuEra_dataVault=/dataVault/dataQuEra_2023julyA \
-
 # 
 # after start install QPIXL:  cd   /qpixl_wrk;   pip install -e .

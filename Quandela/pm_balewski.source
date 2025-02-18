@@ -1,9 +1,9 @@
 #!/bin/bash
 #  salloc -q interactive -C cpu -t 4:00:00 -A m4916 #PI=Katie, NERSC Quantum Repo
 
-echo load my  creds
-source /global/homes/b/balewski/.ssh/quandela.credentials
-#env |grep QUANDELA  # activate to see the creds
+echo load my QUANDELA   creds
+source /global/homes/b/balewski/.ssh/quandela.creds
+env |grep QUANDELA  # activate to see the creds
 
 
 IMG=balewski/ubu24-perceval:p2c # has broken Qiskit interface
