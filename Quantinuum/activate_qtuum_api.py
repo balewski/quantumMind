@@ -54,7 +54,7 @@ if __name__ == "__main__":
     
     if 0:
         qnx.login_with_credentials()
-        #okok
+        okok
         activate_qtuum_api()
         bb
         # List your saved credentials

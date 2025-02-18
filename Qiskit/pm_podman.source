@@ -4,6 +4,7 @@
 # to activate IBM run once:   /dataVault/activate_IBMProvider.py 
 
 IMG=balewski/ubu24-qiskit:p4c
+#IMG=balewski/ubu24-qiskit:x0
 CFSH=/global/cfs/cdirs/mpccc/balewski/
 
 echo launch image $IMG
