@@ -12,7 +12,7 @@ from toolbox.Util_H5io4 import  write4_data_hdf5, read4_data_hdf5
 from time import time
 from pprint import pprint
 import numpy as np
-from PlotterQCrankV3 import Plotter
+from PlotterQuandela import Plotter
 
 from toolbox.Util_QiskitV2 import unpack_numpy_to_counts
 
@@ -25,7 +25,7 @@ def get_parser():
     parser.add_argument( "-Y","--noXterm", dest='noXterm',  action='store_false', default=True, help="enables X-term for interactive mode")         
     parser.add_argument("--basePath",default='out',help="head dir for set of experimentst")
                         
-    parser.add_argument('-e',"--expName",  default='exp_62a21daf',help='IBMQ experiment name assigned during submission')
+    parser.add_argument('-e',"--expName",  default='exp_62a21daf',help='Quandela experiment name assigned during submission')
     
     args = parser.parse_args()
     # make arguments  more flexible 
@@ -43,20 +43,14 @@ def get_parser():
 
 
 #...!...!....................
-def postproc_qcrank(bigD,md):
+def postproc_experiment(bigD,md):
     pom=md['postproc']
-    #if pom['hw_calib']: expD['rec_udata']*=pom['ampl_fact']  # changes DATA
-    rdata=expD['rec_udata'].flatten()
-    tdata=expD['inp_udata'].flatten()
+    
+    rdata=expD['rec_data'][:,0].flatten() # [val,err]
+    tdata=expD['truth'].flatten()
 
     elm=compute_ellipse(tdata,rdata)
 
-    if 1:  # hack to do self-calibration
-        expD['rec_udata']*=elm['ampl_fact']  # changes DATA
-        rdata=expD['rec_udata'].flatten()
-        tdata=expD['inp_udata'].flatten()
-        pom['hw_calib']='auto'
-        pom['ampl_fact']=elm['ampl_fact']
                 
     res_data = rdata - tdata
     mean = np.mean(res_data)
@@ -121,7 +115,7 @@ if __name__=="__main__":
             print(expD)
         stop2
         
-    postproc_qcrank(expD,expMD)
+    postproc_experiment(expD,expMD)
       
     #...... WRITE  OUTPUT
     outF=os.path.join(args.outPath,expMD['short_name']+'.h5')
@@ -134,10 +128,10 @@ if __name__=="__main__":
     expMD['plot']={'resid_max_range':0.3}
 
     plot=Plotter(args)
-    fig0=10 if expMD['postproc']['hw_calib'] else 1
+    fig0=1
    
     if 'a' in args.showPlots:
-        plot.ehands_accuracy(expD,expMD,figId=fig0)
+        plot.reco_accuracy(expD,expMD,figId=fig0)
 
     if 'c' in args.showPlots:
         not_tested

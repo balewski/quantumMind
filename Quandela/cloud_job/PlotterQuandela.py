@@ -89,7 +89,7 @@ class Plotter(PlotterBackbone):
         PlotterBackbone.__init__(self,args)
         
 #...!...!..................
-    def ehands_accuracy(self,bigD,md,figId=1):
+    def reco_accuracy(self,bigD,md,figId=1):
         #pprint(md)
         pmd=md['payload']
         smd=md['submit']
@@ -109,8 +109,8 @@ class Plotter(PlotterBackbone):
 
         
         #....... plot data .....
-        rdata=bigD['rec_udata'].flatten()
-        tdata=bigD['inp_udata'].flatten()
+        rdata=bigD['rec_data'][:,0].flatten()
+        tdata=bigD['truth'].flatten()
         #....  left column ....
         ax = self.plt.subplot(nrow,ncol,1)
            
@@ -150,7 +150,8 @@ class Plotter(PlotterBackbone):
         ax.set(xlabel=xLab,ylabel='num pixels')
         ax.axvline(0.,ls='--',c='k',lw=1.0)
         ax.set_xlim(-resMX,resMX)
-        
+
+        return
         # .... decorations ....
         # Overlay the text on top of the plots
         txt=summary_column(md)
