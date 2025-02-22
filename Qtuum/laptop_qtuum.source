@@ -5,7 +5,7 @@ source /Users/balewski/.ssh/quantinuum.credentials
 #env |grep MY_QTUUM  # activate to see the creds
 
 #IMG=balewski/ubu22-tket-qtuum:p4d  # works in 2024
-IMG=balewski/ubu24-qtuum:p1f
+IMG=balewski/ubu24-qtuum:p1h
 
 echo launch image $IMG
 echo you are launching Docker image ...  remeber to exit
@@ -33,11 +33,12 @@ done
 podman run -it \
     -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
     -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
-    --volume /shared_volumes/quantumMind/Quantinuum:$WORK_DIR \
+    --volume /shared_volumes/quantumMind/Qtuum:$WORK_DIR \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume /shared_volumes/qcrank_light:/qcrank_light \
     --volume $DATA_VAULT:/dataVault2025 \
     -e Qtuum_dataVault=/dataVault2025/dataQtuum_tmp \
+    -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
     --workdir $WORK_DIR  $JNB_PORT  \
     --user $(id -u):$(id -g) \
     $IMG /bin/bash

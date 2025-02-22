@@ -3,13 +3,16 @@ __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
 '''
-testing submitting a list of jcircuits to Quantinuum as 1 job
+testing submitting a list of 2 circuits to Quantinuum as 1 job
+
+"H1-Emulator":  Noise-modelled emulator for Quantinuum’s H1 device, hosted in the cloud. gives 0-cost
+"H1-1E":    # Noise-modelled emulator for Quantinuum’s H1 device, hosted on dedicated hardware.  Gives cost as for real HW H1-1
 '''
 
 import os,hashlib
 import qnexus as qnx
 from pytket import Circuit
-#from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
+from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from pprint import pprint
 from time import time
      
@@ -17,12 +20,15 @@ from time import time
 #  M A I N 
 #=================================
 if __name__ == "__main__":
+
+    if 0:  qnx.login_with_credentials()
+    
     myTag='_'+hashlib.md5(os.urandom(32)).hexdigest()[:6]
     shots=50
     #devName="H1-Emulator"  # produces 0-cost
     devName="H1-1E"   # gives realsit cost estimate
-    #myAccount='CSC641'
-    myAccount='CHM170'  
+    myAccount='CSC641'
+    #myAccount='CHM170'  
     #project = qnx.projects.get_or_create(name="test-feb-14c")
     project = qnx.projects.get_or_create(name="qcrank-feb-14b")
     qnx.context.set_active_project(project)
@@ -31,7 +37,7 @@ if __name__ == "__main__":
     print('upload Bell-state circs ...')
     qc1 = Circuit(2).H(0).CX(0,1).measure_all()
     qc2 = Circuit(5).H(1).CX(1,2).measure_all()
-    #print(tk_to_qiskit(qc2))
+    print(tk_to_qiskit(qc2))
     
     #... upload 2 circuits
     t0=time()
@@ -40,17 +46,13 @@ if __name__ == "__main__":
     t1=time()
     print('elaT=%.1f sec, uploaded, compiling ...'%(t1-t0))
 
+    if 0:
+        xx=ref1.model_dump_json()
+        print('xx',type(xx))
+        print(xx)
+    
 
-    '''
-    print('tt',type(ref1))
-    xx=ref1.model_dump_json()
-    #xx=ref1.json
-    print('xx',type(xx))
-    print(xx)
-    '''
-
-    devConf1 = qnx.QuantinuumConfig(device_name=devName,user_group=myAccount) # Noise-modelled emulator for Quantinuum’s H1 device, hosted in the cloud. gives 0-cost
-    #devConf1 = qnx.QuantinuumConfig(device_name="H1-1E")  # Noise-modelled emulator for Quantinuum’s H1 device, hosted on dedicated hardware.  Gives cost, but will not execute
+    devConf1 = qnx.QuantinuumConfig(device_name=devName,user_group=myAccount) 
 
     print('use devConf:',devConf1)
     

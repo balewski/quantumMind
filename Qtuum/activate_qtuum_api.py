@@ -70,7 +70,7 @@ if __name__ == "__main__":
    
     project = qnx.projects.get_or_create(name="test-feb-13")
     qnx.context.set_active_project(project)
-    ooo
+   
     dateTag = datetime.now().strftime("%Y_%m_%d-%H-%M-%S")
     print('define Bell-state circ')
     qc1 = Circuit(2).H(0).CX(0,1).measure_all()
