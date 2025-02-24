@@ -2,20 +2,18 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-
 '''
-runs localy  or on cloud (needd creds)
+Objective:  run parametrized circuit as function of paramater
+
+runs localy  or on cloud (needa creds)
 
 Records meta-data containing  job_id 
 HD5 arrays contain input and output
 Use sampler and manual transpiler
 Dependence:  qiskit 1.2
 
-
 Use case: 
-XXXXX
-./submit_ibmq_job.py -E  --numQubits 3 3 --numSample 15 --numShot 8000  --backend   ibm_brussels  
-
+./submit_scan_job.py  --numSample 10 --numShot 2000 --backend ideal
 
 '''
 import sys,os,hashlib
@@ -25,20 +23,12 @@ from time import time, localtime
 
 from toolbox.Util_IOfunc import dateT2Str
 from toolbox.Util_H5io4 import  write4_data_hdf5, read4_data_hdf5
-import inspect
-#print(inspect.getsource(qiskit_aer.AerSimulator))
 
 
-
-#from toolbox.Util_QiskitV2 import  circ_depth_aziz, harvest_circ_transpMeta
-
-#sys.path.append(os.path.abspath("/qcrank_light"))
-#from datacircuits.ParametricQCrankV2 import  ParametricQCrankV2 as QCrankV2, qcrank_reco_from_yields
-# Quandeal
+# Quandela
 import perceval as pcvl
 from perceval.components.unitary_components import  BS,PS 
 from perceval.algorithm import Sampler
-
 
 import argparse
 #...!...!..................
@@ -57,7 +47,7 @@ def commandline_parser(backName="ideal",provName="local sim"):
     parser.add_argument( "-E","--executeCircuit", action='store_true', default=False, help="may take long time, test before use ")
      
     '''there are 3 types of backend
-    a) ideal local proc=pcvl.Processor("SLOS", mzi)
+    a) ideal local proc=pcvl.Processor("SLOS")
     b) remote noisy simu: procN='sim:ascella'          
     c) remote QPU: procN='qpu:ascella'
         proc = pcvl.RemoteProcessor(procN) 
@@ -67,7 +57,8 @@ def commandline_parser(backName="ideal",provName="local sim"):
     args.provider=provName
     if 'ideal' not in args.backend:
         args.provider='Quandela cloud'
-
+        
+    print('perceval ver:',pcvl.__version__)
     for arg in vars(args):
         print( 'myArgs:',arg, getattr(args, arg))
     return args
@@ -75,17 +66,15 @@ def commandline_parser(backName="ideal",provName="local sim"):
 #...!...!....................
 def buildPayloadMeta(args):
     pd={}  # payload
-    
-    #pd['nq_addr'],pd['nq_data']=args.numQubits
-    #pd['num_addr']=1<<pd['nq_addr']
     pd['num_sample']=args.numSample
-    #pd['num_qubit']=pd['nq_addr']+pd['nq_data']
-    #pd['seq_len']=pd['nq_data']*pd['num_addr']
     
     sbm={}
     sbm['num_shots']=args.numShot
     if 'ideal' in args.backend: backendN='ideal:SLOS'
-    else:  backendN=args.backend+':ascella'
+    elif 'noisy' in args.backend: backendN='sim:ascella'
+    elif 'qpu' in args.backend: backendN='qpu:ascella'
+    else:
+        print('BPM unknown backend%s requested, ABORT'%args.backend); exit(99)
     sbm['backend']=backendN
     
     pom={}
@@ -108,20 +97,11 @@ def buildPayloadMeta(args):
 #...!...!....................
 def harvest_submitMeta(md,args):
     sbm=md['submit']
-    '''
-    if 'ideal' in sbm['backend']:
-        jid=md['hash']
-    else:
-        jid=
-    sd['job_id']=job.job_id()
-    backN=args.backend
-    sd['backend']=backN     #  job.backend().name  V2
-    '''
     t1=localtime()
     sbm['date']=dateT2Str(t1)
     sbm['unix_time']=int(time())
     sbm['provider']=args.provider
-    print('bbb',args.backend,args.expName)
+    #print('bbb',args.backend,args.expName)
     
 
 
@@ -157,9 +137,6 @@ def harvest_sampler_results(jobL,md,bigD,T0=None):  # many circuits
    
     
     '''
-    aaa
-    jobRes=job.result()
-    #counts=jobRes[0].data.c.get_counts()
     
     if T0!=None:  # when run locally
         elaT=time()-T0
@@ -195,6 +172,7 @@ def harvest_sampler_results(jobL,md,bigD,T0=None):  # many circuits
     print('job QA'); pprint(qa)
     md['job_qa']=qa
     '''
+    
     bigD['rec_data']=Ym
     bigD['transmitance'] = perfV
 
@@ -211,8 +189,8 @@ def construct_circ_and_data(md):
     return qcP, expD
     
 #...!...!....................
-def build_mzi_param_circ(md): # Mach-Zehnder Interferometers=, parametrized
-    # parameterised phase shifter, \phi,  between two fixed beamsplitters.
+def build_mzi_param_circ(md): # Mach-Zehnder Interferometer, parametrized
+    # parameterised phase shifter, \phi,  between two fixed beam splitters.
     mzi = pcvl.Circuit(2) // BS() // (1,PS(phi=pcvl.P("phi"))) // BS()
     pmd=md['payload']
     pmd['num_mode']=2
@@ -222,7 +200,8 @@ def build_mzi_param_circ(md): # Mach-Zehnder Interferometers=, parametrized
 def construct_mzi_inputs(md,verb=1):
     pmd=md['payload']
     # generate float random data
-    data_inp = np.linspace(0.2, 1.7, pmd['num_sample'])
+    #data_inp = np.linspace(0.2, 1.7, pmd['num_sample'])
+    data_inp = np.linspace(-0.4, 3.6, pmd['num_sample'])  # 10pt hits 0 & pi
     if verb>0: print('input data=',data_inp.shape,data_inp)
    
     Yt=(1-np.cos(data_inp))/2
@@ -230,6 +209,22 @@ def construct_mzi_inputs(md,verb=1):
  
     return bigD
 
+#... needed for Explorer Offer ....
+from tqdm.notebook import tqdm
+from time import time,sleep
+#...!...!....................
+def monitor_job(remote_job):
+    previous_prog = 0
+    with tqdm(total=1, bar_format='{desc}{percentage:3.0f}%|{bar}|') as tq:
+        tq.set_description(f'Get  samples for {remote_job.name}')
+        while not remote_job.is_complete:
+            tq.update(remote_job.status.progress/100-previous_prog)
+            previous_prog = remote_job.status.progress/100
+            sleep(1)
+        tq.update(1-previous_prog)
+        tq.close()
+
+    print(f"Job status = {remote_job.status()}")
 #=================================
 #=================================
 #  M A I N 
@@ -238,14 +233,13 @@ def construct_mzi_inputs(md,verb=1):
 if __name__ == "__main__":
     args=commandline_parser()
     np.set_printoptions(precision=3)
-
- 
     
-    if 0:
+    if 0:  # backup plan
         token= os.getenv('MY_QUANDELA_TOKEN')
-        token='_T_eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTA5NiwiZXhwIjoxNzQyNzAyNDk2fQ.8rhXLqTg7cwdljEDs_qOZqYqFeVslEAUHCMs1z-hfBVHuhN68fQJ3EwNOLgKSeJCqbUtrs7hQtBaMMWPyrdAMQ'
         print('perceval ver:',pcvl.__version__)
         pcvl.save_token(token)
+        print(token)
+        
     
     expMD=buildPayloadMeta(args)
     pprint(expMD)
@@ -265,75 +259,48 @@ if __name__ == "__main__":
     else:
         expMD[ 'submit']['job_ids']=jobIdL
         backendN=expMD[ 'submit']['backend']
-        backendN='sim:ascella'
         print('M: use cloude service: %s ...'%backendN)
-        if 1:
-            #pcvl.save_token('_T_eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTA5NiwiZXhwIjoxNzM5OTQ1MDUwfQ.F4kP3s8vc8BPOAsKRKuQtKrPWkU9cIwKFB-3tLNlbrfjwTdREm5HiAJpa39zo_pH54xd_4Cpay9mFSb1h9sx4Q')
-            proc = pcvl.RemoteProcessor("sim:ascella")
-            print('perceval ver:',pcvl.__version__)
-            #proc = pcvl.RemoteProcessor(backendN,qcP)          
+        proc = pcvl.RemoteProcessor(backendN)          
         runLocal=False
         outPath=os.path.join(args.basePath,'jobs')
-       
-                
+                       
     #.... common processor config
     assert os.path.exists(outPath)
     proc.set_circuit(qcP)
-    inpML=[1,0] # initial Fock state
     proc.min_detected_photons_filter(1)
-    input_state = pcvl.BasicState(inpML)
+    input_state = pcvl.BasicState([1,0])  # quSt='0', dual rail encoding
     proc.with_input(input_state)
-
     sampler = Sampler(proc, max_shots_per_call=args.numShot)    
-    #1harvest_circ_transpMeta(qcT,expMD,backend.name)
-
     print('M: execution-ready %d circuits  backend=%s'%(nCirc,args.backend))
                             
     if not args.executeCircuit:
         pprint(expMD)
         print('\nNO execution of circuit, use -E to execute the job\n')
-        exit(0)
-        
+        exit(0)       
 
     # -------- bind the data to parametrized circuit & submit -------
+    print('   --expName   %s   '%(expMD['short_name'] ))
+
     T0=time()
- 
-   
     for ic in range(nCirc):
         theta=expD['inp_data'][ic]
         qcP.get_parameters()[0].set_value(theta)
         sampler.default_job_name = '%s_c%d'%(expMD['short_name'],ic)
         pcvl.pdisplay(proc)
-        '''
-        job = sampler.sample_count.execute_async()  # Create a job
-        #print(inspect.getsource(Sampler))
-        
-        #print(ic,job.id)
-        resD = job.get_results()
-        perf=resD['physical_perf']
-        cntC=resD['results']
-        n0,n1=0,0
-        for k,v in cntC.items():
-            print(k,v)     
-            if k==pcvl.BasicState('|1,0>'): n1=v
-            if k==pcvl.BasicState('|0,1>'): n0=v
-        vvvv
-        sample_count = sampler.sample_count(1000)
-        print('results:',sample_count['results'])
-        print('physical_perf:',sample_count['physical_perf'])
-        hhh
-        job = sampler.sample_count.execute_async(args.numShot)  # Create a job
-        '''
+     
         if runLocal:
             resD=sampler.sample_count()               
             jobIdL[ic]=resD
             #print(ic,'ideal:',jobIdL[ic])
         else:
+            # WARN: submits job to cloud backend
+            job = sampler.sample_count.execute_async(args.numShot)  
+            print(ic,job.id) 
+            jobIdL[ic]=job.id
             
-            #1job = sampler.sample_count.execute_async(args.numShot)  # Create the job
-            #1print(ic,job.id) 
-            #1jobIdL[ic]=job.id
-            jobIdL[ic]='041033f9-f535-4e0e-a0b2-267aa8c78bc7'
+            if 1: #  Cannot create more than 1 job(s) with Explorer Offer
+                print('wait for results ...',backendN)
+                monitor_job(job)             
     
     harvest_submitMeta(expMD,args)    
     if args.verb>1: pprint(expMD)
@@ -344,12 +311,12 @@ if __name__ == "__main__":
         #...... WRITE  MEAS OUTPUT .........
         outF=os.path.join(outPath,expMD['short_name']+'.meas.h5')
         write4_data_hdf5(expD,outF,expMD)        
-        print('   ./postproc_quandela.py  --expName   %s   -p a    -Y\n'%(expMD['short_name']))
+        print('   ./postproc_scan.py  --expName   %s   -p a b   -Y\n'%(expMD['short_name']))
     else:
         #...... WRITE  SUBMIT OUTPUT .........
         outF=os.path.join(outPath,expMD['short_name']+'.ibm.h5')
         write4_data_hdf5(expD,outF,expMD)
-        #1print('M:end --expName   %s   %s  %s  jid=%s'%(expMD['short_name'],expMD['hash'],backendN ,expMD['submit']['job_id']))
+        
         print('   ./retrieve_quandela_job.py --expName   %s   \n'%(expMD['short_name'] ))
         pprint(expMD)
 

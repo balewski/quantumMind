@@ -105,7 +105,7 @@ class Plotter(PlotterBackbone):
         nrow,ncol=1,3
         fig=self.plt.figure(figId,facecolor='white', figsize=(12,3*nrow))
         
-        topTit=[ 'job: '+md['short_name'], 'Residual ',smd['backend']]
+        topTit=['job: '+md['short_name'], 'Residual ',smd['backend']]
 
         
         #....... plot data .....
@@ -158,14 +158,36 @@ class Plotter(PlotterBackbone):
         ax.text(0.88, 0.95, txt, fontsize=10, color='m', ha='left', va='top',transform=ax.transAxes)
 
 #...!...!..................
-    def xyz(self,bigD,md,figId=3):
+    def Mach_Zehnder(self,bigD,md,figId=3):
         #pprint(md)
         pmd=md['payload']
         smd=md['submit']
         tmd=md['transpile']
 
-        figId=self.smart_append(figId)        
-        nrow,ncol=1,2
-        fig=self.plt.figure(figId,facecolor='white', figsize=(12,4))
+        figId=self.smart_append(figId)
+        # Create figure and two subplots with height ratio 2:1
+        fig=self.plt.figure(figId,facecolor='white', figsize=(6,6))
+        # Create two subplots with height ratio 2:1
+        gs = fig.add_gridspec(2, 1, height_ratios=[2, 1])
+        ax1, ax2 = fig.add_subplot(gs[0]), fig.add_subplot(gs[1])
 
-        make_it_work
+        xdata=bigD['inp_data']
+        rdata=bigD['rec_data']#[:,0].flatten()
+        tdata=bigD['truth']#.flatten()
+        topTit='%s  backend: %s  %s'%(md['short_name'],smd['backend'],smd['date'])
+                                        
+        ax1.errorbar(xdata,rdata[:,0],yerr=rdata[:,1], fmt='bs', mfc='none', capsize=0, label='meas')
+        ax1.plot(xdata,tdata,"*-r",label='theory')
+        ax1.set(xlabel='phase (rad)', ylabel='probability', title=topTit)
+        ax1.legend()
+        ax1.grid()
+                
+        #... residual
+        resiV=rdata[:,0]-tdata
+        ax2.errorbar(xdata,resiV,yerr=rdata[:,1], fmt='bs', mfc='none', capsize=3)
+        ax2.set(xlabel='phase (rad)', ylabel='residual')
+        ax2.axhline(0)
+        mxY=np.max(np.abs(resiV))*1.2
+        ax2.set_ylim(-mxY,mxY)
+        ax2.grid()
+                                       

@@ -20,7 +20,7 @@ import argparse
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbosity",type=int,choices=[0, 1, 2,3,4],  help="increase output verbosity", default=1, dest='verb')
-    parser.add_argument("-p", "--showPlots",  default='a', nargs='+',help="abcd-string listing shown plots")
+    parser.add_argument("-p", "--showPlots",  default='ab', nargs='+',help="abcd-string listing shown plots")
     
     parser.add_argument( "-Y","--noXterm", dest='noXterm',  action='store_false', default=True, help="enables X-term for interactive mode")         
     parser.add_argument("--basePath",default='out',help="head dir for set of experimentst")
@@ -45,12 +45,9 @@ def get_parser():
 #...!...!....................
 def postproc_experiment(bigD,md):
     pom=md['postproc']
-    
     rdata=expD['rec_data'][:,0].flatten() # [val,err]
     tdata=expD['truth'].flatten()
-
     elm=compute_ellipse(tdata,rdata)
-
                 
     res_data = rdata - tdata
     mean = np.mean(res_data)
@@ -128,14 +125,12 @@ if __name__=="__main__":
     expMD['plot']={'resid_max_range':0.3}
 
     plot=Plotter(args)
-    fig0=1
-   
     if 'a' in args.showPlots:
-        plot.reco_accuracy(expD,expMD,figId=fig0)
+        plot.reco_accuracy(expD,expMD,figId=1)
 
-    if 'c' in args.showPlots:
-        not_tested
-        plot.xyz()
+    if 'b' in args.showPlots:
+        plot.Mach_Zehnder(expD,expMD,figId=2)
+        
 
     plot.display_all()
     print('M:done')
