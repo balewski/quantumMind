@@ -45,6 +45,8 @@ print('access IQM backend ...')
 provider=IQMProvider(url="https://cocos.resonance.meetiqm.com/garnet")
 backend2 = provider.get_backend()
 
+print('got backend:',backend2.name)
+
 qcT = transpile(qc, backend2)
 
 print(qcT.draw('text', idle_wires=False))

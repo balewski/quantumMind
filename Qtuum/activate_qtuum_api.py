@@ -17,57 +17,43 @@ from datetime import datetime
 from pathlib import Path
 from qnexus.client import get_nexus_client
 
-#...!...!....................
-def activate_qtuum_api0():
-    from pytket.extensions.quantinuum.backends.credential_storage import  MemoryCredentialStorage
-    from pytket.extensions.quantinuum.backends.api_wrappers import QuantinuumAPI
-    import os
-
-    MY_QTUUM_NAME=os.environ.get('MY_QTUUM_NAME')
-    MY_QTUUM_PASS=os.environ.get('MY_QTUUM_PASS')
-    print('credentials MY_QTUUM_NAME=',MY_QTUUM_NAME)
-    cred_storage = MemoryCredentialStorage()
-    cred_storage.save_user_name(user_name=MY_QTUUM_NAME) 
-    cred_storage._password=MY_QTUUM_PASS
-    api = QuantinuumAPI(token_store = cred_storage)
-    return api
-
 
 #...!...!....................
 def activate_qtuum_api():
-    
-    #return
     import os
     import qnexus as qnx
     MY_QTUUM_NAME=os.environ.get('MY_QTUUM_NAME')
     MY_QTUUM_PASS=os.environ.get('MY_QTUUM_PASS')
     print('credentials MY_QTUUM_NAME=',MY_QTUUM_NAME)
-    client=get_nexus_client()
-    print(type(client))
-    client._request_tokens(MY_QTUUM_NAME,MY_QTUUM_PASS)
+    qnx.auth._request_tokens(MY_QTUUM_NAME,MY_QTUUM_PASS)
+    # List your saved credentials
+    my_credentials = qnx.credentials.get_all()
+    print(my_credentials)  # it prints alwasy empty list
+
 #=================================
 #=================================
 #  M A I N 
 #=================================
 #=================================
 if __name__ == "__main__":
+    my_credentials = qnx.credentials.get_all()
+    print(my_credentials)
     
-    if 0:
-        qnx.login_with_credentials()
-        okok
+    if 1: # works
         activate_qtuum_api()
-        bb
-        # List your saved credentials
+        #exit(0)
+
+    if 0: # works too, but need manual typing 
+        qnx.login_with_credentials()        
         my_credentials = qnx.credentials.get_all()
         pprint(my_credentials)
         exit(0)
         
-    if 0: # List Quantinuum devices
-        xx=qnx.devices.get_all(
-            issuers=[qnx.devices.IssuerEnum.QUANTINUUM]
-        )
-        pprint(xx) # dumps details of all Qtuum devices - ~2 pages of text
-   
+    if 0: # List Quantinuum devices+calibration  ~2 pages of text
+        xxL=qnx.devices.get_all( issuers=[qnx.devices.IssuerEnum.QUANTINUUM] )
+        for x in xxL: print('\n',x)
+        ttt
+        
     project = qnx.projects.get_or_create(name="test-feb-13")
     qnx.context.set_active_project(project)
    
