@@ -19,7 +19,6 @@ from toolbox.Util_H5io4 import  read4_data_hdf5, write4_data_hdf5
 from time import time, sleep
 import perceval as pcvl
 
-#from toolbox.Util_QiskitV2 import pack_counts_to_numpy
 from submit_quandela_job import harvest_sampler_results
 
 import argparse
@@ -55,12 +54,18 @@ if __name__ == "__main__":
 
     if args.verb>1: pprint(expMD)
 
-    if 0:    #example decode one Qasm circuit
-        rec2=expD['circQasm'][1].decode("utf-8") 
-        print('qasm circ:',type(rec2),rec2)
+    nCirc=len(sbm['job_ids'])
+    if 0:
+        jid='041033f9-f535-4e0e-a0b2-267aa8c78bc7' # qpu:ascella , Feb 2
+        jid='97264130-1469-41f6-b56e-fa7274762f2a' # qpu:ascella , Feb 22
+        sbm['job_ids']=[jid]*nCirc
     
     jid=sbm['job_ids'][-1]
-    #1jid='cns2cfhqygeg00879yv0' # smapler,  cairo
+                   
+    if 0:  # backup plan
+        token= os.getenv('MY_QUANDELA_TOKEN')
+        print('perceval ver:',pcvl.__version__)
+        pcvl.save_token(token)
 
     # ------  construct sampler-job w/o backend ------
     proc = pcvl.RemoteProcessor(sbm['backend'])  # QPU name does not matter ??
@@ -95,7 +100,7 @@ if __name__ == "__main__":
     write4_data_hdf5(expD,outF,expMD)
 
 
-    print('   ./postproc_quandela.py  --expName   %s   -p a    -Y\n'%(expMD['short_name']))
+    print('   ./postproc_quandela.py  --expName   %s   -p a b   -Y\n'%(expMD['short_name']))
   
     
     
