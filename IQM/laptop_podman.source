@@ -3,7 +3,8 @@
 # activate IBM creads
 source ~/.ssh/iqm.creds
 
-IMG=balewski/ubu24-iqm:p1a
+IMG=balewski/ubu24-iqm:p1a  # worked, but not for Smapler
+IMG=balewski/ubu24-iqm:p1i # qiskit 1.1.2, iqm-client 20.17, qiskit-iqm  15.6
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
