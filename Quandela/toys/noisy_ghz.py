@@ -5,6 +5,22 @@ __email__ = "janstar1122@gmail.com"
 Construct GHZ state uising Heralded (Knill) CNOT gate
 Use local noisy  Sampler
 
+Reference results
+For emission_probability=0.25, multiphoton_component=0.01
+
+num_qubit=2
+transmission: 4.08e-03  num final states: 23
+fidelity: n0+n1/ns=0.950
+
+num_qubit=3
+transmission: 7.08e-05  num final states: 71
+fidelity: n0+n1/ns=0.834
+
+num_qubit=4
+transmission: 1.29e-06  num final states: 93
+fidelity: n0+n1/ns=0.808
+
+
 '''
 import perceval as pcvl
 from perceval.algorithm import Sampler
@@ -13,15 +29,18 @@ print('perceval ver:',pcvl.__version__)
 
 cnot = pcvl.catalog["heralded cnot"].build_processor()
 
-source = pcvl.Source(emission_probability=0.95, multiphoton_component=0.01)
+source = pcvl.Source(emission_probability=0.25, multiphoton_component=0.01)
 #source=None  # activate to disable noise
 
-num_qubit=3  # <=== change  GHZ state size here
+num_qubit=2  # <=== change  GHZ state size here
 num_mode=2*num_qubit
+
+# Aubaert:  each heralded cnots brings two added photons for the heralds. As such, your min_detected_photons_filter is not high enough. It should be num_qubit + 2 * (num_qubit - 1).
+min_photon=num_qubit + 2 * (num_qubit - 1)
 
 # Set detected photons filter and circuit
 proc = pcvl.Processor("SLOS",num_mode,source)
-proc.min_detected_photons_filter(num_qubit)
+proc.min_detected_photons_filter(min_photon)
 proc.add(0, pcvl.BS.H())
 print('moi:',proc._n_moi) #: int = 0  # Number of modes of interest (moi)
 for j in range(num_qubit-1):
@@ -54,9 +73,10 @@ for phSt, count in photC.items():
     else: print('.',end='')
     k+=1
 
-print('\ntransmission: %.3f  num final states: %d'%(resD['physical_perf'], k))
+print('\ntransmission: %.2e  num final states: %d'%(resD['physical_perf'], k))
+print('fidelity: n0+n1/ns=%.3f'%((n0+n1)/shots))
 print('0s prob: %.4f'% (n0/shots)) 
 print('1s prob: %.4f'% (n1/shots))
 print(' num sigma: |no-n1|/sqrt(n0+n1)=%.3f '%( abs(n0-n1)/np.sqrt(n0+n1))) 
 print('asymmetry: n0-n1/n0+n1 =%.4f'%( (n0-n1)/(n0+n1)))
-print('fidelity: n0+n1/ns=%.3f'%((n0+n1)/shots))
+

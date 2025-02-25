@@ -29,27 +29,28 @@ from toolbox.Util_H5io4 import  write4_data_hdf5, read4_data_hdf5
 import perceval as pcvl
 from perceval.components.unitary_components import  BS,PS 
 from perceval.algorithm import Sampler
+from toolbox.Util_Quandela  import  monitor_async_job
 
 import argparse
 #...!...!..................
-def commandline_parser(backName="ideal",provName="local sim"):
+def commandline_parser(backName="ideal",provName="local sim",shots=20_000):
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verb",type=int, help="increase debug verbosity", default=1)
     parser.add_argument("--basePath",default='out',help="head dir for set of experiments")
     parser.add_argument("--expName",  default=None,help='(optional) replaces QuandelajobID assigned during submission by users choice')
  
     # ....Circuit speciffic 
-    parser.add_argument('-i','--numSample', default=2, type=int, help='num of XX packed in to the job')
+    parser.add_argument('-i','--numSample', default=3, type=int, help='num of XX packed in to the job')
 
     # .... job running
-    parser.add_argument('-n','--numShot',type=int,default=2000, help="shots per circuit")
-    parser.add_argument('-b','--backend',default=backName, choices=['ideal','noisy','qpu'],help="tasks")
+    parser.add_argument('-n','--numShot',type=int,default=shots, help="shots per circuit")
+    parser.add_argument('-b','--backend',default=backName, choices=['ideal','noisy','twin','qpu'],help="tasks")
     parser.add_argument( "-E","--executeCircuit", action='store_true', default=False, help="may take long time, test before use ")
      
     '''there are 3 types of backend
-    a) ideal local proc=pcvl.Processor("SLOS")
-    b) remote noisy simu: procN='sim:ascella'          
-    c) remote QPU: procN='qpu:ascella'
+    a,b) ideal local proc=pcvl.Processor("SLOS")  or noisy_local
+    c,d) remote digital twin: procN='sim:ascella'          
+           remote QPU: procN='qpu:ascella'
         proc = pcvl.RemoteProcessor(procN) 
     '''
 
@@ -69,18 +70,22 @@ def buildPayloadMeta(args):
     pd['num_sample']=args.numSample
     
     sbm={}
-    sbm['num_shots']=args.numShot
+    sbm['num_shot']=args.numShot
     if 'ideal' in args.backend: backendN='ideal:SLOS'
-    elif 'noisy' in args.backend: backendN='sim:ascella'
+    elif 'noisy' in args.backend: backendN='noisy:SLOS'
+    elif 'twin' in args.backend: backendN='sim:ascella'
     elif 'qpu' in args.backend: backendN='qpu:ascella'
     else:
         print('BPM unknown backend%s requested, ABORT'%args.backend); exit(99)
+
     sbm['backend']=backendN
+    sbm['perceval_ver']=pcvl.__version__
+    sbm['run_local']='SLOS' in backendN
     
     pom={}
     trm={}
 
-    md={ 'payload':pd, 'submit':sbm ,'transpile':trm, 'postproc':pom}
+    md={ 'payload':pd, 'submit':sbm ,'transpile':trm, 'postproc':pom,'qa':{}}
     
     myHN=hashlib.md5(os.urandom(32)).hexdigest()[:6]
     md['hash']=myHN
@@ -95,21 +100,23 @@ def buildPayloadMeta(args):
 
 
 #...!...!....................
-def harvest_submitMeta(md,args):
+def harvest_submitMeta(md,args,T0=None):
     sbm=md['submit']
+    qam=md['qa']
     t1=localtime()
     sbm['date']=dateT2Str(t1)
     sbm['unix_time']=int(time())
     sbm['provider']=args.provider
     #print('bbb',args.backend,args.expName)
-    
-
+    if sbm['run_local']:
+        elaT=time()-T0
+        print(' job done, elaT=%.1f min'%(elaT/60.))
+        qam['running_duration']=elaT
 
 #...!...!....................
-def harvest_sampler_results(jobL,md,bigD,T0=None):  # many circuits
+def harvest_sampler_results(jobL,md,bigD):  # many circuits
     pmd=md['payload']
-    qa={}
-
+    
     Xt=bigD['inp_data']
     Yt=bigD['truth']
     nCirc=len(jobL)
@@ -139,9 +146,7 @@ def harvest_sampler_results(jobL,md,bigD,T0=None):  # many circuits
     '''
     
     if T0!=None:  # when run locally
-        elaT=time()-T0
-        print(' job done, elaT=%.1f min'%(elaT/60.))
-        qa['running_duration']=elaT
+       
     else:
         jobMetr=job.metrics()
         #print('HSR:jobMetr:',jobMetr)
@@ -179,9 +184,7 @@ def harvest_sampler_results(jobL,md,bigD,T0=None):  # many circuits
     return bigD
 
 #...!...!....................
-def construct_circ_and_data(md):
-
-    # it is a pair 
+def construct_circ_and_data(md):    # it is a pair 
     #.... build parametric circuit
     qcP=build_mzi_param_circ(expMD)
     # input data
@@ -209,22 +212,7 @@ def construct_mzi_inputs(md,verb=1):
  
     return bigD
 
-#... needed for Explorer Offer ....
-from tqdm.notebook import tqdm
-from time import time,sleep
-#...!...!....................
-def monitor_job(remote_job):
-    previous_prog = 0
-    with tqdm(total=1, bar_format='{desc}{percentage:3.0f}%|{bar}|') as tq:
-        tq.set_description(f'Get  samples for {remote_job.name}')
-        while not remote_job.is_complete:
-            tq.update(remote_job.status.progress/100-previous_prog)
-            previous_prog = remote_job.status.progress/100
-            sleep(1)
-        tq.update(1-previous_prog)
-        tq.close()
 
-    print(f"Job status = {remote_job.status()}")
 #=================================
 #=================================
 #  M A I N 
@@ -233,35 +221,41 @@ def monitor_job(remote_job):
 if __name__ == "__main__":
     args=commandline_parser()
     np.set_printoptions(precision=3)
-    
+   
     if 0:  # backup plan
         token= os.getenv('MY_QUANDELA_TOKEN')
         print('perceval ver:',pcvl.__version__)
         pcvl.save_token(token)
         print(token)
         
-    
     expMD=buildPayloadMeta(args)
     pprint(expMD)
 
     qcP, expD= construct_circ_and_data(expMD)
-   
+
+    # define noise level
+    if expMD['submit']['backend']=='noisy:SLOS':
+        noise_gen = pcvl.Source(emission_probability=0.25, multiphoton_component=0.01)
+    else:
+        noise_gen=None
+        
     print('.... PARAMETRIZED IDEAL CIRCUIT ..............')
     pcvl.pdisplay(qcP)
     
     # ------  construct sampler(.) job ------
     nCirc=expMD[ 'payload']['num_sample']
+    nMode=expMD[ 'payload']['num_mode']
     jobIdL=[0]*nCirc
-    runLocal=True  # ideal or fake backend
-    outPath=os.path.join(args.basePath,'meas')
-    if 'ideal' in args.backend:
-        proc = pcvl.Processor("SLOS")
+    runLocal=expMD['submit']['run_local']
+
+    if runLocal:        
+        outPath=os.path.join(args.basePath,'meas')
+        proc = pcvl.Processor("SLOS",nMode,noise_gen)
     else:
         expMD[ 'submit']['job_ids']=jobIdL
         backendN=expMD[ 'submit']['backend']
         print('M: use cloude service: %s ...'%backendN)
-        proc = pcvl.RemoteProcessor(backendN)          
-        runLocal=False
+        proc = pcvl.RemoteProcessor(backendN,m=nMode)          
         outPath=os.path.join(args.basePath,'jobs')
                        
     #.... common processor config
@@ -291,7 +285,6 @@ if __name__ == "__main__":
         if runLocal:
             resD=sampler.sample_count()               
             jobIdL[ic]=resD
-            #print(ic,'ideal:',jobIdL[ic])
         else:
             # WARN: submits job to cloud backend
             job = sampler.sample_count.execute_async(args.numShot)  
@@ -300,13 +293,13 @@ if __name__ == "__main__":
             
             if 1: #  Cannot create more than 1 job(s) with Explorer Offer
                 print('wait for results ...',backendN)
-                monitor_job(job)             
+                monitor_async_job(job)             
     
-    harvest_submitMeta(expMD,args)    
+    harvest_submitMeta(expMD,args,T0)    
     if args.verb>1: pprint(expMD)
     
     if runLocal:
-        harvest_sampler_results(jobIdL,expMD,expD,T0=T0)
+        harvest_sampler_results(jobIdL,expMD,expD)
         print('M: got results')
         #...... WRITE  MEAS OUTPUT .........
         outF=os.path.join(outPath,expMD['short_name']+'.meas.h5')
@@ -317,8 +310,8 @@ if __name__ == "__main__":
         outF=os.path.join(outPath,expMD['short_name']+'.ibm.h5')
         write4_data_hdf5(expD,outF,expMD)
         
-        print('   ./retrieve_quandela_job.py --expName   %s   \n'%(expMD['short_name'] ))
-        pprint(expMD)
+        print('   ./retrieve_scan_job.py --expName   %s   \n'%(expMD['short_name'] ))
+        #pprint(expMD)
 
 
     

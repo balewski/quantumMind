@@ -19,7 +19,7 @@ from toolbox.Util_H5io4 import  read4_data_hdf5, write4_data_hdf5
 from time import time, sleep
 import perceval as pcvl
 
-from submit_quandela_job import harvest_sampler_results
+from submit_scan_job import harvest_sampler_results
 
 import argparse
 def get_parser():
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     write4_data_hdf5(expD,outF,expMD)
 
 
-    print('   ./postproc_quandela.py  --expName   %s   -p a b   -Y\n'%(expMD['short_name']))
+    print('   ./postproc_scan.py  --expName   %s   -p a b   -Y\n'%(expMD['short_name']))
   
     
     

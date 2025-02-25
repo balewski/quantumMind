@@ -1,0 +1,75 @@
+==== examples of batch submission of 2 types of jobs:
+A) same circuit with paramatrized gate, scan value of parameter
+ encoded is Mach-Zander interferometer with varied phase
+ number of angles are scanned
+B) different circuits
+ encoded are 2 types of CNOT and Bell-state
+
+Job can run on 4 types of backends:
+  if 'ideal' in args.backend: backendN='ideal:SLOS'
+    elif 'noisy' in args.backend: backendN='noisy:SLOS'
+    elif 'twin' in args.backend: backendN='sim:ascella'
+    elif 'qpu' in args.backend: backendN='qpu:ascella'
+
+For 'twin' or 'qpu' creds at Quandela are required,
+the value of env:  MY_QUANDELA_TOKEN must be set correctly.
+
+For local noisy backend the magnitude of noise is hardcoded
+
+ if expMD['submit']['backend']=='noisy:SLOS':
+   noise_gen = pcvl.Source(emission_probability=0.25, multiphoton_component=0.01)
+
+= = = = = = = = = =  = = = = =
+
+A)  Scan phase of  Mach-Zander interferometer
+
+ ./submit_scan_job.py -i 10 -E -b  noisy
+
+h5-write : inp_data (10,) float64
+h5-write : truth (10,) float64
+h5-write : rec_data (10, 2) float64
+h5-write : transmitance (10,) float64
+h5-write : meta.JSON as string (1,) object
+closed  hdf5: out/meas/noisy_7df54a.meas.h5  size=0.01 MB, elaT=0.0 sec
+   
+
+For cloud job next use
+  ./retrieve_scan_job.py   --expName   noisy_7df54a
+
+For plotting do
+./postproc_scan.py  --expName   noisy_7df54a   -p a b   -Y
+
+See also
+https://docs.google.com/document/d/1JcCZOZyQOlxeYtKkF4MobzA3Y2rUQgBSzk83USGJUSM/edit?usp=sharing
+
+
+= = = = = = = = = =  = = = = =
+
+B)  Zoo of circuits. I selecatble by '-i' switch as follwos
+-i 1:  1 circuit, CNOT gate
+-i 2:  4 circuits , truth table for Ralph CNOT
+-i 3:  4 circuits , truth table for Knill CNOT
+-i 4:  1 circuit , BellState with Ralph CNOT
+-i 5:  1 circuit , BellState with Knill CNOT
+
+Example truth table for  heralded CNOT on cloud simulator
+(Those are 4 circuits)
+ ./submit_zoo_job.py -i 3  -b twin  -n 5_000_000 -E
+
+
+Retrieve jobs from cloud
+  ./retrieve_zoo_job.py --expName   twin_1964a2   
+
+Output is just ascii - no plots
+Note, the probability to have a success is  ~1/M, so a lot of shots is needed
+
+HRR comment: Knill CNOT truth table, duty fact 2/27
+HRR requested shots=5000000   backend=sim:ascella
+HRR fin state: ['00', '01', '10', '11', 'bad']
+HRR outV:
+ [[71  7  0  0  5]
+ [ 7 71  0  0  5]
+ [ 0  0  0 24  1]
+ [ 0  0 23  2  0]]
+HRR dutyV: [3.650e-06 3.650e-06 1.091e-06 1.092e-06]
+HRR ini state:['00', '01', '10', '11'] 
