@@ -104,18 +104,22 @@ def build_task_GHZstate(md,noise_source):
     num_qubit=2
     if pmd['tag'] ==6:  num_qubit=3
     # create  CNOT Gate as a processor
+    cnotP = pcvl.catalog['postprocessed cnot'].build_processor()
+    cnotH = pcvl.catalog["heralded cnot"].build_processor()
     if pmd['tag']==4:        
-        cnot = pcvl.catalog['postprocessed cnot'].build_processor()
         minPhoton=num_qubit
-        pmd['comment']='bellState with Ralph CNOT'
-
+        pmd['comment']='bellState with postproc-CNOT, (aka Ralph)'
+        cnot=cnotP
     if pmd['tag'] in [5,6]:        
-        cnot = pcvl.catalog["heralded cnot"].build_processor()
         # Aubaert:  each heralded cnots brings two added photons for the heralds. As such, your min_detected_photons_filter is not high enough. It should be num_qubit + 2 * (num_qubit - 1).
+        # Aubaert:   For Ascella, the cloud indicates that the maximum number of photons is 6. use cnotH+cnotP to circumvent it. So more ideas in  toys/ add noisy_ghz.py 
         minPhoton=num_qubit + 2 * (num_qubit - 1)
-        pmd['comment']='bellState with Knill CNOT'
-        if pmd['tag'] ==6: pmd['comment']='3q GHZ-state with Knill CNOTs'
-    
+        pmd['comment']='bellState with heralded-CNOT  (aka Knill)'
+        cnot=cnotH
+        if pmd['tag'] ==6:
+            pmd['comment']='3q GHZ-state cnotH+cnotP'
+            minPhoton=num_qubit + 2  # because only 1  herald-CNOT is used 
+            
     nMode=2*num_qubit
     bitStr='0'*num_qubit
     fockStt=bitStr_to_dualRailState(bitStr )
@@ -131,7 +135,7 @@ def build_task_GHZstate(md,noise_source):
     proc.min_detected_photons_filter(minPhoton)
     proc.add(0, pcvl.BS.H())
     proc.add(0, cnot)
-    if pmd['tag'] ==6:  proc.add(2, cnot)
+    if pmd['tag'] ==6:  proc.add(2, cnotP)
     proc.with_input( fockStt)
     #pcvl.pdisplay(proc)
                     
@@ -149,7 +153,7 @@ def harvest_results(sampResL,md,bigD):  # many circuits
     pmd=md['payload']
     sbm=md['submit']
     bitStrL=['00','01','10','11','bad']  # get labels for 2 qubit final state
-    if pmd['num_qubit']==3:  bitStrL=['000','001','010','011','100','101','110','111','bad']
+    if pmd['num_qubit']==3:  bitStrL=['000','111','001','010','011','100','101','110','bad']
     md['postproc']['fin_bitStr']=bitStrL
     nCirc=sbm['num_circ']   
     nLab=len(bitStrL) ; assert nLab>= 1<<pmd['num_qubit']
@@ -160,17 +164,19 @@ def harvest_results(sampResL,md,bigD):  # many circuits
         dutyV[ic]=resD['physical_perf']
         photC=resD['results' ]# number of photons in each mode.
         outCnt=np.zeros(nLab,dtype=int)
+        nValid=0
         for phStt, count in photC.items():
             #print("photon state:", phStt, "Count:", count)
             bitStr=fockState_to_bitStr(phStt)
-            #print(ic,'qq',phStt,bitStr,":",count)
+            if bitStr!='bad': nValid+=count
+            print(phStt,bitStr,":",count)
             i= bitStrL.index(bitStr)
             outCnt[i]+=count
         outV[ic]=outCnt
     print('\nHRR comment:',pmd['comment'])
     print('HRR requested shots=%d   backend=%s'%(sbm['num_shot'],sbm['backend']))
     print('HRR fin state:',bitStrL)
-    print('HRR counts:\n',outV)
+    print('HRR %d valid counts:\n'%nValid,outV)
     
     print('HRR duty factor:')
     [ print('init state:%s   performance:%.2e'%(pmd['init_bitStr'][i],dutyV[i]))  for i in range(nCirc) ]
@@ -178,6 +184,7 @@ def harvest_results(sampResL,md,bigD):  # many circuits
     pprint
     bigD['meas']=outV
     bigD['duty_fact']=dutyV
+    #bigD['valid']=
 
 
 #=================================
@@ -245,7 +252,7 @@ if __name__ == "__main__":
             print(ic,job.id) 
             jobIdL[ic]=job.id
             
-            if 1: #  Cannot create more than 1 job(s) with Explorer Offer
+            if ic<nCirc-1: #  Cannot create more than 1 job(s) with Explorer Offer
                 print('circ=%d  back=%s wait for results ...'%(ic,backendN))
                 monitor_async_job(job)             
 
