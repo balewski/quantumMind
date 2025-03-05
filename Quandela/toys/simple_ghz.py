@@ -14,8 +14,11 @@ print('perceval ver:',pcvl.__version__)
 
 cnot = pcvl.catalog["heralded cnot"].build_processor()
 num_mode=2*num_qubit
+# Aubaert:  each heralded cnots brings two added photons for the heralds. As such, your min_detected_photons_filter is not high enough. It should be num_qubit + 2 * (num_qubit - 1).
+min_photon=num_qubit + 2 * (num_qubit - 1)
+
 proc = pcvl.Processor("SLOS",num_mode)
-proc.min_detected_photons_filter(num_qubit)
+proc.min_detected_photons_filter(min_photon)
 proc.add(0, pcvl.BS.H())
 for j in range(1,num_qubit):
     proc.add(2*j-2, cnot)
