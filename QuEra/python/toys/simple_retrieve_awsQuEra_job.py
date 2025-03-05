@@ -58,7 +58,7 @@ if __name__ == "__main__":
     args=get_parser()
     
     #arn='arn:aws:braket:us-east-1:765483381942:quantum-task/874bf405-8720-4e77-9fec-b6b84bfa5016' #   'status': 'COMPLETED'
-    #arn='arn:aws:braket:us-east-1:765483381942:quantum-task/1830c574-3744-44f8-8bee-9af4e70a0757'  # state CANCELLED
+    arn='arn:aws:braket:us-east-1:765483381942:quantum-task/1830c574-3744-44f8-8bee-9af4e70a0757'  # state CANCELLED
     
     arn=args.taskARN
     job=retrieve_aws_job( arn)
