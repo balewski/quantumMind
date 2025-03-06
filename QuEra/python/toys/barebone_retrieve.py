@@ -9,12 +9,12 @@ task_arn='arn:aws:braket:us-east-1:765483381942:quantum-task/fa9c947e-b60a-49d6-
 
 try:
     job = AwsQuantumTask(arn=task_arn, poll_timeout_seconds=30)
+    state=job.state()
 except:
     print('job NOT found, quit\n ARN=',task_arn)
     exit(99)
     
 print('job IS found',job)
-state=job.state()
 print('state:',state)
 
 if job.state()!='COMPLETED':  exit(99)
