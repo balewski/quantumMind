@@ -36,14 +36,14 @@ def activate_qtuum_api():
 #=================================
 #=================================
 if __name__ == "__main__":
-    my_credentials = qnx.credentials.get_all()
-    print(my_credentials)
+    #my_credentials = qnx.credentials.get_all()
+    #print(my_credentials)
     
-    if 1: # works
+    if 0: # works
         activate_qtuum_api()
         #exit(0)
 
-    if 0: # works too, but need manual typing 
+    if 1: # works too, but need manual typing 
         qnx.login_with_credentials()        
         my_credentials = qnx.credentials.get_all()
         pprint(my_credentials)

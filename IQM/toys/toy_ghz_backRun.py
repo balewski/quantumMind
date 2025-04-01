@@ -4,7 +4,7 @@ __email__ = "janstar1122@gmail.com"
 
 from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister #, transpile
 from qiskit_aer import AerSimulator
-from iqm.qiskit_iqm import IQMProvider, transpile_to_IQM,IQMJob
+from iqm.qiskit_iqm import IQMProvider, transpile_to_IQM #,IQMJob
 from qiskit.providers.jobstatus import JobStatus
 from time import time,sleep
 t=time()
@@ -24,7 +24,7 @@ def create_ghz(n):
 
 nq=6  ; nshot=2000
 qpuName='garnet' ; topo='grid20q'
-qpuName='syrius' ; topo='star16q'
+#qpuName='sirius' ; topo='star16q'
 #qpuName='deneb' ; topo='star6q'
 
 k0s='0'*nq; k1s='1'*nq
@@ -71,8 +71,11 @@ print('M: job done, status:',jstat,backend2.name)
   
 result = job.result()
 cntD=result.get_counts()
-if len(cntD) <17: print('cntD:',cntD)
-if qpuName=='deneb':
+nSol=len(cntD)
+print('got %d bitStarings'%(nSol))
+if nSol <17 : print('cntD:',cntD)
+
+if qpuName in [ 'deneb','sirius'] :
     k0s+='0'*nq
     k1s+='0'*nq
 

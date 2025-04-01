@@ -35,7 +35,7 @@ print(qcP.draw('text', idle_wires=False))
 options = SamplerOptions()
 options.default_shots=10000
 
-backName='ibm_kyoto'
+backName='ibm_fez'
 print('\n repeat on  %s backend ...'%backName)
 service = QiskitRuntimeService(channel="ibm_quantum")
 
@@ -49,7 +49,7 @@ print(qcT.draw('text', idle_wires=False))
 qcE=qcT.assign_parameters({thetaP:0.33})
 print(qcE.draw('text', idle_wires=False))
 
-sampler = Sampler(backend=backend2, options=options)
+sampler = Sampler(mode=backend2, options=options)
 qcEL=(qcE,) 
 job = sampler.run(qcEL)
 print('job submitted to ', backend2.name)
