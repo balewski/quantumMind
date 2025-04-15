@@ -6,7 +6,8 @@ source /Users/balewski/.ssh/quera_aws.credentials
 env |grep QUERA_AWS  # activate to see the creds
 
 IMG=balewski/ubu24-braket-quera:p1b
-IMG=balewski/ubu24-braket-quera:p1c  # BAD
+#IMG=balewski/ubu24-braket-quera:p1c  # BAD
+
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

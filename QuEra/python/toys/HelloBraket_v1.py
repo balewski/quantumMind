@@ -15,7 +15,7 @@ from braket.ahs.atom_arrangement import AtomArrangement
 import numpy as np
 from pprint import pprint as pp
 from quera_ahs_utils.plotting import show_register
-#import matplotlib.pyplot as plt
+np.set_printoptions(precision=4) 
 
 a = 6.1e-6  # meters
 N_atoms = 11
@@ -44,8 +44,6 @@ for x,y in zip(xL,yL):
 from braket.ahs.hamiltonian import Hamiltonian
 
 H = Hamiltonian()
-
-
 
 from quera_ahs_utils.plotting import show_global_drive 
 from quera_ahs_utils.drive import get_drive
@@ -95,7 +93,9 @@ from braket.devices import LocalSimulator
 
 classical_device = LocalSimulator("braket_ahs")
 
-nshots = 6
+nshots = 20
+print('\nM:localSimu nshots=%d ...'%nshots)
+
 task = classical_device.run(ahs_program, shots=nshots)
 
 # The result can be downloaded directly into an object in the python session:
@@ -115,25 +115,14 @@ n_rydberg = get_avg_density(result)
 print('\nM:dump tolist:\n',n_rydberg.tolist())
 
 
-
-# Indeed, we already see from this classical simulation that a pattern emerges: The alternating occupation density in the chain of atoms indicates a so-called $\mathbb{Z_2}$ phase. 
-
 # ### Simulation on Aquila
 # And now for the truly exciting part! Let's bring Aquila into the game.
 
+print('M: connecting to Aquila....')
+
 from braket.aws import AwsDevice
-if 0:
-    from braket.aws import AwsSession
-    from boto3 import Session
-
-    boto_session = Session(region_name="us-east-1")
-    aws_session = AwsSession(boto_session)
-    print(aws_session)
-    print('M:request access to aquila...')
-    aquila = AwsDevice("arn:aws:braket:us-east-1::device/qpu/quera/Aquila",aws_session)
-
 aquila = AwsDevice("arn:aws:braket:us-east-1::device/qpu/quera/Aquila")
-    
+
 print(aquila)
 
 print('M: submit task to Aquila...')
