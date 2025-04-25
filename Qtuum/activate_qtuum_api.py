@@ -24,7 +24,7 @@ def activate_qtuum_api():
     import qnexus as qnx
     MY_QTUUM_NAME=os.environ.get('MY_QTUUM_NAME')
     MY_QTUUM_PASS=os.environ.get('MY_QTUUM_PASS')
-    print('credentials MY_QTUUM_NAME=',MY_QTUUM_NAME)
+    print('credentials MY_QTUUM_NAME=',MY_QTUUM_NAME,MY_QTUUM_PASS)
     qnx.auth._request_tokens(MY_QTUUM_NAME,MY_QTUUM_PASS)
     # List your saved credentials
     my_credentials = qnx.credentials.get_all()
@@ -36,8 +36,8 @@ def activate_qtuum_api():
 #=================================
 #=================================
 if __name__ == "__main__":
-    my_credentials = qnx.credentials.get_all()
-    print(my_credentials)
+    #my_credentials = qnx.credentials.get_all()
+    #print(my_credentials)
     
     if 1: # works
         activate_qtuum_api()

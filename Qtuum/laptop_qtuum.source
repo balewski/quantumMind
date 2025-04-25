@@ -1,8 +1,8 @@
 # first load my Quantinumm credentials is to initialise a MemoryCredentialStorage with username and password both set
 
 echo load my QTUUM creds
-source /Users/balewski/.ssh/qtuum.creds 
-#env |grep MY_QTUUM  # activate to see the creds
+source /Users/balewski/.ssh/qtuum.creds bert 
+env |grep MY_QTUUM  # activate to see the creds
 
 #IMG=balewski/ubu22-tket-qtuum:p4d  # works in 2024
 IMG=balewski/ubu24-qtuum:p1h
