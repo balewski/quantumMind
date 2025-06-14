@@ -42,7 +42,8 @@ print('counts1:',counts)
 
 print('access IQM backend ...')
 # os.environ["IQM_TOKEN"] is set already
-provider=IQMProvider(url="https://cocos.resonance.meetiqm.com/garnet")
+#provider=IQMProvider(url="https://cocos.resonance.meetiqm.com/garnet")
+provider=IQMProvider(url="https://cocos.resonance.meetiqm.com/syrius")
 backend2 = provider.get_backend()
 
 print('got backend:',backend2.name)
@@ -51,7 +52,8 @@ qcT = transpile(qc, backend2)
 
 print(qcT.draw('text', idle_wires=False))
 print('M: transpiled GHZ(nq=%d) gates count:'%nq, qcT.count_ops())
-qcETL=(qcT,) 
+qcETL=(qcT,)
+stop1
 sampler = Sampler(mode=backend2, options=options)
 job = sampler.run(qcETL)
 result=job.result()
