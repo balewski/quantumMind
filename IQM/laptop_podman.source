@@ -6,6 +6,7 @@ source ~/.ssh/iqm.creds
 IMG=balewski/ubu24-iqm:p1a  # worked, but not for Smapler
 IMG=balewski/ubu24-iqm:p1i # qiskit 1.1.2, iqm-client 20.17, qiskit-iqm  15.6
 IMG=balewski/ubu24-iqm:p1l # from IQM, Salahedeen, qiskit-ibm-runtime  0.35.0 , iqm-client   28.0.0
+#IMG=balewski/ubu24-iqm:p2  # does not have patch fixing transpiler, not use it
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

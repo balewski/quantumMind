@@ -118,36 +118,6 @@ def reduce_unused_qubits(qc_transpiled):
         print('transpiled qubits=%d, no reduction needed' % qc_transpiled.num_qubits)
         return qc_transpiled
 
-def compare_unitaries_both_orders(qc_ideal, qc_transpiled):
-    """Try both normal and reversed qubit ordering for transpiled circuit comparison"""
-    print('M: trying both qubit orderings for comparison...')
-    
-    # Reduce unused qubits once
-    qc_transpiled_compact = reduce_unused_qubits(qc_transpiled)
-    
-    
-    # Try normal ordering first
-    print('\n--- Trying forward qubit ordering ---')
-    #print(qc_transpiled_compact.draw('text', idle_wires=False))
-    result1 = compare_unitaries(qc_ideal, qc_transpiled_compact)
-    
-    if result1:
-        print('SUCCESS: Forward qubit ordering passed')
-        return True
-    
-    # Try with reversed transpiled circuit
-    print('\n--- Trying backward qubit ordering ---')
-    qc_transpiled_reversed = qc_transpiled_compact.reverse_bits()
-    print(qc_transpiled_reversed.draw('text', idle_wires=False))
-    result2 = compare_unitaries(qc_ideal, qc_transpiled_reversed)
-    
-    if result2:
-        print('SUCCESS: Backward qubit ordering passed')
-        return True
-    
-    print('FAILURE: Both qubit orderings failed')
-    return False
-
 # MAIN
 def main():
     nq=3
@@ -162,10 +132,20 @@ def main():
     compare_unitaries(qc, qcT)
 
 
+    # qiskit naitive comparioson
+    from qiskit.quantum_info import Operator
+    # Compare their operators
+    are_equiv = Operator(qc).equiv(Operator(qcT))
+    print('Qiskit Unitary check1:', are_equiv)
+
+
+    
+    service = QiskitRuntimeService(channel="ibm_quantum_platform",instance='research-eu')
+    backends = service.backends()
+    print(backends)
+
     backName='ibm_aachen'
     print('\n repeat on  %s backend ...'%backName)
-    service = QiskitRuntimeService(channel="ibm_quantum")
-
 
     backend2 = service.backend(backName)
     print('use backend =', backend2.name )
@@ -175,6 +155,12 @@ def main():
     print(qcT2.draw('text', idle_wires=False))
 
     # Compare unitaries at the end
-    compare_unitaries_both_orders(qc, qcT2)
+    # Reduce unused qubits once
+    qcT3 = reduce_unused_qubits(qcT2)
+   
+    compare_unitaries(qc, qcT3)
+    are_equiv = Operator(qc).equiv(Operator(qcT3))
+    print('Qiskit Unitary check2:', are_equiv)
+
 
 main()

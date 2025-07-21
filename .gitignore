@@ -41,4 +41,4 @@ __pycache__
 *.pkl
 *.npy
 .cursor
-
+*.qpy
