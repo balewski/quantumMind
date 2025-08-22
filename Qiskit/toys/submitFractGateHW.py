@@ -4,12 +4,29 @@ __email__ = "janstar1122@gmail.com"
 from qiskit import qpy
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler 
-from qiskit import transpile
 
+#................
+from qiskit.transpiler import generate_preset_pass_manager, PassManager
+from qiskit_ibm_runtime.transpiler.passes import FoldRzzAngle
+from qiskit.transpiler.passes import Optimize1qGatesDecomposition, RemoveIdentityEquivalent
+def pm_transpile(backend,optimization_level=3,seed_transpiler=42):
+    print("Generating preset pass manager...")
+    pm = generate_preset_pass_manager(optimization_level=optimization_level, backend=backend, seed_transpiler=seed_transpiler)
 
-coreN='advection_solver_set1'
-inpF='../ibmq_data/inc_advection_solver_aug16/ibmq_qc_inc_%s.qpy'%coreN
-
+    # FoldRzzAngle should be applied at post_optimisation to work w/ fractional gates, Daito
+    pm.post_optimization = PassManager(
+        [
+            FoldRzzAngle(),
+            Optimize1qGatesDecomposition(target=backend.target),
+            RemoveIdentityEquivalent(target=backend.target),
+        ]
+    )
+ 
+    qcT = pm.run(qc)
+    return qcT
+#................
+    
+inpF='inc_advection_solver_set400.qpy'
 
 with open(inpF, 'rb') as fd:
     qcL = qpy.load(fd)
@@ -29,11 +46,14 @@ service = QiskitRuntimeService()
 backN='ibm_kingston'
 backend = service.backend(backN , use_fractional_gates=True)  #  enable rzz gates
 print('use true HW backend =', backN) 
-
-qcT =  transpile(qc, backend,optimization_level=3)
+tseed=42
+qcT=pm_transpile(backend,optimization_level=3,seed_transpiler=tseed)
+physQ = qcT._layout.final_index_layout(filter_ancillas=True)
+print('qcT qubits:',physQ)
 print('Transpiled, ops:',qcT.count_ops())
+#1print(qcT.draw('text', idle_wires=False))
 
 sampler = Sampler(mode=backend)
-job = sampler.run(tuple([qcT]),shots=100)
+job = sampler.run(tuple([qcT]),shots=10)
 
 print('circ submitted')
