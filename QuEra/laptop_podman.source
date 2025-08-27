@@ -5,14 +5,16 @@ echo load my QuEra-AWS creds
 source /Users/balewski/.ssh/quera_aws.credentials
 env |grep QUERA_AWS  # activate to see the creds
 
-IMG=balewski/ubu24-braket-quera:p1
+IMG=balewski/ubu24-braket-quera:p1b
+#IMG=balewski/ubu24-braket-quera:p1c  # BAD
+
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
 
 JNB_PORT=''
 WORK_DIR=/quera
-DATA_VAULT=/docker_volumes/dataVault2024
+DATA_VAULT=/shared_volumes/dataVault2024
 CMD=/bin/bash
 
 echo "The number of arguments is: $#"
@@ -34,8 +36,8 @@ eval podman run -it \
     -e AWS_SECRET_ACCESS_KEY="$QUERA_AWS_SECRET_ACCESS_KEY" \
     -e AWS_DEFAULT_REGION=$QUERA_AWS_REGION \
     -e QuEra_dataVault=/dataVault/dataQuEra_2023julyA \
-    --volume /docker_volumes/quantumMind/QuEra/python:/quera \
-    --volume /docker_volumes/quantumMind:/quantumMind \
+    --volume /shared_volumes/quantumMind/QuEra/python:/quera \
+    --volume /shared_volumes/quantumMind:/quantumMind \
     --volume $DATA_VAULT:/dataVault2024 \
     --workdir $WORK_DIR \
     $JNB_PORT \

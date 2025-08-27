@@ -1,87 +1,124 @@
 #!/usr/bin/env python3
-# test Ry--> X90-Z(phi)-X90  transformation
+"""
+Compare and verify the equivalence of two quantum circuit implementations:
+1. CX-RY-CX sequence
+2. H-CZ-RY-CZ-H sequence
+
+This script demonstrates that these implementations are equivalent up to a global phase.
+"""
 
 import numpy as np
-from qiskit import QuantumCircuit, transpile
+from typing import Tuple
+from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
-from qiskit.circuit.library import RYGate
 
-# Set NumPy print options to display full matrices with 3 decimal places
-np.set_printoptions(threshold=np.inf, linewidth=np.inf, precision=2)
+# Configuration
+PRECISION = 2
+TOLERANCE = 1e-8
+np.set_printoptions(threshold=np.inf, linewidth=np.inf, precision=PRECISION)
 
-def are_unitaries_equal_up_to_phase(U1, U2):
+def are_unitaries_equal_up_to_phase(U1: np.ndarray, U2: np.ndarray) -> bool:
+    """
+    Check if two unitary matrices are equal up to a global phase.
+
+    Args:
+        U1: First unitary matrix
+        U2: Second unitary matrix
+
+    Returns:
+        bool: True if matrices are equal up to a global phase, False otherwise
+    """
     max_index = np.unravel_index(np.argmax(np.abs(U1)), U1.shape)
     
-    if np.abs(U1[max_index]) < 1e-10 or np.abs(U2[max_index]) < 1e-10:
+    if np.abs(U1[max_index]) < TOLERANCE or np.abs(U2[max_index]) < TOLERANCE:
         return np.allclose(U1, U2)
+    
     phase = U1[max_index] / U2[max_index]
-    print('relative phase=', phase)
-    return np.allclose(U1, U2 * phase, atol=1e-8)
+    print('phase=%.2f'%(phase))
+    return np.allclose(U1, U2 * phase, atol=TOLERANCE)
 
-def create_circuitA(th1, th2):  # QCrank 1+1  using CX
+def create_circuit_cx(th1: float, th2: float) -> QuantumCircuit:
+    """
+    Create a quantum circuit using CX gates.
+
+    Args:
+        th1: First rotation angle (unused in current implementation)
+        th2: Second rotation angle
+
+    Returns:
+        QuantumCircuit: Circuit with CX-RY-CX sequence
+    """
     qc = QuantumCircuit(2)
-    #qc.h(1) # address 
-    #qc.ry(th1, 0)
     qc.cx(0, 1)
     qc.ry(th2, 1)
     qc.cx(0, 1)    
     return qc
 
-def create_circuitB(th1, th2):  # QCrank 1+1  using CX
+def create_circuit_cz(th1: float, th2: float) -> QuantumCircuit:
+    """
+    Create a quantum circuit using CZ gates.
+
+    Args:
+        th1: First rotation angle (unused in current implementation)
+        th2: Second rotation angle
+
+    Returns:
+        QuantumCircuit: Circuit with H-CZ-RY-CZ-H sequence
+    """
     qc = QuantumCircuit(2)
-    #qc.h(1) # address 
-    #qc.ry(th1, 0); qc.h(0)
     qc.h(1)
     qc.cz(0, 1)
-
     qc.ry(-th2, 1) 
-    qc.cz(0, 1)  ; qc.h(1)
+    qc.cz(0, 1)
+    qc.h(1)
     return qc
 
+def compare_circuits(th1: float, th2: float) -> bool:
+    """
+    Compare the unitary matrices of two circuit implementations.
 
-def check_unitaries(th1, th2,i):
-    qcA = create_circuitA(th1, th2)
-    qcB = create_circuitB(th1, th2)
+    Args:
+        th1: First rotation angle
+        th2: Second rotation angle
 
-    Ua=Operator(qcA).data
-    Ub=Operator(qcB).data
+    Returns:
+        bool: True if circuits are equivalent up to global phase
+    """
+    circuit_cx = create_circuit_cx(th1, th2)
+    circuit_cz = create_circuit_cz(th1, th2)
 
+    unitary_cx = Operator(circuit_cx).data
+    unitary_cz = Operator(circuit_cz).data
+
+    print("CX circuit unitary:\n", unitary_cx)
+    print("CZ circuit unitary:\n", unitary_cz)
     
-    print("Ua unitary:\n",Ua)
-    print("Ub unitary:\n",Ub)
+    print(circuit_cx)
+    print(circuit_cz)
+
+    are_equal = are_unitaries_equal_up_to_phase(unitary_cx, unitary_cz)
+    print('Circuits equal up to global phase=%s'%(str(are_equal)))
     
-    if 1:
-        print(qcA)
-        print(qcB)
-
-    are_equal_transformed = are_unitaries_equal_up_to_phase(Ua,Ub)
-   
-    print(f"\nOriginal and transformed unitaries are equal up to a global phase: {are_equal_transformed}")
-    
-
-    return are_equal_transformed 
-
-
-#=================================
-#  M A I N 
-#=================================
+    return are_equal
 
 def main():
+    """Run the circuit comparison tests with random angles."""
     np.random.seed(43)  # for reproducibility
-    m = 4  # number of random angle pairs to test
+    num_tests = 4
     
-    for i in range(m):
+    for i in range(num_tests):
         th1 = np.random.uniform(0, 2*np.pi)
         th2 = np.random.uniform(0, 2*np.pi)
         
-        print(f"\nTest {i+1}: Ry(θ1={th1:.3f}) and Ry(θ2={th2:.3f})")
-        if check_unitaries(th1, th2,i):
-            print("All decompositions are correct!")
+        print('\nTest %d: Ry(theta1=%.3f) and Ry(theta2=%.3f)'%(i+1, th1, th2))
+        if compare_circuits(th1, th2):
+            print("✓ Circuits are equivalent!")
         else:
-            print("Decomposition mismatch detected.")
-            exit(0)
+            print("✗ Circuit equivalence test failed!")
+            return
         print("-" * 50)
-    print('PASS for %d pairs'%m)
+    
+    print('✓ All %d test pairs passed!'%(num_tests))
 
 if __name__ == "__main__":
     main()
