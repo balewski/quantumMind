@@ -31,9 +31,12 @@ if __name__ == "__main__":
     print(backend.name,'Counts:',counts)
 
     #------------------------------------------------
-    # B: Simulate the circuit using an ideal Aer simulation
+    print('\n Simulate the circuit using an ideal Aer simulation')
     backend = AerSimulator()
-    job = backend.run(qc, shots=nshot)    
+    cx_u3_basis = ['cx', 'u3']
+    qcT = transpile(qc, backend,basis_gates=cx_u3_basis)
+    print(qcT)
+    job = backend.run(qcT, shots=nshot)    
     counts = job.result().get_counts()
     print(backend.name,'Counts:',counts)
     

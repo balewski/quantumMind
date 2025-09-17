@@ -1,11 +1,13 @@
 #!/bin/bash
 
 echo load my QUANDELA   creds
-source /global/homes/b/balewski/.ssh/quandela.creds
+source /global/homes/b/balewski/.ssh/quandela.creds  # PM
+source /Users/balewski/.ssh/quandela.creds  # laptop
 env |grep QUANDELA  # activate to see the creds
 
-IMG=balewski/ubu24-perceval:p2c
-IMG=balewski/ubu24-perceval:p2e
+#IMG=balewski/ubu24-perceval:p2c  #PM??
+#IMG=balewski/ubu24-perceval:p2e  # january, laptop
+IMG=balewski/ubu24-perceval:p2f  #  sept, laptop
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

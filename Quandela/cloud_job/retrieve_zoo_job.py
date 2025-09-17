@@ -72,7 +72,11 @@ if __name__ == "__main__":
         jid=sbm['job_ids'][ic]
         job = proc.resume_job(jid)
         assert job.status()=='SUCCESS'
-        sampResL[ic] = job.get_results()
+        resD=job.get_results()
+        sampResL[ic] = resD
+        print('counts:',resD['results'])
+        print('perf:',resD['physical_perf'],resD['logical_perf'])
+
 
    
     harvest_results(sampResL,expMD,expD)

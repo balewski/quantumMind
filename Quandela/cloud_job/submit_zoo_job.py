@@ -14,7 +14,7 @@ in meta-data it is converted to 'tag'
 -i 5:  1 circuit , BellState with Knill CNOT
 -i 6:  1 circuit , 3q GHZ  with Knill CNOT
 
-runs localy  or on cloud (needa creds)
+runs locally  or on cloud (needs creds)
 
 Records meta-data containing  job_id 
 HD5 arrays contain input and output
@@ -111,8 +111,8 @@ def build_task_GHZstate(md,noise_source):
         pmd['comment']='bellState with postproc-CNOT, (aka Ralph)'
         cnot=cnotP
     if pmd['tag'] in [5,6]:        
-        # Aubaert:  each heralded cnots brings two added photons for the heralds. As such, your min_detected_photons_filter is not high enough. It should be num_qubit + 2 * (num_qubit - 1).
-        # Aubaert:   For Ascella, the cloud indicates that the maximum number of photons is 6. use cnotH+cnotP to circumvent it. So more ideas in  toys/ add noisy_ghz.py 
+        # Aubaert:  each heralded cnots brings two added photons for the heralds. As such, your min_detected_photons_filter  should be num_qubit + 2 * (num_qubit - 1).
+        # Aubaert:   For Ascella, the cloud indicates that the maximum number of photons is 6. use cnotH+cnotP to circumvent it. See more ideas in  toys/noisy_ghz.py 
         minPhoton=num_qubit + 2 * (num_qubit - 1)
         pmd['comment']='bellState with heralded-CNOT  (aka Knill)'
         cnot=cnotH
@@ -226,6 +226,7 @@ if __name__ == "__main__":
         print('M: use cloude service: %s ...'%backendN)
                                
     #.... common processor config
+    print('M: write to outPath:',outPath)
     assert os.path.exists(outPath)
                         
     if not args.executeCircuit:
@@ -252,9 +253,13 @@ if __name__ == "__main__":
             print(ic,job.id) 
             jobIdL[ic]=job.id
             
-            if ic<nCirc-1: #  Cannot create more than 1 job(s) with Explorer Offer
+            if ic<nCirc-1 or 1: #  Cannot create more than 1 job(s) with Explorer Offer
                 print('circ=%d  back=%s wait for results ...'%(ic,backendN))
-                monitor_async_job(job)             
+                monitor_async_job(job)
+                resD=job.get_results()
+                if 1:  # debug
+                    print('perf:',resD['physical_perf'],resD['logical_perf'])
+                    print('counts:',resD['results'])
 
     harvest_submitMeta(expMD,args,T0)    
     if args.verb>1: pprint(expMD)
