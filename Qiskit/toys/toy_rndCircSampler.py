@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
-'''
- generate random large circuit and run it using density matrix simulator which is very slow
 
-'''
+"""
+Random circuit generation and execution with density matrix simulation
+
+Generate random large circuit and run it using density matrix simulator which is very slow
+"""
 
 from qiskit.circuit.random import random_circuit
 from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister,transpile

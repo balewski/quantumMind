@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Retrieve and analyze completed quantum jobs with detailed execution metrics
+"""
+
 
 from pprint import pprint
 from qiskit_ibm_runtime import QiskitRuntimeService

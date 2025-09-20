@@ -2,11 +2,12 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-Applying noise to custom unitary gates
+"""
+Custom 2-qubit noise model with amplitude damping errors for iSWAP gates
 
+Applying noise to custom unitary gates
 https://qiskit.github.io/qiskit-aer/tutorials/4_custom_gate_noise.html
-'''
+"""
 
 from qiskit import transpile, QuantumCircuit
 import qiskit.quantum_info as qi  # IMPORTANT for defining custom gates

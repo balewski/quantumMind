@@ -20,8 +20,9 @@ if __name__ == "__main__":
 
     num_qubit=3
     nMode=2*num_qubit
-    minPhoton=num_qubit 
-    isIdeal=True
+    minPhoton=num_qubit
+    
+    isIdeal=not True
     
     if isIdeal:
         proc = pcvl.Processor("SLOS",nMode)
@@ -34,8 +35,14 @@ if __name__ == "__main__":
     proc.with_input(pcvl.BasicState([1,0,1,0,1,0]))
     pcvl.pdisplay(proc)
     print('M: proc:',proc.name)
+
+    if not isIdeal:
+        targetSamp=500
+        shotsEstim = proc.estimate_required_shots(nsamples=targetSamp)
+        print('Estiamted %.2e shots are neeeded  to acquire %d samples on %s'%(shotsEstim,targetSamp,proc.name))
+
     
-    shots=2_000_000_000
+    shots=7_000_000_000
     sampler = Sampler(proc, max_shots_per_call=shots)
     if isIdeal:
         resD=sampler.sample_count(shots)

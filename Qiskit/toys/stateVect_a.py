@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Advanced state vector simulation with iSWAP operators and custom circuit construction
+"""
+
 # https://qiskit.github.io/qiskit-aer/tutorials/1_aersimulator.html
 
 import qiskit.quantum_info as qi

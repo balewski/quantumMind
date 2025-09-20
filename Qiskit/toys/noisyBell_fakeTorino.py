@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Bell state preparation using FakeTorino backend with hardware noise characteristics
+"""
 
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator

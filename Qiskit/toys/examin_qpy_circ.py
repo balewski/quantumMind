@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Load and analyze quantum circuits from QPY files, evaluate transpilation for hardware backends
+"""
+
 
 from qiskit import  transpile
 from qiskit_aer import AerSimulator

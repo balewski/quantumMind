@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Compare unitary matrices of original and transpiled quantum circuits across different backends
+"""
+
 from qiskit import QuantumCircuit,QuantumRegister, transpile, ClassicalRegister, transpile
 from qiskit_ibm_runtime import QiskitRuntimeService, Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler

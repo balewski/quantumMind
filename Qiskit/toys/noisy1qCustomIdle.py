@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+"""
+Custom 1-qubit noise model with depolarizing and Pauli errors for identity gates
 
-'''
 Applying noise to custom unitary gates
-
 https://qiskit.github.io/qiskit-aer/tutorials/4_custom_gate_noise.html
-'''
+"""
 
 from qiskit import transpile, QuantumCircuit
 import qiskit.quantum_info as qi  # IMPORTANT for defining custom gates

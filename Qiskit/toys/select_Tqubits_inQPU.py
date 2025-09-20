@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Systematic selection of optimal qubit arrangements for T-shaped connectivity patterns
+"""
+
 from qiskit_ibm_runtime import QiskitRuntimeService
 import networkx as nx
 from pprint import pprint

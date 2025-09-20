@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+AER simulator execution with feed-forward operations and hardware noise models
+"""
+
 from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister, transpile
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler

@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Density matrix simulation with random density matrices and Hadamard gate evolution
+"""
+
 # https://qiskit.github.io/qiskit-aer/tutorials/1_aersimulator.html
 
 import qiskit.quantum_info as qi

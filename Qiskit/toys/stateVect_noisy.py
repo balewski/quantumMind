@@ -2,11 +2,11 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-example of state vector computation using Qiskit 1.2
+"""
+State vector simulation with realistic noise models from IBM quantum backends
 
-
-'''
+Example of state vector computation using Qiskit 1.2
+"""
 from qiskit import  QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.quantum_info.operators import Operator
 from qiskit_aer import AerSimulator

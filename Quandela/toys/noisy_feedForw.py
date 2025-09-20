@@ -22,15 +22,14 @@ if __name__ == "__main__":
     num_qubit=4
     nMode=2*num_qubit
     minPhoton=num_qubit  
-    isIdeal= not True
+    isIdeal= True
     
     if isIdeal:
-        proc = pcvl.Processor("SLOS",nMode)
         shots=50_000 
+        proc = pcvl.Processor("SLOS",nMode)
     else:
-        proc = pcvl.RemoteProcessor("sim:ascella",m=nMode)
-        shots=50_000_000_000_000  
-        #proc = pcvl.RemoteProcessor("qpu:ascella",m=nMode)
+        shots=50_000_000_000  
+        #proc = pcvl.RemoteProcessor("sim:ascella",m=nMode)
         proc = pcvl.RemoteProcessor("sim:belenos",m=nMode)
 
     # Set up the circuit: H gate + CNOT to create Bell state
@@ -39,18 +38,22 @@ if __name__ == "__main__":
     proc.add(0, cnotH)        # CNOT with heralding
 
 
-    if 1:  # Feed-forward X correction in qubit 3 based mid-circ meas of qubit 1
-        srcMode=2; trgModeOff=2
-        ff_X = pcvl.FFCircuitProvider(srcMode, trgModeOff, pcvl.Circuit(2))
+    if 1:  # Feed-forward X correction on q3  based on measurement of Alice's qubit 1
+        nModes=2; # the size of the circuit that will be applied conditionally.
+        modeOff=2; # The first mode index (in the global processor) where this feed‑forward block will be inserted.
+        ff_X = pcvl.FFCircuitProvider(nModes, modeOff, pcvl.Circuit(2))
+        #                     ( measurement_pattern, conditional_circuit)
         ff_X.add_configuration([0, 1], pcvl.PERM([1, 0]))
         proc.add(2, pcvl.Detector.pnr())
         proc.add(3, pcvl.Detector.pnr())
         proc.add(2, ff_X)
     
 
-    if 0:    # Feed-forward Z correction
+    if 0 :
+        # Feed-forward Z correction on q2  based on measurement of Alice's qubit 0
+        modeOff=3  # this selects q3, since it is 2*nModes+modeOff from the top of processor
         phi = pcvl.P("phi")
-        ff_Z = pcvl.FFConfigurator(2, 3, pcvl.PS(phi), {"phi": 0})
+        ff_Z = pcvl.FFConfigurator(nModes, modeOff, pcvl.PS(phi), {"phi": 0})
         ff_Z.add_configuration([0, 1], {"phi": np.pi})
         proc.add(0, pcvl.Detector.pnr())
         proc.add(1, pcvl.Detector.pnr())
@@ -69,15 +72,13 @@ if __name__ == "__main__":
 
     pcvl.pdisplay(proc)
     print('M: input_state=%s, min_photons=%d' % (str(input_state), minPhoton),proc.name)
-    
-    
+        
     sampler = Sampler(proc, max_shots_per_call=shots)
 
     resD=sampler.sample_count(shots)  # blocking call
-    print('resD:');    print(resD)
+    print('raw resD:');    print(resD)
     print('shots=%2g' % shots,proc.name)
     
-    exit(0)
     # Handle different performance metrics based on simulator type
     if isIdeal:
         # Local/ideal simulator

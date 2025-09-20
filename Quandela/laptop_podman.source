@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo load my QUANDELA   creds
-source /global/homes/b/balewski/.ssh/quandela.creds  # PM
+#source /global/homes/b/balewski/.ssh/quandela.creds  # PM
 source /Users/balewski/.ssh/quandela.creds  # laptop
 env |grep QUANDELA  # activate to see the creds
 

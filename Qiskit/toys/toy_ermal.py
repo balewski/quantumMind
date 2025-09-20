@@ -2,12 +2,12 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-example of state vector computation using Qiskit 1.2
+"""
+Error mitigation examples with state vector and density matrix methods (partial implementation)
+
+Example of state vector computation using Qiskit 1.2
 https://qiskit.github.io/qiskit-aer/tutorials/1_aersimulator.html
-
-
-'''
+"""
 from qiskit import  QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.quantum_info.operators import Operator
 from qiskit_aer import AerSimulator

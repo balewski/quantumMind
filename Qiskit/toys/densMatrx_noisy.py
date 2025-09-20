@@ -2,14 +2,14 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-example of desnity matrix computation using Qiskit 1.2
+"""
+Density matrix simulation with noise models extracted from real IBM quantum devices
+
+Example of density matrix computation using Qiskit 1.2
 
     https://docs.quantum.ibm.com/guides/build-noise-models
     https://docs.quantum.ibm.com/guides/build-noise-models#initializing-a-noise-model-from-a-backend
-
-
-'''
+"""
 from qiskit import  QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
 from qiskit.quantum_info.operators import Operator
 from qiskit_aer import AerSimulator

@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Hardware execution on IBM quantum devices with parametric circuits and reset operations
+"""
+
 from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister, transpile
 from qiskit_ibm_runtime import QiskitRuntimeService, Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler

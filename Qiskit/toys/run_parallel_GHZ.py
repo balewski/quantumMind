@@ -2,10 +2,11 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-spreads a GHZ small circuit in many copies on a QPU based on user's choice of qubits
+"""
+Parallel GHZ circuit execution across multiple qubit groups on quantum hardware
 
-'''
+Spreads a GHZ small circuit in many copies on a QPU based on user's choice of qubits
+"""
 from qiskit import QuantumCircuit, transpile
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Options, Session
 from qiskit.result.utils import marginal_distribution

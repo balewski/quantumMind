@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
+
+"""
+Load and analyze QPY circuits with fractional gate optimization for hardware execution
+"""
 from qiskit import qpy
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler 

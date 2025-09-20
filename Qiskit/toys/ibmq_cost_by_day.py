@@ -2,7 +2,9 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
+"""
+Track and analyze IBM Quantum usage costs and quantum time consumption by backend
+
     start_date = datetime(2024, 8, 8)  # Start date (YYYY, MM, DD)
     end_date = datetime(2024, 12, 27)   # End date (YYYY, MM, DD)
 

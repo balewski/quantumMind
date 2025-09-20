@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski, ChatGPT"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Create custom quantum gates (T-gates) and compose them into larger circuit structures
+"""
+
 
 
 import random

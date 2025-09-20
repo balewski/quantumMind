@@ -2,8 +2,9 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-
 """
+Comprehensive workflow for creating, serializing, and deserializing parametric quantum circuits with metadata
+
 ================================================================================
 Qiskit Circuit and Metadata Serialization Workflow
 ================================================================================
@@ -12,7 +13,7 @@ Purpose:
 --------
 This script demonstrates a comprehensive and robust workflow for creating, managing,
 and persisting complex quantum circuits using Qiskit.  Meta data contain numpy arrays,
-circit are parametric, initial state is also parametric.
+circuit are parametric, initial state is also parametric.
 
 Workflow Overview:
 ------------------

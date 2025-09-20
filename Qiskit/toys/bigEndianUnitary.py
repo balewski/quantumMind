@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski, ChatGPT"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Convert unitary matrices between big-endian and little-endian conventions with matrix display utilities
+"""
+
 import numpy as np
 from scipy.stats import unitary_group
 

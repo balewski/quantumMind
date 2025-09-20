@@ -2,12 +2,13 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-Not implemented:
-- forceing the same qubits to be calibrated as for the circuit of interest
-- revert order : firts trinciple circ of interest, then append calibration circuits
+"""
+Readout error correction using tensored calibration matrices for multi-qubit systems
 
-'''
+Not implemented:
+- forcing the same qubits to be calibrated as for the circuit of interest
+- revert order : first principle circ of interest, then append calibration circuits
+"""
 
 import numpy as np
 from qiskit import QuantumCircuit

@@ -2,6 +2,10 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+"""
+Expectation value estimation using AER backend with Pauli observables
+"""
+
 from qiskit import QuantumCircuit,QuantumRegister, ClassicalRegister
 from qiskit_ibm_runtime.options.estimator_options import EstimatorOptions
 from qiskit_aer import AerSimulator

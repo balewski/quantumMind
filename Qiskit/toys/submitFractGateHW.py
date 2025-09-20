@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
+
+"""
+Submit circuits with fractional gates (RZZ) to IBM quantum hardware
+"""
 from qiskit import qpy
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler 

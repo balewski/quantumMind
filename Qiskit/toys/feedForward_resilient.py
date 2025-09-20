@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-# use majority voting to compensate readout error for feed-forward
+"""
+Feed-forward operations with majority voting for readout error compensation
+"""
 
+# use majority voting to compensate readout error for feed-forward
 # Expresions:  https://docs.quantum.ibm.com/api/qiskit/0.44/circuit_classical
 
 import numpy as np

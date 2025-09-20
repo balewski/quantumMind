@@ -1,15 +1,16 @@
-may need some cleanup to work
 #!/usr/bin/env python3
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
-'''
-example of defining custom delays with different pauli errors
-use sampler 
+"""
+Bell state generation with custom density matrix and noise modeling (needs cleanup)
+
+Example of defining custom delays with different pauli errors
+Use sampler 
 
 Most of code written by ChatGPT & Preplexity
-
-'''
+May need some cleanup to work
+"""
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator

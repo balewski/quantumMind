@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+Verify equivalence of quantum circuit implementations: CX-RY-CX vs H-CZ-RY-CZ-H sequences
+
 Compare and verify the equivalence of two quantum circuit implementations:
 1. CX-RY-CX sequence
 2. H-CZ-RY-CZ-H sequence
