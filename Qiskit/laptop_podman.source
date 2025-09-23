@@ -6,7 +6,7 @@ source ~/.ssh/ibmq.creds jan
 #IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
 IMG=balewski/ubu24-qiskit:p4c  #works
 IMG=balewski/ubu24-qiskit:p6d 
-IMG=balewski/ubu24-qiskit:p7c 
+IMG=balewski/ubu24-qiskit:p7f 
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

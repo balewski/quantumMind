@@ -42,3 +42,4 @@ __pycache__
 *.npy
 .cursor
 *.qpy
+.emacs.d
