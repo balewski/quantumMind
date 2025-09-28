@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
+"""
+Quantum Phase Estimation (QPE) for a Heisenberg-type Hamiltonian.
+
+Features:
+- Builds a Hamiltonian of size `--nq_system` using `prep_Heisenberg_Hamiltonian.py`.
+- Selects an eigenstate (by `--evIdx`) and prepares it as an initial system state.
+- Runs QPE with `--nq_phase` phase qubits and trotterized time evolution (Suzuki-Trotter reps).
+- Two QPE implementations are supported: repeat U 2^k times (fixed time per layer).
+- Outputs timing info, counts, predicted most-likely bitstring, and a histogram PNG tagged with the expected key.
+
+Key args:
+- `-s/--nq_system` number of system qubits; `-q/--nq_phase` number of phase qubits
+- `-t/--time` evolution time per base layer; `--trotterSteps` Suzuki-Trotter repetitions
+- `--shots` sampler shots; `--isEigen` verifies eigenstate; `-v/--verb` printing level
+"""
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,6 +29,7 @@ from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime import Sampler
 from scipy.linalg import expm
 from qiskit.circuit.library import PauliEvolutionGate
+from qiskit.visualization import plot_histogram
 from prep_Heisenberg_Hamiltonian import create_heisenberg_hamiltonian, compute_eigenstates, prepare_eigenstate_circuit, check_if_eigenstate
 
 
@@ -26,8 +42,7 @@ def qpe_circuit(nq_phase, hamiltonian,qc_initState,time,trotterSteps):
     Build the QPE circuit.
     nq_phase: number of phase qubits
     hamiltonian: SparsePauliOp 
-    theta: evolution time scaling
-    init_state_label: eigenstate label for last 3 qubits
+    time: evolution time per base layer
     """
     
     nq_system = hamiltonian.num_qubits
@@ -47,23 +62,14 @@ def qpe_circuit(nq_phase, hamiltonian,qc_initState,time,trotterSteps):
     # Define the Trotterization strategy with the desired number of repetitions
     trotter_synth = SuzukiTrotter(reps=trotterSteps)
 
-    ''' 1 c-U per phase qubit
     for k in range(nq_phase):
-        evo = PauliEvolutionGate(hamiltonian, time=time * (2 ** k), synthesis=trotter_synth)
         target_qubits=list(range(nq_phase, nq_phase + nq_system))
-        qc.append(evo.control(1), [k] + target_qubits)
-    '''
+        evo = PauliEvolutionGate(hamiltonian, time=time , synthesis=trotter_synth)
+        for _ in range(1<<k):
+            qc.append(evo.control(1), [k] + target_qubits)
+   
 
-    # fixed trotter steps per time
-    for k in range(nq_phase):
-        nrep=1<<k
-        for j in range(nrep):
-            evo = PauliEvolutionGate(hamiltonian, time=time , synthesis=trotter_synth)
-            cevo=evo.control(1)
-            target_qubits=list(range(nq_phase, nq_phase + nq_system))            
-            qc.append(cevo, [k] + target_qubits)
-
-    #print(qc)  ;aa  
+    
         
     # Step 4: Inverse QFT on phase register
     qft_gate = QFTGate(nq_phase).inverse()
@@ -71,12 +77,12 @@ def qpe_circuit(nq_phase, hamiltonian,qc_initState,time,trotterSteps):
 
     # Step 5: Measurement of phase register
     for i in range(nq_phase):
-        qc.measure(i , i) #nq_phase-1-i)
+        qc.measure(i , i)
 
     return qc
 
 def eval_phase(countD,args,eigenvalue):
-    phase = (-args.time  * eigenvalue) / (2 * np.pi)  # normalized phase in [0,1)
+    phase = (-args.time  * eigenvalue) / (2 * np.pi)  # normalized phase fraction
     xtrue= phase % 1.0
 
     nqp=args.nq_phase
@@ -86,7 +92,20 @@ def eval_phase(countD,args,eigenvalue):
     ikey=int(max_key,2)
     xrec=ikey/2**nqp
     xerr=1/2**nqp
-    print('key=%s ikey=%d  prob=%.3f X: true=%.3f reco=%.3f +/- %.3f'%(max_key, ikey, prob,xtrue,xrec,xerr))
+    ipred = int((xtrue * (2**nqp)) + 0.5) % (2**nqp)
+    kpred = format(ipred, '0%db' % nqp)
+    print('key=%s ikey=%d  prob=%.3f X: true=%.3f reco=%.3f +/- %.3f expected_key~%s'%(max_key, ikey, prob,xtrue,xrec,xerr,kpred))
+    return kpred
+
+def plot_counts(ax, counts, expected_key):
+    title = f'QPE counts (expected: {expected_key})'
+    plot_histogram(counts, ax=ax, title=title, sort='asc')
+    labels = [t.get_text() for t in ax.get_xticklabels()]
+    idx = labels.index(expected_key)
+    xticks = ax.get_xticks()
+    xpos = xticks[idx]
+    ymin, ymax = ax.get_ylim()
+    ax.vlines(x=xpos, ymin=ymin, ymax=ymax, colors='red', linestyles='dashed')
 
 
 # -------------------------
@@ -94,21 +113,23 @@ def eval_phase(countD,args,eigenvalue):
 # -------------------------
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nq_ham", type=int, default=3, help="Number of qubits in the Hamiltonian (default: 3).")
-    parser.add_argument("--nq_phase", type=int, default=3, help="Number of phase qubits")
+    parser.add_argument('-s',"--nq_system", type=int, default=3, help="Number of qubits in the Hamiltonian (system)")
+    parser.add_argument('-q',"--nq_phase", type=int, default=5, help="Number of phase qubits")
     parser.add_argument("--evIdx", type=int, default=0, help="Index of the eigenstate to prepare (0 for ground state).")
 
     parser.add_argument("--isEigen", action='store_true', help="Check if the initial state is an eigenstate")
-    parser.add_argument("--time", type=float, default=1.5, help="evolution time (a.u.)")
+    parser.add_argument('-t',"--time", type=float, default=1.2, help="evolution time (a.u.)")
+    
     parser.add_argument("--shots", type=int, default=10_000, help="Number of shots")
-    parser.add_argument("--trotterSteps", type=int, default=200, help="Number of Trotter steps")
+    parser.add_argument("--trotterSteps", type=int, default=10, help="Number of Trotter steps")
+    parser.add_argument('-v',"--verb", type=int, default=1, help="verbosity level; >1 prints full circuit")
     args = parser.parse_args()
     print(vars(args))
   
 
    # 1. Create Hamiltonian
     try:
-        hamiltonian = create_heisenberg_hamiltonian(args.nq_ham)
+        hamiltonian = create_heisenberg_hamiltonian(args.nq_system)
         print("Hamiltonian created:\n", hamiltonian)
     except NotImplementedError as e:
         print(f"Error: {e}")
@@ -141,8 +162,7 @@ def main():
     qcT_start = time.time()
     qcT = transpile(qc_initState, basis_gates=['u','cx'])
     qcT_end = time.time()
-    print('Transpile (initState) elapsed=%.3f s' % (qcT_end - qcT_start))
-    print(qcT.draw())
+    
 
     if args.isEigen:
         # Final check using the transpiled circuit and the Hamiltonian
@@ -151,12 +171,14 @@ def main():
      
     # Build QPE circuit
     qc = qpe_circuit(args.nq_phase, hamiltonian,qc_initState,args.time,args.trotterSteps)
-    print(qc); print(qc.count_ops())
+    if args.verb>1:
+        print(qc)
+    print(qc.count_ops())
     # Run the QPE algorithm
     print(f"\nRunning QPE with {args.shots} shots...")
     backend = AerSimulator()
     transpile_start = time.time()
-    qcT = transpile(qc, backend,basis_gates=['u','cz'])
+    qcT = transpile(qc, backend)
     transpile_end = time.time()
     print('Transpile (QPE) elapsed=%.3f s' % (transpile_end - transpile_start))
     len2q=qcT.depth(filter_function=lambda x: x.operation.num_qubits == 2 )
@@ -171,14 +193,17 @@ def main():
 
     # Post-process and plot the results
     counts = result[0].data.c.get_counts()
-    pprint(counts)
+    #pprint(counts)
 
-    eval_phase(counts, args, selected_eigenvalue )
+    expected_key = eval_phase(counts, args, selected_eigenvalue )
+    print('expected_key:',expected_key)
     # Plot histogram
-    if 0:
+    if 1:
         fig, ax = plt.subplots()
-        plot_counts(ax, counts, args.nq_phase, args.theta)
-        plt.show()
+        plot_counts(ax, counts, expected_key)
+        outF='out/hs%d_ek%s.png'%(hamiltonian.num_qubits,expected_key)
+        plt.savefig(outF)
+        print('saved:',outF)
 
 
 if __name__ == '__main__':

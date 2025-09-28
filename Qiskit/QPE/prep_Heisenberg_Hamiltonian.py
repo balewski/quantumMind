@@ -2,27 +2,14 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 """
-Eigenstate Preparation and Verification Script
+Heisenberg Hamiltonian utilities: build H, compute eigenstates, prepare eigenstate circuits,
+and verify eigenstate property.
 
-This script serves two main purposes:
-1.  Classical Computation of Eigenstates: It defines a 2-qubit or 3-qubit
-    Heisenberg-type Hamiltonian and uses classical linear algebra (numpy)
-    to compute its exact eigenvalues and eigenvectors.
-
-2.  Quantum Circuit Preparation: It takes a classically computed eigenvector
-    (selected by an index via command-line) and constructs a Qiskit quantum
-    circuit that prepares this specific quantum state from the initial |0...0> state.
-
-The script includes verification steps to ensure the quantum circuit correctly
-generates the desired eigenstate and that this state is indeed an eigenstate
-of the specified Hamiltonian.
-
-Usage:
-    - To prepare the ground state (index 0) of the default 3-qubit Hamiltonian:
-      python bb3.py
-
-    - To prepare the first excited state (index 1) of the 2-qubit Hamiltonian:
-      python bb3.py --nq_ham 2 --evIdx 1
+Capabilities:
+- Create toy Heisenberg-like Hamiltonians for 2, 3, and 4 qubits (4-qubit version uses 6 hardcoded terms).
+- Compute exact eigenvalues/eigenvectors (numpy eigh).
+- Prepare a `QuantumCircuit` that initializes a chosen eigenstate from |0...0>, and strip leading resets.
+- Verify that a prepared circuit output state is an eigenstate of H.
 """
 import argparse
 import numpy as np
@@ -34,22 +21,38 @@ def create_heisenberg_hamiltonian(n_qubits: int) -> SparsePauliOp:
     Creates a Heisenberg-type Hamiltonian for a specified number of qubits.
     """
     if n_qubits == 2:
-        # H = -1.5*XX + 1.0*YY - 0.9*ZZ
         paulis = ["XX", "YY", "ZZ"]
         coeffs = [-1.5, 1.0, -0.9]
     elif n_qubits == 3:
-        # H = 0.5*XXI - 1.0*IYY + 0.8*ZIZ
-        paulis = ["XXI", "IYY", "ZIZ"]
-        coeffs = [0.5, -1.0, 0.8]
+        paulis = ["XXI", "IYY", "ZIZ","XXX"]
+        coeffs = [0.5, -1.0, 0.8,-0.2]
+    elif n_qubits == 4:
+        # Randomly picked 6-term 4-qubit Hamiltonian (hardcoded)
+        # Terms include 2-body and 3-body interactions, illustrative only
+        paulis = [
+            "XXII",  # 2-body
+            "IYYZ",  # mixed with Z on last
+            "ZIZI",  # Z interactions
+            "XYIX",  # mixed XYX
+            "IIZX",  # ZX on last two
+            "ZZZZ",  # 4-body
+        ]
+        coeffs = [
+            0.7,
+            -1.1,
+            0.5,
+            -0.9,
+            0.6,
+            0.3,
+        ]
     else:
-        raise NotImplementedError("This script currently only supports 2 and 3-qubit Heisenberg Hamiltonians.")
+        raise NotImplementedError("This script currently only supports 2, 3, and 4-qubit Heisenberg Hamiltonians.")
     
     return SparsePauliOp(paulis, coeffs)
 
 def compute_eigenstates(hamiltonian: SparsePauliOp):
     """
     Computes the eigenvalues and eigenvectors of a Hamiltonian using matrix mechanics.
-    (Logic from bb1.py)
     """
     hamiltonian_matrix = hamiltonian.to_matrix()
     print("Computing eigenvalues and eigenvectors of the Hamiltonian matrix...")
@@ -59,14 +62,13 @@ def compute_eigenstates(hamiltonian: SparsePauliOp):
 def prepare_eigenstate_circuit(eigenvector: np.ndarray) -> QuantumCircuit:
     """
     Prepares a Qiskit circuit initialized to a specific eigenstate.
-    (Logic from bb2.py)
     """
     num_qubits = int(np.log2(len(eigenvector)))
     qc = QuantumCircuit(num_qubits, name="eigenstate")
     # The `initialize` method prepares a state. It is the inverse of a state preparation circuit.
     # To get a circuit that prepares the state from |0...0>, we need its inverse.
     qc.initialize(eigenvector, qc.qubits)
-    qcT = transpile(qc, basis_gates=['u','cx'])
+    qcT = transpile(qc)
     
     # Remove leading resets and show the simplified circuit
     qcT2 = strip_leading_resets(qcT)
@@ -181,7 +183,7 @@ def main():
     # Final check using the transpiled circuit and the Hamiltonian
     check_if_eigenstate(hamiltonian, qcT)
 
-    print('WARNING - code works incrreclty - need debugging')
+    
 
 if __name__ == "__main__":
     main()
