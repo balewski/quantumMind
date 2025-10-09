@@ -3,10 +3,8 @@
 # activate IBM creads
 source ~/.ssh/ibmq.creds jan
 
-#IMG=balewski/ubu22-qiskit1.0:p2j # + QML + IonQ +Braket + pytorch+PennyLane_0.35
-IMG=balewski/ubu24-qiskit:p4c  #works
-IMG=balewski/ubu24-qiskit:p6d 
 IMG=balewski/ubu24-qiskit:p7f 
+IMG=balewski/ubu24-qiskit:p7l 
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -42,6 +40,7 @@ eval podman run -it \
     -e QISKIT_IBM_CHANNEL=$QISKIT_IBM_CHANNEL \
     -e QISKIT_IBM_INSTANCE=$QISKIT_IBM_INSTANCE \
     -e QISKIT_IBM_QPUS=$QISKIT_IBM_QPUS \
+    -e QCTRL_API_KEY=$QCTRL_API_KEY \
     -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
     --volume /shared_volumes/quantumMind/Qiskit:/Qiskit \
     --volume /shared_volumes/quantumMind:/quantumMind \
