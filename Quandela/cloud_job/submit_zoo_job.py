@@ -210,8 +210,8 @@ if __name__ == "__main__":
     pprint(expMD)
     expD={}
     
-    print('.... FIRTS CIRCUIT ..............')
-    pcvl.pdisplay(taskL[0])
+    print('.... FIRTS CIRCUIT 2..............')
+    pcvl.pdisplay(taskL[2])
     
     # ------  construct sampler(.) job ------
     nCirc=expMD['submit']['num_circ']

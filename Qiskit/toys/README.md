@@ -10,7 +10,7 @@ This directory contains various quantum computing examples, experiments, and uti
 - **`circ_2_big_gate.py`** - Create custom quantum gates (T-gates) and compose them into larger circuit structures
 - **`compare_trasp_unitaries.py`** - Compare unitary matrices of original and transpiled quantum circuits across different backends
 - **`examin_qpy_circ.py`** - Load and analyze quantum circuits from QPY files, evaluate transpilation for hardware backends
-- **`write_read_parametric_qpy.py`** - Comprehensive workflow for creating, serializing, and deserializing parametric quantum circuits with metadata
+- **`write_read_parametric_qpy.py`** - Comprehensive workflow for creating, serializing, and deserializing parametric quantum circuits with metadata, in .qpy format
 
 ### 🔬 **State Vector & Density Matrix Simulations**
 - **`stateVect_ideal.py`** - Basic state vector simulation with custom unitary operations and state initialization
