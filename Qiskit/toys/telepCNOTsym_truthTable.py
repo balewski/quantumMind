@@ -355,7 +355,7 @@ def main(args):
     truth_measured = compute_measured_truth_table(backend, nshot, n_stack)
     
     # Plot the measured truth table
-    outF = f'out/cnot_truthTable_s{n_stack}_b{args.backendType}.png'
+    outF = f'cnot_truthTable_s{n_stack}_b{args.backendType}.png'
     plot_truth_table(truth_measured, outF, backend.name, nshot, n_stack)
     
     # Print comparison statistics
