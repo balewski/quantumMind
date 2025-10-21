@@ -44,7 +44,7 @@ def commandline_parser(backName="ideal",provName="local sim",shots=20_000):
 
     # .... job running
     parser.add_argument('-n','--numShot',type=int,default=shots, help="shots per circuit")
-    parser.add_argument('-b','--backend',default=backName, choices=['ideal','noisy','twin','qpu'],help="tasks")
+    parser.add_argument('-b','--backend',default=backName, choices=['ideal','noisy','sim:ascella','qpu:ascella','sim:belenos','qpu:belenos'],help="type of bckend")
     parser.add_argument( "-E","--executeCircuit", action='store_true', default=False, help="may take long time, test before use ")
      
     '''there are 3 types of backend
@@ -71,27 +71,25 @@ def buildPayloadMeta(args):
     
     sbm={}
     sbm['num_shot']=args.numShot
-    if 'ideal' in args.backend: backendN='ideal:SLOS'
-    elif 'noisy' in args.backend: backendN='noisy:SLOS'
-    elif 'twin' in args.backend: backendN='sim:ascella'
-    elif 'qpu' in args.backend: backendN='qpu:ascella'
-    else:
-        print('BPM unknown backend%s requested, ABORT'%args.backend); exit(99)
+    if 'ideal' in args.backend: args.backend='ideal:SLOS'
+    elif 'noisy' in args.backend: args.backend='noisy:SLOS'
 
-    sbm['backend']=backendN
+    shortND={'ideal:SLOS':'ideal','noisy:SLOS':'locNoisy',
+            'sim:ascella':'simAsc', 'qpu:ascella':'qpuAsc',
+            'sim:belenos':'simBel', 'qpu:belenos':'qpuBel'}
+    
+    sbm['backend']=args.backend
     sbm['perceval_ver']=pcvl.__version__
-    sbm['run_local']='SLOS' in backendN
+    sbm['run_local']='SLOS' in args.backend
     
     pom={}
-    trm={}
-
-    md={ 'payload':pd, 'submit':sbm ,'transpile':trm, 'postproc':pom,'qa':{}}
+    md={ 'payload':pd, 'submit':sbm ,'postproc':pom,'qa':{}}
     
     myHN=hashlib.md5(os.urandom(32)).hexdigest()[:6]
     md['hash']=myHN
 
     if args.expName==None:
-        md['short_name']='%s_%s'%(args.backend,myHN)
+        md['short_name']='%s_%s'%(shortND[args.backend],myHN)
     else:
         md['short_name']=args.expName
 
@@ -125,7 +123,13 @@ def harvest_sampler_results(jobL,md,bigD):  # many circuits
     perfV=np.zeros(nCirc)
     for ic in range(nCirc):
         resD=jobL[ic] # tmp, ideal simu
-        perf=resD['physical_perf']
+        #pprint(resD)
+        perf=None  # local sim and cloud sim have different dict
+        for xx in ['physical_perf', 'global_perf']:
+            if xx in resD:
+                perf=resD[xx]
+                break
+        assert perf!=None
         cntC=resD['results']
         n0,n1=0,0
         for k,v in cntC.items():
@@ -140,43 +144,6 @@ def harvest_sampler_results(jobL,md,bigD):  # many circuits
         print('ic=%d  transm=%.2g  n0=%d n1=%d  prob=%.3f +/- %.3f  Yt=%.3f  theta=%.1f rad'%(ic, perf,n0,n1,prob,probEr,Yt[ic],Xt[ic]))
     avrPerf=np.mean(perfV)
     print('M:OK avrPerf=%.2g'%avrPerf)
-        
-   
-    
-    '''
-    
-    if T0!=None:  # when run locally
-       
-    else:
-        jobMetr=job.metrics()
-        #print('HSR:jobMetr:',jobMetr)
-        qa['timestamp_running']=jobMetr['timestamps']['running']
-        qa['quantum_seconds']=jobMetr['usage']['quantum_seconds']
-        qa['all_circ_executions']=jobMetr['executions']
-        
-        if jobMetr['num_circuits']>0:
-            qa['one_circ_depth']=jobMetr['circuit_depths'][0]
-        else:
-            qa['one_circ_depth']=None
-    
-    #1pprint(jobRes[0])
-    nCirc=len(jobRes)  # number of circuit in the job
-    jstat=str(job.status())
- 
-    
-    countsL=[ jobRes[i].data.c.get_counts() for i in range(nCirc) ]
-
-    # collect job performance info
-    res0cl=jobRes[0].data.c
-    qa['status']=jstat
-    qa['num_circ']=nCirc
-    qa['shots']=res0cl.num_shots
-    
-    qa['num_clbits']=res0cl.num_bits
-    
-    print('job QA'); pprint(qa)
-    md['job_qa']=qa
-    '''
     
     bigD['rec_data']=Ym
     bigD['transmitance'] = perfV
@@ -233,12 +200,11 @@ if __name__ == "__main__":
 
     qcP, expD= construct_circ_and_data(expMD)
 
-    # define noise level
+    # define noise level for local simu
+    noise_model =None
     if expMD['submit']['backend']=='noisy:SLOS':
-        noise_gen = pcvl.Source(emission_probability=0.25, multiphoton_component=0.01)
-    else:
-        noise_gen=None
-        
+        noise_model = pcvl.NoiseModel(transmittance=0.05, indistinguishability=0.92, g2=0.03)
+         
     print('.... PARAMETRIZED IDEAL CIRCUIT ..............')
     pcvl.pdisplay(qcP)
     
@@ -250,7 +216,7 @@ if __name__ == "__main__":
 
     if runLocal:        
         outPath=os.path.join(args.basePath,'meas')
-        proc = pcvl.Processor("SLOS",nMode,noise_gen)
+        proc = pcvl.Processor("SLOS",nMode,noise_model)
     else:
         expMD[ 'submit']['job_ids']=jobIdL
         backendN=expMD[ 'submit']['backend']

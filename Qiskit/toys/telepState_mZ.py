@@ -14,7 +14,8 @@ Feed-forward Z-correction removed, because in Z-basis it makes no difference
 import argparse
 import numpy as np
 import qiskit as qk
-from qiskit_aer import Aer
+from qiskit_aer import AerSimulator
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 
 # ----------------------------
@@ -146,10 +147,11 @@ if __name__ == "__main__":
     qcTele = circTeleport('z', args.secretState)
 
     # Run on Aer simulator
-    backend = Aer.get_backend('aer_simulator')
-    job = backend.run(qcTele, shots=args.shots)
+    backend = AerSimulator()
+    sampler = Sampler(mode=backend)
+    job = sampler.run([qcTele], shots=args.shots)
     result = job.result()
-    counts = result.get_counts(qcTele)
+    counts = result[0].data.meas.get_counts()
 
     print(qcTele.draw(output="text", idle_wires=False))
     print("Counts:", counts)

@@ -3,8 +3,7 @@
 # activate IBM creads
 source ~/.ssh/ibmq.creds jan
 
-IMG=balewski/ubu24-qiskit:p7f 
-IMG=balewski/ubu24-qiskit:p7m  # includes QSP & Q-CTRL
+IMG=balewski/ubu24-qec:p2c  # Google Quantum Erroro Correction: Stim
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
@@ -32,25 +31,13 @@ for var in "$@"; do
   # ... more ...
 done
 
-#echo podman run -it  $JNB_PORT  $IMG /bin/bash
 
-
-eval podman run -it \
-    -e QISKIT_IBM_TOKEN=$QISKIT_IBM_TOKEN \
-    -e QISKIT_IBM_CHANNEL=$QISKIT_IBM_CHANNEL \
-    -e QISKIT_IBM_INSTANCE=$QISKIT_IBM_INSTANCE \
-    -e QISKIT_IBM_QPUS=$QISKIT_IBM_QPUS \
-    -e QCTRL_API_KEY=$QCTRL_API_KEY \
-    --volume /shared_volumes/quantumMind/Qiskit:/Qiskit \
+eval podman run -it --rm \
+    --volume /shared_volumes/quantumMind/GoogleQEC:/qec \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume $DATA_VAULT:/dataVault2025 \
-    --workdir $WORK_DIR $QCRANK \
+    --workdir /qec  \
     --user $(id -u):$(id -g) \
-    $JNB_PORT $IMG #/bin/bash
+    $JNB_PORT $IMG 
 
-#    -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
-# note, LD_PRELOAD is needed for symbol: omp_get_num_threads
-#     -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
-#
-# 
-# after start install QPIXL:  cd   /qpixl_wrk;   pip install -e .
+

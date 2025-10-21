@@ -62,7 +62,8 @@ Example:
 import argparse
 import numpy as np
 import qiskit as qk
-from qiskit_aer import Aer
+from qiskit_aer import AerSimulator
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 
 # ----------------------------
@@ -232,13 +233,14 @@ if __name__ == "__main__":
     qcTele = circTeleport_noFF(args.basis, args.secretState)
 
     # Run on Aer simulator
-    backend = Aer.get_backend('aer_simulator')
-    job = backend.run(qcTele, shots=args.shots)
+    backend = AerSimulator()
+    sampler = Sampler(mode=backend)
+    job = sampler.run([qcTele], shots=args.shots)
     result = job.result()
-    counts_raw = result.get_counts(qcTele)
+    counts_raw = result[0].data.c.get_counts()
 
     print(qcTele.draw(output="text", idle_wires=False))
-    print("Raw counts (AliceZ AliceX BobRaw):", counts_raw)
+    print("Raw counts (c2 c1 c0):", counts_raw)
 
     # Post-process correction
     counts_corrected = post_process_counts(counts_raw, meas_basis=args.basis)

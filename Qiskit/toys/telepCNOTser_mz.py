@@ -6,6 +6,7 @@ import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit import transpile
 from qiskit_aer import AerSimulator
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 def create_cnot_teleport_symetric(inpCT):
     """
@@ -62,11 +63,12 @@ qc = create_cnot_teleport_symetric(inpCT)
 print(qc.draw(output='text'))
 
 # Simulate the qc
-simulator = AerSimulator()
-compiled_qc = transpile(qc, simulator)
-job = simulator.run(compiled_qc, shots=1024)
+backend = AerSimulator()
+compiled_qc = transpile(qc, backend)
+sampler = Sampler(mode=backend)
+job = sampler.run([compiled_qc], shots=1024)
 result = job.result()
-counts = result.get_counts(qc)
+counts = result[0].data.meas.get_counts()
 
 print('inp c,t:',inpCT)
 print("Measurement results:\nct ab")

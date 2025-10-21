@@ -31,6 +31,7 @@ Register naming:
 import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
 from qiskit_aer import AerSimulator
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import FakeTorino, FakeCusco
 import matplotlib.pyplot as plt
 import argparse
@@ -158,18 +159,22 @@ def compute_measured_truth_table(backend, nshot, n_stack=1):
     print(f'Transpiled circuits for {backend.name}')
     print(f'Number of qubits per circuit: {qcT[0].num_qubits}')
     
-    # Run all circuits
+    # Run all circuits using Sampler
+    sampler = Sampler(mode=backend)
     t0 = time.time()
-    job = backend.run(qcT, shots=nshot)
-    results = job.result()
+    job = sampler.run(qcT, shots=nshot)
+    result = job.result()
     elapsed = time.time() - t0
     print(f'Simulation completed in {elapsed:.2f} seconds')
+    
+    # Extract counts from PubResult
+    results = [pub_result.data.meas.get_counts() for pub_result in result]
     
     # Process results to compute probability distribution
     truth_table = np.zeros((4, 4))
     
     for idx, (inp_ctrl, inp_targ) in enumerate(input_states):
-        counts = results.get_counts(idx)
+        counts = results[idx]
         
         # Sum over ancilla bits and compute output probabilities
         ct_counts = {}
@@ -300,13 +305,15 @@ def main(args):
         print(f'Transpiled circuit ops: {qcT.count_ops()}')
         print(f'Number of qubits: {qcT.num_qubits}')
         
+        # Run circuit using Sampler
+        sampler = Sampler(mode=backend)
         t0 = time.time()
-        job = backend.run(qcT, shots=nshot)
+        job = sampler.run([qcT], shots=nshot)
         result = job.result()
         elapsed = time.time() - t0
         print(f'Simulation completed in {elapsed:.2f} seconds')
         
-        counts = result.get_counts()
+        counts = result[0].data.meas.get_counts()
         
         # Sum over ab bits, only show ct bits
         ct_counts = {}
@@ -355,7 +362,7 @@ def main(args):
     truth_measured = compute_measured_truth_table(backend, nshot, n_stack)
     
     # Plot the measured truth table
-    outF = f'cnot_truthTable_s{n_stack}_b{args.backendType}.png'
+    outF = f'out/cnot_truthTable_s{n_stack}_b{args.backendType}.png'
     plot_truth_table(truth_measured, outF, backend.name, nshot, n_stack)
     
     # Print comparison statistics

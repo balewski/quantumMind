@@ -10,9 +10,9 @@ import numpy as np
 from qiskit.circuit.classical import expr
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, transpile
 from qiskit.tools.visualization import circuit_drawer
-from qiskit_ibm_runtime import QiskitRuntimeService
-from time import time, sleep
-from qiskit.providers.jobstatus import JobStatus
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+from time import time
+from qiskit_aer import AerSimulator
 
 def feedF_circuit(n=4):
     qr = QuantumRegister(n)
@@ -125,42 +125,34 @@ if __name__ == "__main__":
     print(circuit_drawer(qc.decompose(), output='text',cregbundle=False, idle_wires=False))
 
     print('M: access QiskitRuntimeService()...')
-    service = QiskitRuntimeService()
-    backendN="ibmq_qasm_simulator"
-    backendN="ibm_cusco"
-    #backendN="ibm_kyoto"
-    #backendN="ibm_hanoi"
-
-    if 0:
+    
+    use_real_backend = False  # Set to True to run on real hardware
+    
+    if use_real_backend:
+        service = QiskitRuntimeService()
+        backendN = "ibm_cusco"  # or "ibmq_qasm_simulator"
         backend = service.get_backend(backendN)
     else:
-        from qiskit import   Aer
-        backend = Aer.get_backend('aer_simulator')
-    
-    print('use backend version:',backend.version )
+        backend = AerSimulator()
 
+    print('use backend:', backend.name)
 
-    # from Aziz, patch backend for feed-forward 'NEW' logic
-    #  with qc.if_test((qc.cregs[0], 1)): qc.h(2)  # NEW
-    #  an issue opened on github https://github.com/Qiskit/qiskit-ibm-runtime/issues/1253. 
-    if "if_else" not in backend.target:
-        from qiskit.circuit import IfElseOp
-        backend.target.add_instruction(IfElseOp, name="if_else")
-    
+    # Check for dynamic circuit support (if_else)
+    if not backend.target.has_instruction("if_else"):
+        print("Warning: Backend target does not report if_else support. Execution may fail.")
+
     print('M: transpiling ...')
     qcT = transpile(qc, backend=backend, optimization_level=3, seed_transpiler=42)
-    job = backend.run(qcT,shots=1000, dynamic=True)
     
-    i=0; T0=time()
-    while True:
-        jstat=job.status()
-        elaT=time()-T0
-        print('P:i=%d  status=%s, elaT=%.1f sec'%(i,jstat,elaT))
-        if jstat in [ JobStatus.DONE, JobStatus.ERROR]: break
-        i+=1; sleep(5)
-
-    print('M: job done, status:',jstat,backend)
-
+    print('M: running sampler ...')
+    sampler = Sampler(mode=backend)
+    
+    T0 = time()
+    job = sampler.run([qcT], shots=1000)
     result = job.result()
-    counts=result.get_counts(0)
+    elaT = time() - T0
+    
+    print(f'M: job done in {elaT:.1f} sec')
+
+    counts = result[0].data.c.get_counts()
     print('M: counts:', counts)

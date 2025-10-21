@@ -1,9 +1,39 @@
 #!/usr/bin/env python3
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
+
 import perceval as pcvl
 from time import time, sleep
 from tqdm.notebook import tqdm
+from pprint import pprint
+import numpy as np
+
+def generate_binary_list(nb):
+    return ['0' * nb, '1' * nb] + [format(i, f'0{nb}b') for i in range(1, 2**nb - 1)]
+
+#...!...!.................... 
+def decode_sampler_result(resD,num_qubit,verb=1):
+    nLab= 1+ (1<<num_qubit)
+    bitStrL=generate_binary_list(num_qubit)+['bad']
+    outCnt=np.zeros(nLab,dtype=int)    
+    print(resD)
+    
+    perf=None  # local sim and cloud sim have different dict
+    for xx in ['physical_perf', 'global_perf']:
+        if xx in resD:
+            perf=resD[xx]
+            break
+    assert perf!=None
+
+    fockR=resD['results' ]# number of photons in each mode.    
+    for foStt, count in fockR.items():
+        #print("photon fock state:", foStt, "Count:", count)        
+        bitStr=fockState_to_bitStr(foStt)
+        if verb: print(foStt,bitStr,":",count)
+        i= bitStrL.index(bitStr)
+        outCnt[i]+=count
+
+    return outCnt,perf,bitStrL
 
 #...!...!.................... 
 def fockState_to_bitStr(basic_state):

@@ -13,7 +13,8 @@ Works for any choice of measurement basis (x, y, z)
 import argparse
 import numpy as np
 import qiskit as qk
-from qiskit_aer import Aer
+from qiskit_aer import AerSimulator
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 
 # ----------------------------
@@ -198,10 +199,21 @@ if __name__ == "__main__":
     qcTele = circTeleport(args.basis, args.secretState, args.delayLine)
 
     # Run on Aer simulator
-    backend = Aer.get_backend('aer_simulator')
-    job = backend.run(qcTele, shots=args.shots)
+    backend = AerSimulator()
+    sampler = Sampler(mode=backend)
+    job = sampler.run([qcTele], shots=args.shots)
     result = job.result()
-    counts = result.get_counts(qcTele)
+    
+    # Reconstruct counts from individual register measurements
+    mz_shots = result[0].data.mz_alice.array
+    mx_shots = result[0].data.mx_alice.array
+    bob_shots = result[0].data.bob.array
+
+    counts = {}
+    for i in range(args.shots):
+        # Bitstring format in Qiskit is 'bob mx_alice mz_alice'
+        bitstring = f"{bob_shots[i]} {mx_shots[i]} {mz_shots[i]}"
+        counts[bitstring] = counts.get(bitstring, 0) + 1
 
     print(qcTele.draw(output="text", idle_wires=False))
     print("Counts:", counts)

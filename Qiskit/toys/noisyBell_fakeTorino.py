@@ -6,6 +6,7 @@ Bell state preparation using FakeTorino backend with hardware noise characterist
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime.fake_provider import FakeTorino
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 def make_ghz(nq=3):
     circuit = QuantumCircuit(nq)
@@ -29,8 +30,10 @@ if __name__ == "__main__":
     qcT = transpile(qc, backend)
     
     # Run the transpiled circuit using the chosen backend
-    job = backend.run(qcT, shots=nshot)    
-    counts = job.result().get_counts()
+    sampler = Sampler(mode=backend)
+    job = sampler.run([qcT], shots=nshot)
+    result = job.result()
+    counts = result[0].data.meas.get_counts()
     print(backend.name,'Counts:',counts)
 
     #------------------------------------------------
@@ -39,8 +42,10 @@ if __name__ == "__main__":
     cx_u3_basis = ['cx', 'u3']
     qcT = transpile(qc, backend,basis_gates=cx_u3_basis)
     print(qcT)
-    job = backend.run(qcT, shots=nshot)    
-    counts = job.result().get_counts()
+    sampler = Sampler(mode=backend)
+    job = sampler.run([qcT], shots=nshot)
+    result = job.result()
+    counts = result[0].data.meas.get_counts()
     print(backend.name,'Counts:',counts)
     
 

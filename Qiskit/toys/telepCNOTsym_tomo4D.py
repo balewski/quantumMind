@@ -19,6 +19,7 @@ Backend types:
 import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import FakeTorino, FakeCusco
 import matplotlib.pyplot as plt
 import argparse
@@ -159,18 +160,22 @@ def compute_measured_tomography(backend, nshot):
     print(f'Transpiled circuits for {backend.name}')
    
     
-    # Run all circuits
+    # Run all circuits using Sampler
+    sampler = Sampler(mode=backend)
     t0 = time.time()
-    job = backend.run(qcT, shots=nshot)
-    results = job.result()
+    job = sampler.run(qcT, shots=nshot)
+    result = job.result()
     elapsed = time.time() - t0
     print(f'Simulation completed in {elapsed:.2f} seconds')
+    
+    # Extract counts from PubResult
+    results = [pub_result.data.meas.get_counts() for pub_result in result]
     
     # Process results to compute expectation values
     tomo_matrix = np.zeros((16, 16))
     
     for idx, (prep_ctrl, prep_targ, meas_ctrl, meas_targ) in enumerate(circuit_indices):
-        counts = results.get_counts(idx)
+        counts = results[idx]
         
         # Compute joint expectation value <Z_ctrl ⊗ Z_targ>
         # After basis rotations, this measures <Pauli_ctrl ⊗ Pauli_targ>
@@ -302,13 +307,15 @@ def main(args):
         print(f'Transpiled circuit ops: {qcT.count_ops()}')
         print(f'Number of qubits: {qcT.num_qubits}')
         
+        # Run circuit using Sampler
+        sampler = Sampler(mode=backend)
         t0 = time.time()
-        job = backend.run(qcT, shots=nshot)
+        job = sampler.run([qcT], shots=nshot)
         result = job.result()
         elapsed = time.time() - t0
         print(f'Simulation completed in {elapsed:.2f} seconds')
         
-        counts = result.get_counts()
+        counts = result[0].data.meas.get_counts()
         
         # Sum over ab bits, only show ct bits
         ct_counts = {}

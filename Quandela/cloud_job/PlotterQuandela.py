@@ -105,7 +105,7 @@ class Plotter(PlotterBackbone):
         nrow,ncol=1,3
         fig=self.plt.figure(figId,facecolor='white', figsize=(12,3*nrow))
         
-        topTit=['job: '+md['short_name'], 'Residual ',smd['backend']]
+        topTit=['job: '+md['short_name'], 'Residuals',smd['backend']]
 
         
         #....... plot data .....
@@ -174,7 +174,7 @@ class Plotter(PlotterBackbone):
         xdata=bigD['inp_data']
         rdata=bigD['rec_data']#[:,0].flatten()
         tdata=bigD['truth']#.flatten()
-        topTit='%s  backend: %s  %s'%(md['short_name'],smd['backend'],smd['date'])
+        topTit='%s  b: %s  %s'%(md['short_name'],smd['backend'],smd['date'])
                                         
         ax1.errorbar(xdata,rdata[:,0],yerr=rdata[:,1], fmt='bs', mfc='none', capsize=0, label='meas')
         ax1.plot(xdata,tdata,"*-r",label='theory')
@@ -185,7 +185,7 @@ class Plotter(PlotterBackbone):
         #... residual
         resiV=rdata[:,0]-tdata
         ax2.errorbar(xdata,resiV,yerr=rdata[:,1], fmt='bs', mfc='none', capsize=3)
-        ax2.set(xlabel='phase (rad)', ylabel='residual')
+        ax2.set(xlabel='phase (rad)', ylabel='residuals')
         ax2.axhline(0)
         mxY=np.max(np.abs(resiV))*1.2
         ax2.set_ylim(-mxY,mxY)

@@ -6,8 +6,10 @@ from pprint import pprint
 import os,hashlib
 from time import time
 from toolbox.Util_H5io4 import  write4_data_hdf5, read4_data_hdf5
-from qiskit import qpy
-
+try:
+    from qiskit import qpy
+except:
+    print("Util_QiskitV2: QPY not avaliable")
 #ver V2b - nqTor fixed,
 
 #...!...!.................... 
