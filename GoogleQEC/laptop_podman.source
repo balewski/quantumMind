@@ -36,7 +36,7 @@ eval podman run -it --rm \
     --volume /shared_volumes/quantumMind/GoogleQEC:/qec \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume $DATA_VAULT:/dataVault2025 \
-    --workdir /qec  \
+    --workdir /qec   \
     --user $(id -u):$(id -g) \
     $JNB_PORT $IMG 
 

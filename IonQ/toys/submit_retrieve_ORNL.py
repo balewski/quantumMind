@@ -6,23 +6,31 @@ from time import sleep
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
 
-qc_bell = QuantumCircuit(2, name="Sim example with noise")
+qc_bell = QuantumCircuit(2, name=" example with noise")
 qc_bell.h(0)
 qc_bell.cx(0, 1)
 qc_bell.measure_all()
 
 # Create the provider (make sure your API key is set up)
 provider = IonQProvider()
-backend = provider.get_backend("simulator")
-backend.set_options(noise_model="forte-1")
 
-if 0:
-    job= backend.run(qc_bell, shots=1000)
+if 1:  # simu
+    qc_bell.name='simu forte-1 '+  qc_bell.name
+    backend = provider.get_backend("simulator")
+    backend.set_options(noise_model="forte-1")
+    print('runs on simulator')
+else:
+    qc_bell.name='real forte-1 '+  qc_bell.name
+    backend = provider.get_backend("qpu.forte-1")
+    print('runs on real QPU')
+    
+if 1:
+    job= backend.run(qc_bell, shots=200)
     print('use backend.run()')
 else:
     sampler = Sampler(mode=backend)
     print('use sampler.run()')
-    job =  sampler.run([qc_bell], shots=1000)
+    job =  sampler.run([qc_bell], shots=100)
 
 jid=job.job_id()
 print('full jobID:',jid, job.status())

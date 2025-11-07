@@ -41,7 +41,7 @@ options.default_shots=100
 
 backName='ibm_fez'
 print('\n repeat on  %s backend ...'%backName)
-service = QiskitRuntimeService(channel="ibm_quantum")
+service = QiskitRuntimeService()#channel="ibm_quantum")
 
 backend2 = service.backend(backName)
 print('use backend =', backend2.name )

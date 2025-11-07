@@ -20,12 +20,12 @@ def my_circuit(n):
     cr = ClassicalRegister(n, name="meas")
     qc = QuantumCircuit(qr, cr)
     qc.h(0)
+    qc.ry(theta,1)
     for i in range(1, n):  qc.cx(0,i)
     qc.barrier()
     for i in range(0,n):  qc.measure(i,i)
-    qc.reset(1)
-    qc.ry(theta,1)
-    qc.measure(1,0)
+    #qc.reset(1)
+    #qc.measure(1,0)
     return qc,theta
 
 

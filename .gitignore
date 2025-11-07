@@ -43,3 +43,4 @@ __pycache__
 .cursor
 *.qpy
 .emacs.d
+*.swp
