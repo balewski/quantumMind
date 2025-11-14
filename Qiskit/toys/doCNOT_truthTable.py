@@ -27,14 +27,14 @@ Register naming:
 """
 
 import numpy as np
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime import SamplerV2 as Sampler
+from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 from qiskit_ibm_runtime.fake_provider import FakeTorino, FakeCusco, FakeFez, FakeMarrakesh
 import argparse
 import time
-import math
 
 
 def format_prob(prob, decimals=3, tol=1e-5):
@@ -178,14 +178,13 @@ def teleCnot(qc: QuantumCircuit, ctr, trg):
     qc.cx(anc[1], trg)
 
     qc.h(anc[1])
-    qc.measure(anc[0], creg[0])
-    qc.measure(anc[1], creg[1])
-
-    with qc.if_test((creg[0], 1)):
-        qc.x(trg)  # X correction on target
-
-    with qc.if_test((creg[1], 1)):
-        qc.z(ctr)  # Z correction on control
+    # Mid-circuit measurements using MidCircuitMeasure
+    mid_instr = MidCircuitMeasure()
+    qc.append(mid_instr, [anc[0]], [creg[0]])
+    qc.append(mid_instr, [anc[1]], [creg[1]])
+    # Conditional corrections using c_if with measured bits
+    qc.x(trg).if_test(creg[0], 1)  # X correction on target
+    qc.z(ctr).c_if(creg[1], 1)  # Z correction on control
     qc.barrier()
 
     # Advance layer pointer

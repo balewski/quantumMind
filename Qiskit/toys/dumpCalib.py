@@ -110,11 +110,25 @@ def extract_gate_error(gate_props):
 def collect_per_qubit(properties, phys_ql):
     sx_err = {q: None for q in phys_ql}
     read_err = {q: None for q in phys_ql}
+    t1_map = {q: None for q in phys_ql}
+    t2_map = {q: None for q in phys_ql}
 
     # Readout errors from qubit properties
     for q in phys_ql:
         if q < len(properties.qubits):
-            read_err[q] = extract_qubit_readout_err(properties.qubits[q])
+            qprops = properties.qubits[q]
+            read_err[q] = extract_qubit_readout_err(qprops)
+            # Extract T1/T2 (case-insensitive)
+            for item in qprops:
+                name = getattr(item, 'name', '')
+                val = getattr(item, 'value', None)
+                if not isinstance(name, str):
+                    continue
+                lname = name.lower()
+                if lname.startswith('t1'):
+                    t1_map[q] = val
+                elif lname.startswith('t2'):
+                    t2_map[q] = val
 
     # Gate errors: prefer 'sx', else fall back to 'x'
     for gate in properties.gates:
@@ -126,7 +140,7 @@ def collect_per_qubit(properties, phys_ql):
             if name == 'sx' or sx_err[qubits[0]] is None:
                 sx_err[qubits[0]] = val
 
-    return sx_err, read_err
+    return sx_err, read_err, t1_map, t2_map
 
 
 def collect_cz_pairs(properties, phys_ql):
@@ -148,12 +162,17 @@ def collect_cz_pairs(properties, phys_ql):
     return cz_errs
 
 
-def print_tables(phys_ql, sx_err, read_err, cz_errs):
+def print_tables(phys_ql, sx_err, read_err, cz_errs, t1_map, t2_map):
     # Per-qubit table
     print('\nPer-qubit calibration:')
-    print('qubit  sxErr   readErr')
+    print('qubit   sxErr   readErr   T1(us)    T2(us)')
     for q in phys_ql:
-        print(f'{q:5d}  {format_val(sx_err[q]):>6s}  {format_val(read_err[q]):>6s}')
+        def fmt_f1(v):
+            try:
+                return f'{float(v):6.1f}'
+            except Exception:
+                return '  n/a '
+        print(f'{q:5d}  {fmt_f1(sx_err[q])}   {fmt_f1(read_err[q])}   {fmt_f1(t1_map[q])}    {fmt_f1(t2_map[q])}')
 
     # CZ pairs
     print('\nCZ connectors among selected qubits:')
@@ -210,10 +229,10 @@ def main(args):
 
     print(f'Calibration date (PT): {format_calib_date_pt(properties)}')
 
-    sx_err, read_err = collect_per_qubit(properties, phys_ql)
+    sx_err, read_err, t1_map, t2_map = collect_per_qubit(properties, phys_ql)
     cz_errs = collect_cz_pairs(properties, phys_ql)
 
-    print_tables(phys_ql, sx_err, read_err, cz_errs)
+    print_tables(phys_ql, sx_err, read_err, cz_errs, t1_map, t2_map)
 
 
 if __name__ == '__main__':
