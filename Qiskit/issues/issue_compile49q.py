@@ -1,15 +1,6 @@
 #!/usr/bin/env python3
 __author__ = "Jan Balewski, modified by Gemini"
 __email__ = "janstar1122@gmail.com"
-'''
-Code Summary
-This script is a Qiskit simulation of the 25-qubit Shor code (distance d=5), a quantum
-error-correcting code capable of protecting against any two single-qubit errors.
-The program encodes a logical state, injects user-defined errors, and uses syndrome
-measurement with a minimum weight perfect decoder to detect the error's type and
-location. The final verification step checks if the decoder correctly identified the
-injected error(s) by calculating the true net logical effect of the physical errors.
-'''
 
 import argparse
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
@@ -26,29 +17,6 @@ NUM_ANC_X = DISTANCE * (DISTANCE - 1)
 NUM_ANC_Z = DISTANCE - 1
 assert DISTANCE == 5  # it sometimes fails for d=3, I did not debug it
 
-# --- 2. The Minimum Weight Perfect Decoder ---
-def build_repetition_code_decoder_map(d=DISTANCE):
-    n = d
-    t = (d - 1) // 2
-    num_stabilizers = d - 1
-    decoder_map = {}
-    def get_syndrome(errors):
-        syndrome = [0] * num_stabilizers
-        for err_loc in errors:
-            if err_loc > 0:
-                syndrome[err_loc - 1] = 1 - syndrome[err_loc - 1]
-            if err_loc < n - 1:
-                syndrome[err_loc] = 1 - syndrome[err_loc]
-        return ''.join(map(str, syndrome))
-    decoder_map[get_syndrome([])] = []
-    for i in range(n):
-        errors = [i]
-        decoder_map[get_syndrome(errors)] = errors
-    if t >= 2:
-        for i, j in combinations(range(n), 2):
-            errors = [i, j]
-            decoder_map[get_syndrome(errors)] = errors
-    return decoder_map
 
 def decode_shor_syndrome(full_syndrome, d=DISTANCE):
     rep_code_decoder = build_repetition_code_decoder_map(d)
@@ -156,44 +124,9 @@ def main():
         
     result = backend.run(qc, shots=shots).result()
     counts = result.get_counts()
+    print('counts:', counts)
     
-    raw_syndrome_key = list(counts.keys())[0]
-    print(f"\nMeasured Syndrome (raw key): '{raw_syndrome_key}'")
-    sx_str, sz_str = raw_syndrome_key.split()
-    
-    full_syndrome = sz_str + sx_str
-    print(f"Processed Full Syndrome: Z='{sz_str}', X='{sx_str}'")
-    
-    decoded_corrections = decode_shor_syndrome(full_syndrome)
-    decoded_x_locs = decoded_corrections['X']
-    decoded_z_blocks = decoded_corrections['Z']
-    
-    print(f"\nDecoded Correction: X on qubits {decoded_x_locs}")
-    print(f"Decoded Correction: Z on blocks {decoded_z_blocks}")
-
-    print("\n--- Verifying Decoder Correctness ---")
-    print(f"  Injected X Errors on qubits: {true_x_errors}")
-    print(f"  Decoded X Correction for qubits: {decoded_x_locs}")
-    
-    # --- START FINAL FIX ---
-    # The true logical Z error depends on the PARITY of physical Z errors per block.
-    # An even number of Z errors in a block cancels out to a logical identity.
-    z_error_block_counts = Counter([loc // DISTANCE for loc in true_z_errors])
-    true_z_blocks = sorted([block for block, count in z_error_block_counts.items() if count % 2 != 0])
-    # --- END FINAL FIX ---
-
-    print(f"  Injected Z Errors (net logical effect on blocks): {true_z_blocks}")
-    print(f"  Decoded Z Correction for blocks: {decoded_z_blocks}")
-    
-    passed_x = (true_x_errors == decoded_x_locs)
-    passed_z = (true_z_blocks == decoded_z_blocks)
-
-    if passed_x and passed_z:
-        print("\n*** DECODER VERIFICATION PASSED ***")
-    else:
-        print("\n*** DECODER VERIFICATION FAILED ***")
-        if not passed_x: print(" -> X-error decoding mismatch.")
-        if not passed_z: print(" -> Z-error decoding mismatch.")
+  
 
 if __name__ == "__main__":
     main()
