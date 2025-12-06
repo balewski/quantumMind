@@ -118,10 +118,12 @@ def main():
     print("--- Running the simulation... ---")
     shots=1
     backend = AerSimulator()
+    backend.set_max_qubits(qc.num_qubits)
     if 1:   # TranspilerError: 'HighLevelSynthesis is unable to synthesize "measure"'
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         qc=pm.run(qc)
         
+        print('M: transp  gates count:', qc.count_ops())
     result = backend.run(qc, shots=shots).result()
     counts = result.get_counts()
     print('counts:', counts)

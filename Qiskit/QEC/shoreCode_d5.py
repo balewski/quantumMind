@@ -77,26 +77,129 @@ def decode_shor_syndrome(full_syndrome, d=DISTANCE):
     return {'Z': logical_z_errors, 'X': x_errors}
 
 
+def get_encoder_circuit():
+    """Returns a QuantumCircuit that encodes the logical state for the Shor code."""
+    d = DISTANCE
+    qr = QuantumRegister(NUM_QUBITS, name='q')
+    qc = QuantumCircuit(qr, name='Encoder')
+    
+    # Phase 1: CNOTs from qubit 0 to heads of other blocks
+    for i in range(1, d): qc.cx(qr[0], qr[i * d])
+    
+    # Phase 2: Hadamard on heads of all blocks
+    qc.h([qr[i * d] for i in range(d)])
+    qc.barrier()
+    
+    # Phase 3: CNOTs within each block (repetition code encoding)
+    for i in range(d):
+        block_start = i * d
+        for j in range(1, d): qc.cx(qr[block_start], qr[block_start + j])
+    qc.barrier()
+    return qc
+
+def get_syndrome_circuit():
+    """Returns a circuit for measuring the stabilizers of the Shor code."""
+    d = DISTANCE
+    q = QuantumRegister(NUM_QUBITS, name='q')
+    anc_qx = QuantumRegister(NUM_ANC_X, name='ax')
+    anc_qz = QuantumRegister(NUM_ANC_Z, name='az')
+    qc = QuantumCircuit(q, anc_qx, anc_qz, name='Syndrome')
+
+    # Part 1: Measure X-type errors (using Z-stabilizers on anc_qx)
+    for i in range(d):
+        block_start = i * d
+        anc_start = i * (d - 1)
+        for j in range(d - 1):
+            qc.cx(q[block_start + j], anc_qx[anc_start + j])
+            qc.cx(q[block_start + j + 1], anc_qx[anc_start + j])
+    qc.barrier()
+    
+    # Part 2: Measure Z-type errors (using X-stabilizers on anc_qz)
+    qc.h(anc_qz)
+    qc.barrier()
+    for i in range(d - 1):
+        anc = anc_qz[i]
+        for j in range(d): qc.cx(anc, q[i * d + j])
+        for j in range(d): qc.cx(anc, q[(i + 1) * d + j])
+    qc.barrier()
+    qc.h(anc_qz)
+    qc.barrier()
+    
+    return qc
+
+
+def evaluate_results(raw_syndrome_key, true_x_errors, true_z_errors, verb=1):
+    if verb > 0: print(f"\nMeasured Syndrome (raw key): '{raw_syndrome_key}'")
+    sx_str, sz_str = raw_syndrome_key.split()
+    
+    full_syndrome = sz_str + sx_str
+    if verb > 0: print(f"Processed Full Syndrome: Z='{sz_str}', X='{sx_str}'")
+    
+    decoded_corrections = decode_shor_syndrome(full_syndrome)
+    decoded_x_locs = decoded_corrections['X']
+    decoded_z_blocks = decoded_corrections['Z']
+    
+    if verb > 0:
+        print(f"\nDecoded Correction: X on qubits {decoded_x_locs}")
+        print(f"Decoded Correction: Z on blocks {decoded_z_blocks}")
+
+        print("\n--- Verifying Decoder Correctness ---")
+        print(f"  Injected X Errors on qubits: {true_x_errors}")
+        print(f"  Decoded X Correction for qubits: {decoded_x_locs}")
+    
+    # --- START FINAL FIX ---
+    # The true logical Z error depends on the PARITY of physical Z errors per block.
+    # An even number of Z errors in a block cancels out to a logical identity.
+    z_error_block_counts = Counter([loc // DISTANCE for loc in true_z_errors])
+    true_z_blocks = sorted([block for block, count in z_error_block_counts.items() if count % 2 != 0])
+    # --- END FINAL FIX ---
+
+    if verb > 0:
+        print(f"  Injected Z Errors (net logical effect on blocks): {true_z_blocks}")
+        print(f"  Decoded Z Correction for blocks: {decoded_z_blocks}")
+    
+    passed_x = (true_x_errors == decoded_x_locs)
+    passed_z = (true_z_blocks == decoded_z_blocks)
+
+    if passed_x and passed_z:
+        if verb > 0: print("\n*** DECODER VERIFICATION PASSED ***")
+        return True
+    else:
+        if verb > 0:
+            print("\n*** DECODER VERIFICATION FAILED ***")
+            if not passed_x: print(" -> X-error decoding mismatch.")
+            if not passed_z: print(" -> Z-error decoding mismatch.")
+        return False
+
+
 # --- 3. Main Execution Logic ---
 def init_state(qc, data_qubits, args):
     if args.initOne:
-        print("--- Initializing to logical state |1_L> ---")
+        if args.verb > 0: print("--- Initializing to logical state |1_L> ---")
         qc.x(data_qubits[0])
         qc.barrier()
     else:
-        print("--- Initializing to logical state |0_L> ---")
+        if args.verb > 0: print("--- Initializing to logical state |0_L> ---")
 
 def main():
     parser = argparse.ArgumentParser(description=f"Shor's {NUM_QUBITS}-Qubit (d={DISTANCE}) Code Simulation")
-    parser.add_argument('-x','--xq', type=int, nargs='+', help=f'Qubit(s) (0-{NUM_QUBITS-1}) to apply an X error on.')
-    parser.add_argument('-z','--zq', type=int, nargs='+', help=f'Qubit(s) (0-{NUM_QUBITS-1}) to apply a Z error on.')
+    parser.add_argument('-x','--xq', type=int, nargs='+', default=[], help=f'Qubit(s) (0-{NUM_QUBITS-1}) to apply an X error on.')
+    parser.add_argument('-y','--yq', type=int, nargs='+', default=[], help=f'Qubit(s) (0-{NUM_QUBITS-1}) to apply a Y error on.')
+    parser.add_argument('-z','--zq', type=int, nargs='+', default=[], help=f'Qubit(s) (0-{NUM_QUBITS-1}) to apply a Z error on.')
     parser.add_argument('-o','--initOne', action='store_true', help='Initialize the logical state to |1_L>.')
     parser.add_argument("-v", "--verb", type=int, help="Increase debug verbosity", default=1)
     args = parser.parse_args()
 
-    true_x_errors = sorted(list(set(args.xq))) if args.xq else []
-    true_z_errors = sorted(list(set(args.zq))) if args.zq else []
-    print(f"--- Injecting true errors: X on {true_x_errors}, Z on {true_z_errors} ---")
+    raw_x = args.xq if args.xq else []
+    raw_y = args.yq if args.yq else []
+    raw_z = args.zq if args.zq else []
+
+    # Y error is X and Z error on the same qubit
+    true_x_errors = sorted(list(set(raw_x + raw_y)))
+    true_z_errors = sorted(list(set(raw_z + raw_y)))
+    
+    print(f"--- Injecting true errors: X on {raw_x}, Y on {raw_y}, Z on {raw_z} ---")
+    print(f"    (Effective physical errors: X on {true_x_errors}, Z on {true_z_errors})")
 
     data_qubits = QuantumRegister(NUM_QUBITS, name='q')
     anc_qx = QuantumRegister(NUM_ANC_X, name='ax')
@@ -108,36 +211,14 @@ def main():
     init_state(qc, data_qubits, args)
 
     print("--- Building Encoder --- d=%d"%DISTANCE)
-    d = DISTANCE
-    for i in range(1, d): qc.cx(data_qubits[0], data_qubits[i * d])
-    qc.h([data_qubits[i * d] for i in range(d)])
-    qc.barrier()
-    for i in range(d):
-        block_start = i * d
-        for j in range(1, d): qc.cx(data_qubits[block_start], data_qubits[block_start + j])
-    qc.barrier()
+    qc.append(get_encoder_circuit().to_instruction(), data_qubits)
 
     for loc in true_x_errors: qc.x(loc)
     for loc in true_z_errors: qc.z(loc)
     if true_x_errors or true_z_errors: qc.barrier()
 
     print("--- Building Syndrome Measurement Circuit ---")
-    for i in range(d):
-        block_start = i * d
-        anc_start = i * (d - 1)
-        for j in range(d - 1):
-            qc.cx(data_qubits[block_start + j], anc_qx[anc_start + j])
-            qc.cx(data_qubits[block_start + j + 1], anc_qx[anc_start + j])
-    qc.barrier()
-    qc.h(anc_qz)
-    qc.barrier()
-    for i in range(d - 1):
-        anc = anc_qz[i]
-        for j in range(d): qc.cx(anc, data_qubits[i * d + j])
-        for j in range(d): qc.cx(anc, data_qubits[(i + 1) * d + j])
-    qc.barrier()
-    qc.h(anc_qz)
-    qc.barrier()
+    qc.append(get_syndrome_circuit().to_instruction(), qc.qubits)
     
     qc.measure(anc_qz, synd_zbits)
     qc.measure(anc_qx, synd_xbits)
@@ -145,55 +226,21 @@ def main():
     print("--- Final Circuit built --- nq=%d"%qc.num_qubits)
     print('M:  gates count:', qc.count_ops())
 
-    if args.verb > 1: print(qc)
-    
+    if args.verb ==2: print(qc)
+    if args.verb ==3: print(qc.decompose())
+
     print("--- Running the simulation... ---")
     shots=1
     backend = AerSimulator()
-    if 0:   # TranspilerError: 'HighLevelSynthesis is unable to synthesize "measure"'
-        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
-        qc=pm.run(qc)
+    backend.set_max_qubits(qc.num_qubits)  
+    pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+    qcT=pm.run(qc)
         
-    result = backend.run(qc, shots=shots).result()
+    result = backend.run(qcT, shots=shots).result()
     counts = result.get_counts()
     
     raw_syndrome_key = list(counts.keys())[0]
-    print(f"\nMeasured Syndrome (raw key): '{raw_syndrome_key}'")
-    sx_str, sz_str = raw_syndrome_key.split()
-    
-    full_syndrome = sz_str + sx_str
-    print(f"Processed Full Syndrome: Z='{sz_str}', X='{sx_str}'")
-    
-    decoded_corrections = decode_shor_syndrome(full_syndrome)
-    decoded_x_locs = decoded_corrections['X']
-    decoded_z_blocks = decoded_corrections['Z']
-    
-    print(f"\nDecoded Correction: X on qubits {decoded_x_locs}")
-    print(f"Decoded Correction: Z on blocks {decoded_z_blocks}")
-
-    print("\n--- Verifying Decoder Correctness ---")
-    print(f"  Injected X Errors on qubits: {true_x_errors}")
-    print(f"  Decoded X Correction for qubits: {decoded_x_locs}")
-    
-    # --- START FINAL FIX ---
-    # The true logical Z error depends on the PARITY of physical Z errors per block.
-    # An even number of Z errors in a block cancels out to a logical identity.
-    z_error_block_counts = Counter([loc // DISTANCE for loc in true_z_errors])
-    true_z_blocks = sorted([block for block, count in z_error_block_counts.items() if count % 2 != 0])
-    # --- END FINAL FIX ---
-
-    print(f"  Injected Z Errors (net logical effect on blocks): {true_z_blocks}")
-    print(f"  Decoded Z Correction for blocks: {decoded_z_blocks}")
-    
-    passed_x = (true_x_errors == decoded_x_locs)
-    passed_z = (true_z_blocks == decoded_z_blocks)
-
-    if passed_x and passed_z:
-        print("\n*** DECODER VERIFICATION PASSED ***")
-    else:
-        print("\n*** DECODER VERIFICATION FAILED ***")
-        if not passed_x: print(" -> X-error decoding mismatch.")
-        if not passed_z: print(" -> Z-error decoding mismatch.")
+    evaluate_results(raw_syndrome_key, true_x_errors, true_z_errors, args.verb)
 
 if __name__ == "__main__":
     main()
