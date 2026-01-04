@@ -5,7 +5,8 @@ source ~/.ssh/ibmq.creds jan
 
 #IMG=balewski/ubu24-qiskit:p7m  # includes QSP & Q-CTRL
 #IMG=balewski/ubu24-qiskit:p7o  # ver 0.43.0 
-IMG=balewski/ubu24-qiskit:p7p  # ver 0.43.0 
+#IMG=balewski/ubu24-qiskit:p7p  # ver 0.43.0 
+IMG=balewski/ubu24-qiskit:p7q  #  w/  qiskit-experiments
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit

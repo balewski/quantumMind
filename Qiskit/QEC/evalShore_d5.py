@@ -140,6 +140,7 @@ def run_single_test(args, backend, pm):
     # backend and pm are passed in to reuse resources and avoid memory leaks
     qcT = pm.run(qc)
     result = backend.run(qcT, shots=1).result()
+    print('type of backend:',result.results[0].metadata["method"])
     counts = result.get_counts()
     raw_syndrome = list(counts.keys())[0]
     

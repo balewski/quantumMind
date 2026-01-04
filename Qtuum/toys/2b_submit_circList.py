@@ -26,7 +26,8 @@ if __name__ == "__main__":
     myTag='_'+hashlib.md5(os.urandom(32)).hexdigest()[:6]
     shots=50
     #devName="H1-Emulator"  # produces 0-cost
-    devName="H1-1E"   # gives realsit cost estimate
+    devName="H1-1LE"  noiseless simulation of H1.
+    # gives realistic cost estimate
     myAccount='CSC641'
     #myAccount='CHM170'  
     #project = qnx.projects.get_or_create(name="test-feb-14c")
@@ -58,7 +59,7 @@ if __name__ == "__main__":
     
     #...  compile list of circs at once
     t0=time()
-    refCL=qnx.compile( circuits=[ref1,ref2], name='comp'+myTag,
+    refCL=qnx.compile( programs=[ref1,ref2], name='comp'+myTag,
                        optimisation_level=2, backend_config=devConf1,
                        project=project )
     t1=time()
@@ -73,7 +74,7 @@ if __name__ == "__main__":
  
     #.... execution     
     t0=time()
-    ref_exec= qnx.start_execute_job( circuits=refCL, n_shots=shotL,
+    ref_exec= qnx.start_execute_job( programs=refCL, n_shots=shotL,
                                      backend_config=devConf1,name="exec"+myTag)    
     t1=time()
     qnx.jobs.wait_for(ref_exec)

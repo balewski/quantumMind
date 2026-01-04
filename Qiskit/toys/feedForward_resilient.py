@@ -9,7 +9,6 @@ Feed-forward operations with majority voting for readout error compensation
 import numpy as np
 from qiskit.circuit.classical import expr
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, transpile
-from qiskit.tools.visualization import circuit_drawer
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 from time import time
 from qiskit_aer import AerSimulator
@@ -122,7 +121,7 @@ if __name__ == "__main__":
     #qc=create_FeedF_circuit()
     #qc=create_some_circuit()
     qc=feedF_circuit()
-    print(circuit_drawer(qc.decompose(), output='text',cregbundle=False, idle_wires=False))
+    print(qc.decompose().draw( output='text',cregbundle=False, idle_wires=False))
 
     print('M: access QiskitRuntimeService()...')
     
@@ -138,8 +137,8 @@ if __name__ == "__main__":
     print('use backend:', backend.name)
 
     # Check for dynamic circuit support (if_else)
-    if not backend.target.has_instruction("if_else"):
-        print("Warning: Backend target does not report if_else support. Execution may fail.")
+    #if not backend.target.has_instruction("if_else"):
+    #    print("Warning: Backend target does not report if_else support. Execution may fail.")
 
     print('M: transpiling ...')
     qcT = transpile(qc, backend=backend, optimization_level=3, seed_transpiler=42)
@@ -154,5 +153,5 @@ if __name__ == "__main__":
     
     print(f'M: job done in {elaT:.1f} sec')
 
-    counts = result[0].data.c.get_counts()
+    counts = result[0].data.c0.get_counts()
     print('M: counts:', counts)

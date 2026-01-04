@@ -26,9 +26,10 @@ def activate_qtuum_api():
     MY_QTUUM_PASS=os.environ.get('MY_QTUUM_PASS')
     print('credentials MY_QTUUM_NAME=',MY_QTUUM_NAME,MY_QTUUM_PASS)
     qnx.auth._request_tokens(MY_QTUUM_NAME,MY_QTUUM_PASS)
-    # List your saved credentials
-    my_credentials = qnx.credentials.get_all()
-    print(my_credentials)  # it prints alwasy empty list
+    user_ref = qnx.users.get_self()
+    user_data = user_ref.df()
+    print(f"Successfully authenticated.")
+    print("User Info:", user_data.to_dict(orient='records')[0]) 
 
 #=================================
 #=================================
@@ -52,9 +53,23 @@ if __name__ == "__main__":
     if 0: # List Quantinuum devices+calibration  ~2 pages of text
         xxL=qnx.devices.get_all( issuers=[qnx.devices.IssuerEnum.QUANTINUUM] )
         for x in xxL: print('\n',x)
-        ttt
-        
-    project = qnx.projects.get_or_create(name="test-feb-13")
+        exit(0)
+
+
+    print('list all my projects')
+    # Get the iterator
+    my_projects = qnx.projects.get_all()
+    # Convert to DataFrame and print
+    print(my_projects.df())
+
+    target_project = my_projects.list()[0]
+    print(target_project)
+    #qnx.context.set_active_project(target_project)
+
+    stop_1
+    
+    print('get my project ...')
+    project = qnx.projects.get_or_create(name="test-jan-3a")
     qnx.context.set_active_project(project)
    
     dateTag = datetime.now().strftime("%Y_%m_%d-%H-%M-%S")
