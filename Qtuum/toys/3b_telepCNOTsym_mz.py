@@ -11,7 +11,7 @@ from pytket.circuit import BasisOrder
 from time import time
 from pprint import pprint
 
-def create_cnot_teleport_serial(inpCT):
+def create_cnot_teleport_serial(inpCT,inpX=0):
     """
     Create a qc for CNOT gate teleportation.
     Serial version
@@ -21,16 +21,18 @@ def create_cnot_teleport_serial(inpCT):
     # Define quantum and classical registers
     # Processor A: control qubit (q0) and ancilla (q1)
     # Processor B: target qubit (q3) and ancilla (q2)
-    qreg = QuantumRegister(4, 'q')
-    creg = ClassicalRegister(2, 'ab')
-    freg = ClassicalRegister(2, 'ct')
-    qc = QuantumCircuit(qreg, creg,freg)    
+    qreg = QuantumRegister(5, 'q')
+    creg = ClassicalRegister(2, 'ab')  # mid-circuit measurement
+    freg = ClassicalRegister(2, 'ct')  # final register
+    xreg = ClassicalRegister(1, 'x')   # test qubit
+    qc = QuantumCircuit(qreg, creg,xreg,freg)    
     
     # Step 1: Prepare initial states (for testing)
     # Put control qubit in |1⟩ state and target in |0⟩
 
     if inpCT[0]: qc.x(qreg[0])  # Control = |1⟩
     if inpCT[1]: qc.x(qreg[3])  # Traget = |1⟩
+    if inpX: qc.x(qreg[4])  # test qubit for bit ordering verification
     qc.barrier()
     
     # Step 2: Create entangled pair between processors
@@ -55,7 +57,8 @@ def create_cnot_teleport_serial(inpCT):
     
     # now measure final qubits 0 & 3
     qc.measure(qreg[0], freg[1])
-    qc.measure(qreg[3], freg[0])        
+    qc.measure(qreg[3], freg[0])      
+    qc.measure(qreg[4], xreg[0])      
     return qc
 
 
@@ -63,8 +66,10 @@ def create_cnot_teleport_serial(inpCT):
 #  M A I N 
 #=================================
 if __name__ == "__main__":
-    inpCT=(1,0)  # input (control, target)
-    qc_qiskit = create_cnot_teleport_serial(inpCT)
+    inpCT=(1,0)   # input (control, target)
+    inpX=0        # test qubit
+    qc_qiskit = create_cnot_teleport_serial(inpCT,inpX)
+    print('inp c,t:',inpCT,'inpX:',inpX) 
     print("Qiskit circuit:")
     print(qc_qiskit.draw(output='text'))
 
@@ -75,7 +80,7 @@ if __name__ == "__main__":
     print("\n--- Gate Sequence in TKet---")
     for command in qc_tket.get_commands():
         print(command)
-    print(tk_to_qiskit(qc_tket))
+    print(tk_to_qiskit(qc_tket))  # WILL CRASH, not essential
 
     # --- QNexus Setup ---
     myTag = '_' + secrets.token_hex(3)
@@ -125,7 +130,7 @@ if __name__ == "__main__":
     # DLO gives bits in order defined in the circuit: c[n-1], ..., c[0]
     tket_counts = result.get_counts(basis=BasisOrder.dlo)
     
-    print('inp c,t:',inpCT)
+    print('inp c,t:',inpCT,'inpX:',inpX)
     print("\nMeasurement results (TKET DLO order):")
     pprint(tket_counts)
     
