@@ -7,11 +7,11 @@ Submit 1 circuit to Quantinuum Nexus - CAREFULL w/ credits
 Updated to use the newer Nexus interface (qnexus)
 '''
 
-import os, hashlib
+import os, secrets
 import qnexus as qnx
 from pytket import Circuit
 from pytket.circuit import BasisOrder
-from pytket.extensions.qiskit import tk_to_qiskit
+from pytket.extensions.qiskit import tk_to_qiskit # only for printing
 from pprint import pprint
 from time import time, sleep
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # qnx.login_with_credentials() # call once to authenticate
     
-    myTag = '_' + hashlib.md5(os.urandom(32)).hexdigest()[:6]
+    myTag = '_' + secrets.token_hex(3)
     shots = 10
     #devName = "H1-1LE"  # noiseless simulation of H1. Gives realistic cost estimate.
     devName = "H1-Emulator" # Use for error-modelled emulation of H1.
@@ -43,7 +43,12 @@ if __name__ == "__main__":
     print('define some TKET circ')
     qc = create_circ(3)
     print(tk_to_qiskit(qc))
+    print("\n--- Gate Sequence in TKet---")
+    for command in qc.get_commands():
+        print(command)
 
+    print(qc)
+    
     print('\nuploading circuit ...')
     t0 = time()
     ref = qnx.circuits.upload(circuit=qc, name='myca'+myTag)

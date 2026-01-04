@@ -9,7 +9,7 @@ testing submitting a list of 2 circuits to Quantinuum as 1 job
 "H1-1E":    # Noise-modelled emulator for Quantinuum’s H1 device, hosted on dedicated hardware.  Gives cost as for real HW H1-1
 '''
 
-import os,hashlib
+import os, secrets
 import qnexus as qnx
 from pytket import Circuit
 from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     if 0:  qnx.login_with_credentials()
     
-    myTag='_'+hashlib.md5(os.urandom(32)).hexdigest()[:6]
+    myTag='_'+ secrets.token_hex(3)
     shots=50
     #devName="H1-Emulator"  # produces 0-cost
     devName="H1-1LE"  noiseless simulation of H1.
