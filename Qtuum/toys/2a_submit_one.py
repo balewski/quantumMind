@@ -34,7 +34,7 @@ if __name__ == "__main__":
     myTag = '_' + secrets.token_hex(3)
     shots = 10
     #devName = "H1-2LE"  # noiseless simulation of H2.
-    devName = "H2-1E" # Use for error-modelled emulation of H2.
+    devName = "H2-1LE" # Use for error-modelled emulation of H2.
     
     #myAccount = 'CSC641'
     myAccount = 'CHM170'
@@ -74,10 +74,10 @@ if __name__ == "__main__":
     for x in qcT.get_commands():
         print(x)
 
-    #... get cost
-    cost = qnx.circuits.cost(circuit_ref=refC, n_shots=shots,
-                             backend_config=devConf, syntax_checker="H1-1SC")
-    print('\nshots=%d cost=%.1f:'%(shots, cost))
+    if 1 : #... get cost
+        cost = qnx.circuits.cost(circuit_ref=refC, n_shots=shots,
+                             backend_config=devConf, syntax_checker="H2-1SC")
+        print('\nshots=%d cost=%.1f:'%(shots, cost))
 
     #.... execution     
     t0 = time()
