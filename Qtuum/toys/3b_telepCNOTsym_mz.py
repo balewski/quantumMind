@@ -11,7 +11,7 @@ from pytket.circuit import BasisOrder
 from time import time
 from pprint import pprint
 
-def create_cnot_teleport_serial(inpCT,inpX=0):
+def create_cnot_teleport(inpCT,inpX=0):
     """
     Create a qc for CNOT gate teleportation.
     Serial version
@@ -22,10 +22,10 @@ def create_cnot_teleport_serial(inpCT,inpX=0):
     # Processor A: control qubit (q0) and ancilla (q1)
     # Processor B: target qubit (q3) and ancilla (q2)
     qreg = QuantumRegister(5, 'q')
-    creg = ClassicalRegister(2, 'ab')  # mid-circuit measurement
+    mreg = ClassicalRegister(2, 'yb')  # mid-circuit measurement
     freg = ClassicalRegister(2, 'ct')  # final register
-    xreg = ClassicalRegister(1, 'x')   # test qubit
-    qc = QuantumCircuit(qreg, creg,xreg,freg)    
+    xreg = ClassicalRegister(1, 'a')   # test qubit
+    qc = QuantumCircuit(qreg, mreg,xreg,freg)    
     
     # Step 1: Prepare initial states (for testing)
     # Put control qubit in |1⟩ state and target in |0⟩
@@ -45,13 +45,13 @@ def create_cnot_teleport_serial(inpCT,inpX=0):
     qc.cx(qreg[2], qreg[3])
     
     qc.h(qreg[2])
-    qc.measure(qreg[1], creg[0])
-    qc.measure(qreg[2], creg[1])
+    qc.measure(qreg[1], mreg[0])
+    qc.measure(qreg[2], mreg[1])
     
-    with qc.if_test((creg[0], 1)):
+    with qc.if_test((mreg[0], 1)):
         qc.x(qreg[3])  # X correction
     
-    with qc.if_test((creg[1], 1)):
+    with qc.if_test((mreg[1], 1)):
         qc.z(qreg[0])  # Z correction
     qc.barrier()
     
@@ -68,7 +68,7 @@ def create_cnot_teleport_serial(inpCT,inpX=0):
 if __name__ == "__main__":
     inpCT=(1,0)   # input (control, target)
     inpX=0        # test qubit
-    qc_qiskit = create_cnot_teleport_serial(inpCT,inpX)
+    qc_qiskit = create_cnot_teleport(inpCT,inpX)
     print('inp c,t:',inpCT,'inpX:',inpX) 
     print("Qiskit circuit:")
     print(qc_qiskit.draw(output='text'))
@@ -80,14 +80,14 @@ if __name__ == "__main__":
     print("\n--- Gate Sequence in TKet---")
     for command in qc_tket.get_commands():
         print(command)
-    print(tk_to_qiskit(qc_tket))  # WILL CRASH, not essential
+    #print(tk_to_qiskit(qc_tket))  # WILL CRASH, not essential
 
     # --- QNexus Setup ---
     myTag = '_' + secrets.token_hex(3)
     shots = 100
     #devName = "H1-Emulator"   # noisy
     devName = "H1-1LE"        # noiseless
-    myAccount = 'CSC641'
+    myAccount = 'CSC641' 
     project = qnx.projects.get_or_create(name="qcrank-jan-04")
     qnx.context.set_active_project(project)
 

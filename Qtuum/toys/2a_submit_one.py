@@ -33,10 +33,11 @@ if __name__ == "__main__":
     
     myTag = '_' + secrets.token_hex(3)
     shots = 10
-    #devName = "H1-1LE"  # noiseless simulation of H1. Gives realistic cost estimate.
-    devName = "H1-Emulator" # Use for error-modelled emulation of H1.
+    #devName = "H1-2LE"  # noiseless simulation of H2.
+    devName = "H2-1E" # Use for error-modelled emulation of H2.
     
-    myAccount = 'CSC641'
+    #myAccount = 'CSC641'
+    myAccount = 'CHM170'
     project = qnx.projects.get_or_create(name="qcrank-feb-14b")
     qnx.context.set_active_project(project)
 
@@ -44,10 +45,9 @@ if __name__ == "__main__":
     qc = create_circ(3)
     print(tk_to_qiskit(qc))
     print("\n--- Gate Sequence in TKet---")
+    print(qc)
     for command in qc.get_commands():
         print(command)
-
-    print(qc)
     
     print('\nuploading circuit ...')
     t0 = time()
