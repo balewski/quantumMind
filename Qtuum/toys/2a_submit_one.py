@@ -33,12 +33,13 @@ if __name__ == "__main__":
     
     myTag = '_' + secrets.token_hex(3)
     shots = 10
-    #devName = "H1-2LE"  # noiseless simulation of H2.
-    devName = "H2-1LE" # Use for error-modelled emulation of H2.
+
+    devName = "H2-1E" # Use for error-modelled emulation of H2.
+    #devName="Helios-1E" #full error modelling  , not working w/ TKet
     
     #myAccount = 'CSC641'
     myAccount = 'CHM170'
-    project = qnx.projects.get_or_create(name="qcrank-feb-14b")
+    project = qnx.projects.get_or_create(name="qcrank-feb")
     qnx.context.set_active_project(project)
 
     print('define some TKET circ')
@@ -74,11 +75,13 @@ if __name__ == "__main__":
     for x in qcT.get_commands():
         print(x)
 
-    if 1 : #... get cost
+    if 0 : #... get cost
+        if 'H2'in devName: checkDev="H2-1SC"
+        if 'Helios'in devName: checkDev="Helios-1SC"
         cost = qnx.circuits.cost(circuit_ref=refC, n_shots=shots,
-                             backend_config=devConf, syntax_checker="H2-1SC")
-        print('\nshots=%d cost=%.1f:'%(shots, cost))
-
+                                 backend_config=devConf, syntax_checker=checkDev)
+        print('\nshots=%d  dev=%s  cost=%.1f:'%(shots, checkDev,cost))
+    
     #.... execution     
     t0 = time()
     ref_exec = qnx.start_execute_job(programs=[refC], n_shots=[shots],
