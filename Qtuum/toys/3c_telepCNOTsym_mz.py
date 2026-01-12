@@ -10,6 +10,7 @@ import qnexus as qnx
 from pytket.circuit import BasisOrder
 from time import time
 from pprint import pprint
+from itertools import groupby
 
 def create_cnot_teleport(inpCT):
     """
@@ -56,36 +57,30 @@ def create_cnot_teleport(inpCT):
     return qc
 def get_creg_list(qc_tket):
     """
-    Extracts the alphabetical order of registers and their sizes from the TKet circuit.
+    Extracts the alphabetical order of registers and their bits from the TKet circuit.
     Necessary because TKet sorts registers during conversion.
     """
-    from itertools import groupby
-    return [[name, len(list(group))] for name, group in groupby(qc_tket.bits, key=lambda x: x.reg_name)]
+    return [[name, list(group)] for name, group in groupby(qc_tket.bits, key=lambda x: x.reg_name)]
 
-def split_tket_counts_by_creg(creg_list, tket_counts):
+def split_tket_counts_by_cregV2(creg_list, result):
     """
-    Splits the combined TKET counts into counts per classical register.
-    Takes as input a list of (register_name, size) tuples.
+    Splits the TKET result into counts per classical register using cbits.
     Returns a double dictionary: {reg_name: {bitstring: count}}
     """
-    # Initialize the results container
-    reg_counts = {name: {} for name, size in creg_list}
+    reg_counts = {}
     
-    for bit_tuple, count in tket_counts.items():
-        # TKet DLO basis: index 0 is MSB (last bit in definition list).
-        # Reverse bit_tuple to align indices with alphabetical definition order.
-        rev_tuple = bit_tuple[::-1]
+    for name, bits in creg_list:
+        # Get counts for just these bits. 
+        # bit_tuple will be (val_bit0, val_bit1, ...)
+        counts = result.get_counts(cbits=bits)
         
-        ptr = 0
-        for name, size in creg_list:
-            # Slice the reversed tuple for this register
-            chunk = rev_tuple[ptr : ptr + size]
-            # Convert bit tuple to string. Qiskit strings are bit[n-1]...bit[0] (Big-Endian)
-            # chunk is (bit[0], ... bit[n-1]), so we reverse it
-            bitstr = "".join(str(b) for b in reversed(chunk))
-            
-            reg_counts[name][bitstr] = reg_counts[name].get(bitstr, 0) + count
-            ptr += size
+        reg_dict = {}
+        for bit_tuple, count in counts.items():
+            # Convert bit tuple to MSB-first bitstring (Qiskit style)
+            # bit_tuple is (bit[0], bit[1], ... bit[n-1]), so reverse it
+            bitstr = "".join(str(b) for b in reversed(bit_tuple))
+            reg_dict[bitstr] = count
+        reg_counts[name] = reg_dict
             
     return reg_counts
 
@@ -114,8 +109,8 @@ if __name__ == "__main__":
 
     # --- QNexus Setup ---
     myTag = '_' + secrets.token_hex(3)
-    shots = 1000
-    devName = "H2-1E"
+    shots = 100
+    devName = "H2-1E";  checkDev="H2-1SC"
     myAccount = 'CSC641'
     project = qnx.projects.get_or_create(name="qcrank-feb")
     qnx.context.set_active_project(project)
@@ -139,8 +134,8 @@ if __name__ == "__main__":
 
     #... get cost
     cost = qnx.circuits.cost(circuit_ref=refC, n_shots=shots,
-                             backend_config=devConf, syntax_checker="H1-1SC")
-    print('\nshots=%d cost=%.1f:'%(shots, cost))
+                             backend_config=devConf, syntax_checker=checkDev)
+    print('\nshots=%d  dev=%d  cost=%.1f:'%(shots, checkDev, cost))
 
     #.... execution     
     t0 = time()
@@ -165,7 +160,7 @@ if __name__ == "__main__":
     
     # --- Split results by Classical Register --- 
     print("\nSplit results by Classical Register:")
-    split_counts = split_tket_counts_by_creg(creg_list, tket_counts)
+    split_counts = split_tket_counts_by_cregV2(creg_list, result)
     pprint(split_counts)
     
     print('\ndone devName=', devName)

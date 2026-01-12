@@ -25,7 +25,7 @@ if __name__ == "__main__":
     
     myTag='_'+ secrets.token_hex(3)
     shots=50
-    devName="H2-1E"  noiseless simulation of H2.
+    devName="H2-1E"  # noisy simulation of H2.
     # gives realistic cost estimate
     myAccount='CSC641'
     #myAccount='CHM170'  
