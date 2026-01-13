@@ -127,15 +127,15 @@ if __name__ == "__main__":
     if args.backend == 'ideal':
         # Initialize AerSimulator with seed if provided
         backend = AerSimulator(seed_simulator=args.seed)
-        qc_run = qc 
+        qcT = qc 
     else:
         from qiskit_ibm_runtime import QiskitRuntimeService
         from qiskit import transpile
         service = QiskitRuntimeService()
         print(f'\nUsing real HW backend: {args.backend} ...')
         backend = service.backend(args.backend)
-        qc_run = transpile(qc, backend)
-        if args.printCirc:   print(qc_run)
+        qcT = transpile(qc, backend) #, scheduling_method='alap')
+        if args.printCirc:   print(qcT)
         
     print('M: running sampler ...')
     sampler = Sampler(mode=backend)
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     # 3. Run Job
     # If seed is provided, we can also pass it to the run options for some backends,
     # but for AerSimulator, initializing it in the constructor is robust.
-    job = sampler.run([qc_run], shots=args.shots)
+    job = sampler.run([qcT], shots=args.shots)
     result = job.result()
     print('M: job done')
     
