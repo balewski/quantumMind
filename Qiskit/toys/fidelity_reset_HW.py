@@ -122,10 +122,10 @@ def analyze_results(result_data, n_qubits, depth, total_shots, phys_layout):
     Computes average probability of measuring state 1.
     """
     print("\n" + "="*80)
-    print("ANALYSIS: Probability of State |1> (Target: 1.0)")
+    print("ANALYSIS: Probability of State |0> (Target prob: 0.0)")
     print("="*80)
     
-    print(f"{'LogQ':<6} | {'PhysQ':<6} | {'Prob(1)':<10} | {'Bits(1)/Total'}")
+    print(f"{'LogQ':<6} | {'PhysQ':<6} | {'Prob(0)':<10} | {'Bits(1)/Total'}")
     print("-" * 50)
     
     total_ones_all = 0
