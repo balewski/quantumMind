@@ -35,6 +35,7 @@ nq=4
 qcP,thetaP=create_h_circuit(nq)
 print(qcP)
 print(qcP.draw('text', idle_wires=False))
+print(qcP.count_ops())
 
 options = SamplerOptions()
 options.default_shots=100
@@ -47,6 +48,7 @@ backend2 = service.backend(backName)
 print('use backend =', backend2.name )
 pm = generate_preset_pass_manager(optimization_level=3, backend=backend2)
 qcT = pm.run(qcP)
+print(qcT[0].count_ops())
 print('transpiled for',backend2)
 print(qcT.draw('text', idle_wires=False))
 
