@@ -9,6 +9,7 @@ from qiskit_aer import AerSimulator
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 def parse_args():
+    """Parse command-line arguments for the X-Measure-Reset benchmark."""
     parser = argparse.ArgumentParser(description="X-Measure-Reset Sequence Benchmark")
     parser.add_argument('--size', type=int, default=5, help="Number of qubits")
     parser.add_argument('--depth', type=int, default=8, help="Number of X-Meas-Reset cycles per qubit")
@@ -19,6 +20,10 @@ def parse_args():
     return parser.parse_args()
 
 def build_x_meas_reset_circuit(n_qubits, depth):
+    """Construct a circuit performing repeated X, measure, reset cycles per qubit.
+
+    Returns a `QuantumCircuit` with one classical register per qubit.
+    """
     print(f"Building circuit: {n_qubits} qubits, {depth} cycles (X-Meas-Reset)")
     qr = QuantumRegister(n_qubits, 'q')
     crs = [ClassicalRegister(depth, name=f"c{i}") for i in range(n_qubits)]
@@ -32,12 +37,27 @@ def build_x_meas_reset_circuit(n_qubits, depth):
         if d < depth-1: qc.barrier()
     return qc
 
+from datetime import datetime, timezone
+
 def print_calibration_data(backend, phys_qubits):
+    """Print calibration metrics (T1, T2, readout and gate errors) for qubits."""
     if backend is None or backend.name == 'aer_simulator': return
     props = backend.properties()
     if not props: return
     
+    # Get current time and calibration time
+    now = datetime.now(timezone.utc)
+    cal_time = props.last_update_date
+    
+    # Calculate lag
+    lag = now - cal_time
+    lag_hours = lag.total_seconds() / 3600
+    
     print("\n--- Calibration Data ---")
+    print(f"Current time (UTC):      {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print(f"Calibration time (UTC):  {cal_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print(f"Calibration age:         {lag_hours:.2f} hours ({lag_hours/24:.2f} days)")
+    print()
     print(f"{'PhysID':<6} | {'T1(us)':<8} | {'T2(us)':<8} | {'err s0->m1':<10} | {'err s1->m0':<10} | {'AvgErr':<8} | {'X_Gate_Err':<10}")
     print("-" * 80)
     
@@ -51,6 +71,45 @@ def print_calibration_data(backend, phys_qubits):
         print(f"{q:<6} | {t1:<8.1f} | {t2:<8.1f} | {p01:<10.4f} | {p10:<10.4f} | {(p01+p10)/2:<8.4f} | {x_err:<10.2e}")
     print("-" * 80)
     print(f"{'PhysID':<6} | {'T1(us)':<8} | {'T2(us)':<8} | {'err s0->m1':<10} | {'err s1->m0':<10} | {'AvgErr':<8} | {'X_Gate_Err':<10}")
+
+
+def analyze_results(result_data, n_qubits, phys_layout):
+    """
+    Computes probability of measuring state 0 and Binomial error using raw uint8 data.
+    """
+    print("\n" + "="*60)
+    print("ANALYSIS: Probability of State |0>,|1> ")
+    print("="*60)
+    print(f"{'LogQ':<6} | {'PhysQ':<6} | {'Prob(0)':<10} | {'Prob(1)':<10} | {'std prob':<12}")
+    print("-" * 45)
+
+    for i in range(n_qubits):
+        # Access the raw BitArray directly
+        bit_array = getattr(result_data, f"c{i}")
+        
+        # Unpack bits (shots x depth)
+        raw_bits = np.unpackbits(bit_array.array, axis=1, bitorder='little')
+        
+        #  Get depth directly from the BitArray object ---
+        depth = bit_array.num_bits
+        # Valid slice
+        valid_bits = raw_bits[:, :depth]
+        #if i==0: print('BAS',bit_array.array.shape,'depth',depth,valid_bits.shape)
+        # Statistics
+        total_samples = valid_bits.size
+        count_1 = np.count_nonzero(valid_bits)
+        count_0 = total_samples - count_1
+        
+        prob_0 = count_0 / total_samples
+        
+        # Binomial Error Calculation
+        if 0 < prob_0 < 1:
+            err_0 = np.sqrt(prob_0 * (1 - prob_0) / total_samples)
+        else:
+            err_0 = 1.0 / total_samples
+        
+        phys_id = phys_layout[i]
+        print(f"{i:<6} | {phys_id:<6} | {prob_0:.4f}     | {1-prob_0:.4f}     | {err_0:.4f}")
 
 def analyze_results(result_data, n_qubits,  phys_layout):
     """
@@ -73,7 +132,7 @@ def analyze_results(result_data, n_qubits,  phys_layout):
         depth = bit_array.num_bits
         # Valid slice
         valid_bits = raw_bits[:, :depth]
-        if i==0: print('BAS',bit_array.array.shape,'depth',depth,valid_bits.shape)
+        #if i==0: print('BAS',bit_array.array.shape,'depth',depth,valid_bits.shape)
         # Statistics
         total_samples = valid_bits.size
         count_1 = np.count_nonzero(valid_bits)

@@ -39,8 +39,9 @@ def activate_qtuum_api():
 if __name__ == "__main__":
     #my_credentials = qnx.credentials.get_all()
     #print(my_credentials)
-    
-    if 1: # works
+
+    # none of this 3 blow are needed if all works as it should
+    if 0: # works
         activate_qtuum_api()
         #exit(0)
 
@@ -66,12 +67,14 @@ if __name__ == "__main__":
     print(target_project)
     #qnx.context.set_active_project(target_project)
 
-    stop_1
+    #1stop_1
     
     print('get my project ...')
     project = qnx.projects.get_or_create(name="test-jan-3a")
     qnx.context.set_active_project(project)
-   
+
+    stop_2
+    
     dateTag = datetime.now().strftime("%Y_%m_%d-%H-%M-%S")
     print('define Bell-state circ')
     qc1 = Circuit(2).H(0).CX(0,1).measure_all()

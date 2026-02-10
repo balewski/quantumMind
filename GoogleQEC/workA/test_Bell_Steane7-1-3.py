@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import stim
 import numpy as np
 
