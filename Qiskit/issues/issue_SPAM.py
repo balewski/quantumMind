@@ -30,16 +30,16 @@ def parse_args():
 def build_x_meas_reset_circuit(n_qubits):
     """Construct a circuit performing one X, measure, reset cycle per qubit.
 
-    Returns a `QuantumCircuit` with one classical register `c` of size n_qubits.
+    Returns a `QuantumCircuit` with one classical register per qubit (`c0`, `c1`, ...).
     """
     print(f"Building circuit: {n_qubits} qubits, 1 round (Reset-X-Measure)")
     qr = QuantumRegister(n_qubits, 'q')
-    cr = ClassicalRegister(n_qubits, name="c")
-    qc = QuantumCircuit(qr, cr)
+    crs = [ClassicalRegister(1, name=f"c{i}") for i in range(n_qubits)]
+    qc = QuantumCircuit(qr, *crs)
 
     for q in range(n_qubits):
         qc.x(qr[q])
-        qc.measure(qr[q], cr[q])
+        qc.measure(qr[q], crs[q][0])
     return qc
 
 def get_prep1meas0_errors(backend, phys_qubits):
@@ -66,16 +66,11 @@ def compute_spam_stats(backend, result_data, n_qubits, phys_layout):
     """Compute per-qubit stats for the SPAM table and plot."""
     prep1meas0 = get_prep1meas0_errors(backend, phys_layout[:n_qubits])
     rows = []
-    bit_array = result_data.c
-    raw_bits = np.unpackbits(bit_array.array, axis=1, bitorder='little')
-    depth = bit_array.num_bits
-    valid_bits = raw_bits[:, :depth]
-    valid_bits = valid_bits[:, :n_qubits]
     for i in range(n_qubits):
-        col = valid_bits[:, i]
-        total_samples = col.size
-        count_1 = int(np.count_nonzero(col))
-        count_0 = total_samples - count_1
+        creg = getattr(result_data, f"c{i}")
+        counts = creg.get_counts()
+        total_samples = sum(counts.values())
+        count_0 = int(counts.get("0", 0))
         prob_0 = count_0 / total_samples if total_samples > 0 else 0.0
 
         if 0 < prob_0 < 1 and total_samples > 0:
@@ -93,6 +88,33 @@ def compute_spam_stats(backend, result_data, n_qubits, phys_layout):
             "std": err_0,
         })
     return rows
+
+
+def print_spam_table(rows):
+    title = "SPAM summary: calibration prep1meas0 vs measured Prob(0)"
+    bar_eq = "=" * 72
+    bar_dash = "-" * 72
+
+    def fmt4(x):
+        try:
+            if x is None or not np.isfinite(float(x)):
+                return "   nan  "
+            return f"{float(x):0.4f}"
+        except Exception:
+            return "   nan  "
+
+    print("\n" + bar_eq)
+    print(title)
+    print(bar_eq)
+    print("LogQ   | PhysQ  | prep1m0  | Prob(0)    | std prob  ")
+    print(bar_dash)
+    for r in rows:
+        logq = int(r["logQ"])
+        physq = int(r["physQ"])
+        prep = fmt4(r.get("prep1meas0", None))
+        prob0 = fmt4(r.get("prob0", None))
+        std = fmt4(r.get("std", None))
+        print(f"{logq:<6} | {physq:<6} | {prep:<8} | {prob0:<10} | {std:<9}")
 
 
 def plot_spam(rows, pct=10.0, out_png=None, run_date=None, qpu_name=None):
@@ -211,6 +233,7 @@ if __name__ == "__main__":
     
     # 4. Analysis table
     rows = compute_spam_stats(backend, result[0].data, args.size, phys_layout)
+    print_spam_table(rows)
     back_name = backend.name if isinstance(backend.name, str) else backend.name()
     run_date = datetime.now().strftime("%Y-%m-%d")
     out_png = f"out/spam_{run_date}_{back_name}_nq{args.size}.png"
