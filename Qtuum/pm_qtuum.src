@@ -1,7 +1,7 @@
 #!/bin/bash
 #  salloc -q interactive -C cpu -t 4:00:00 -A nstaff 
 
-IMG=balewski/ubu24-x86-qtuum:p3f
+IMG=balewski/ubu24-x86-qtuum:p4a  # includes tket2
 
 CFSH=/global/cfs/cdirs/mpccc/balewski/
 
@@ -30,8 +30,6 @@ for var in "$@"; do
 done
 
 podman-hpc run -it \
-   -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
-   -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
    -e LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgomp.so.1 \
    --volume $HOME:/home \
    --volume $CFSH/qcrank_light:/qcrank_light \
@@ -43,3 +41,6 @@ podman-hpc run -it \
    --workdir  $WORK_DIR2  \
    $IMG /bin/bash
 
+
+#   -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
+#   -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
