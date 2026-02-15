@@ -11,8 +11,12 @@ import qnexus as qnx
 from time import time, sleep
 from pytket.backends.backendresult import BasisOrder
 
+'''
+reference:  https://docs.quantinuum.com/guppy/getting_started.html
 
-# To implement this circuit, we define a Python function with the @guppy decorator. Since our circuit takes no inputs, the function does not have to have any parameters. Similarly, as the circuit prepares a single-qubit state, we must annotate the function with the corresponding return type. We also record the outcome of the mid-circuit measurement for later evaluation using result, as this will make it available later once we run the simulation.
+ To implement this circuit, we define a Python function with the @guppy decorator. Since our circuit takes no inputs, the function does not have to have any parameters. Similarly, as the circuit prepares a single-qubit state, we must annotate the function with the corresponding return type. We also record the outcome of the mid-circuit measurement for later evaluation using result, as this will make it available later once we run the simulation.
+'''
+
 
 @guppy
 def simple_circuit() -> qubit:

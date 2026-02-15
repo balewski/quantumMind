@@ -1,8 +1,22 @@
 #!/usr/bin/env python3
 """
-Feed-forward demo: Bell state with mid-circuit measurement and conditional X gate.
-Compiles a Guppy circuit, runs a local stabilizer emulation,
-then (optionally) submits to Quantinuum via Nexus.
+Feed-forward demo using Guppy (Quantinuum's Python-embedded quantum language).
+
+Circuit: prepare a Bell pair (H + CX), mid-circuit measure q1,
+conditionally apply X on q2 to disentangle it → q2 always collapses to |0⟩.
+
+Pipeline:
+  1. Define the circuit as a @guppy function (my_circ_fn)
+  2. Wrap it in an evaluator that measures the returned qubit
+  3. Run local stabilizer emulation to verify correctness
+  4. Compile to HUGR IR, upload to Quantinuum Nexus, and submit
+     an execution job on a real device (Helios-1E)
+  5. Wait for the job, then post-process per-shot results
+
+Retrieve results later:  python3 retrieve_circuit.py <job_id>
+Visualize HUGR graph:    python3 inspect_hugr.py <job_id>
+
+Ref:  https://docs.quantinuum.com/guppy/getting_started.html
 """
 
 __author__ = "Jan Balewski"
@@ -47,7 +61,7 @@ def build_evaluator(circuit_fn):
 
 
 def run_emulation(guppy_prog, n_qubits: int = 2,
-                  shots: int = 5, seed: int = 3):
+                  shots: int = 5, seed: int = 42):
     """Run local stabilizer emulation of *guppy_prog* and print results."""
     emulator = guppy_prog.emulator(n_qubits=n_qubits).stabilizer_sim().with_seed(seed)
     sim_result = emulator.with_shots(shots).run()
