@@ -173,12 +173,21 @@ def main():
                 # Case B: HUGR program from Guppy
                 elif "HUGRRef" in str(type(circ_ref)):
                     try:
-                        from tket2 import hugr_to_circuit
+                        # Try the new 'tket' package first (renamed from tket2)
+                        import tket.circuit
                         hugr_pkg = circ_ref.download_hugr()
-                        circuit = hugr_to_circuit(hugr_pkg)
-                        print(f"  converted HUGR to pytket Circuit via tket2")
+                        tk2_circ = tket.circuit.Tk2Circuit(hugr_pkg)
+                        circuit = tk2_circ.to_tket1()
+                        print(f"  converted HUGR to pytket Circuit via tket.circuit")
                     except ImportError:
-                        print("  ⚠  HUGRRef found but 'tket2' is not installed.")
+                        # Fallback for older environments still using 'tket2'
+                        try:
+                            from tket2 import hugr_to_circuit
+                            hugr_pkg = circ_ref.download_hugr()
+                            circuit = hugr_to_circuit(hugr_pkg)
+                            print(f"  converted HUGR to pytket Circuit via legacy tket2")
+                        except ImportError:
+                            print("  ⚠  HUGRRef found but neither 'tket' nor 'tket2' is installed.")
                     except Exception as exc:
                         print(f"  (failed to convert HUGR: {exc})")
             except Exception as exc:
