@@ -1,7 +1,9 @@
 FROM ubuntu:24.04
 # Quantinuum - x86_64 version
 
-# podman build -f ubu24-x86-qtuum.dockerfile -t balewski/ubu24-x86-qtuum:p3f .
+# podman-hpc build -f ubu24-x86-qtuum.dockerfile -t balewski/ubu24-x86-qtuum:p4a .
+# >> real	7m51.364s
+# podman-hpc migrate balewski/ubu24-x86-qtuum:p4a
 
 # Set non-interactive mode for apt-get
 ARG DEBIAN_FRONTEND=noninteractive

@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 # Quantinuum
 
-# podman build   -f ubu24-qtuum.dockerfile -t balewski/ubu24-qtuum:p3e   --platform linux/arm64   
+# podman build   -f ubu24-arm-qtuum.dockerfile -t balewski/ubu24-qtuum:p3e   --platform linux/arm64   
 # PM: real      7m42.406s
 # for omp_get_num_threads:  #      -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
 
