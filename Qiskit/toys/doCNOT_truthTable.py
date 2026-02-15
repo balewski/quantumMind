@@ -375,7 +375,7 @@ def get_parser():
                         help='Number of CNOT gates to stack (CNOT^n)')
     parser.add_argument('--physQL', type=int, nargs='+', default=None,
                         help='Space-separated physical qubit list for initial_layout (e.g., 1 3)')
-    parser.add_argument('--printCirc', type=str, default=None,
+    parser.add_argument('-c','--printCirc', type=str, default=None,
                         help='Print circuit matching selector like 01z or 11x (two bits + basis)')
     parser.add_argument('--transSeed', type=int, default=42,
                         help='Seed for the transpiler randomness')

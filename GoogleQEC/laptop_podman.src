@@ -11,7 +11,6 @@ PORT=8835
 JNB_PORT=''
 QCRANK=''
 DATA_VAULT=/shared_volumes/dataVault2025
-MPL_HOST_CACHE="$HOME/.cache/mpl-cache"
 
 # persistent cache on the host
 MPL_HOST_CACHE=/Users/balewski/shared_volumes/mpl-cache

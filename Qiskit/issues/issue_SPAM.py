@@ -23,7 +23,7 @@ def parse_args():
     parser.add_argument('-c', "--printCirc", action="store_true", help="Print circuit")
     parser.add_argument('-b', '--backend', default='ideal', help="quantum backend")
     parser.add_argument('-s', '--seed', type=int, default=None, help="Seed for random generator")
-    parser.add_argument('--pct', type=float, default=30.0,
+    parser.add_argument('--pct', type=float, default=17.0,
                         help="Percentile for median error bars (e.g., 5 -> 5th/95th)")
     return parser.parse_args()
 
@@ -182,11 +182,13 @@ def plot_spam(rows, pct=10.0, out_png=None, run_date=None, qpu_name=None):
     # axis limits and aspect ratio
     lo = -0.001
     if qpu_name == "ibm_miami":
-        hi = 0.035
+        hi = 0.03
     elif qpu_name == "ibm_marrakesh":
         hi = 0.025
     elif qpu_name == "ibm_pittsburgh":
         hi = 0.01
+    elif qpu_name == "ibm_torino":
+        hi = 0.035
     else:
         hi = 0.01
     ax.set_xlim(lo, hi)
@@ -194,15 +196,13 @@ def plot_spam(rows, pct=10.0, out_png=None, run_date=None, qpu_name=None):
     ax.set_aspect('equal', adjustable='box')
     plt.tight_layout()
     if out_png:
-        out_dir = os.path.dirname(out_png)
-        if out_dir:
-            os.makedirs(out_dir, exist_ok=True)
         plt.savefig(out_png, dpi=200)
         print(f"\nSaved plot: {out_png}")
     plt.show()
 
 if __name__ == "__main__":
     args = parse_args()
+    assert os.path.isdir("out"), "Output directory missing: 'out/' (create it first)"
 
     # 1. Build
     qc = build_x_meas_reset_circuit(args.size)
