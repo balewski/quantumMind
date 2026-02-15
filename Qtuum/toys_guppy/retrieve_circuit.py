@@ -176,7 +176,8 @@ def main():
                         # Try the new 'tket' package first (renamed from tket2)
                         import tket.circuit
                         hugr_pkg = circ_ref.download_hugr()
-                        tk2_circ = tket.circuit.Tk2Circuit(hugr_pkg)
+                        # hugr_pkg is a guppy Package object; tket expects the HUGR JSON
+                        tk2_circ = tket.circuit.Tk2Circuit(hugr_pkg.to_json())
                         circuit = tk2_circ.to_tket1()
                         print(f"  converted HUGR to pytket Circuit via tket.circuit")
                     except ImportError:
