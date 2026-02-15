@@ -133,19 +133,25 @@ def main():
 
     ensure_auth()
 
+    # ---- Step 1: reconstruct the job reference ----
     ref_exec = get_job_ref(args.job_id, args.project)
 
-    # ---- Step 1: job status ----
-    status = qnx.jobs.status(ref_exec)
+    # Note: status is an ExecutionStatus object, status.status is the Enum
+    full_status = qnx.jobs.status(ref_exec)
+    status_enum = full_status.status if hasattr(full_status, 'status') else full_status
     print(f"\n=== Job {args.job_id} ===")
-    print(f"  status: {status}")
+    print(f"  status: {full_status}")
 
-    if "Complete" not in str(status):
+    if "COMPLETED" not in str(status_enum):
         print("  ⚠  Job is not complete yet — circuit may not be available.")
 
     # ---- Step 2: retrieve results & compiled circuits ----
-    results = qnx.jobs.results(ref_exec)
-    print(f"  results: {len(results)} program(s)\n")
+    try:
+        results = qnx.jobs.results(ref_exec)
+        print(f"  results: {len(results)} program(s)\n")
+    except Exception as exc:
+        print(f"  (could not retrieve results: {exc})")
+        results = []
 
     out_dir = Path(args.outdir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -153,9 +159,9 @@ def main():
     for idx, res_item in enumerate(results):
         print(f"--- Program {idx} ---")
 
-        # Try to get the compiled circuit (pytket Circuit)
+        # Try to get the input program reference
         try:
-            circ_ref = res_item.get_input()      # ProgramRef / CircuitRef
+            circ_ref = res_item.get_input()
             print(f"  input ref: {circ_ref}")
         except Exception as exc:
             print(f"  (could not get input ref: {exc})")
@@ -170,55 +176,55 @@ def main():
                     circuit = circ_ref.download_circuit()
                     print(f"  downloaded pytket Circuit")
                 
-                # Case B: HUGR program from Guppy
+                # Case B: HUGR from Guppy
                 elif "HUGRRef" in str(type(circ_ref)):
                     try:
                         import tket.circuit
-                        hugr_pkg = circ_ref.download_hugr()
+                        hugr_pkg_raw = circ_ref.download_hugr()
+                        pack = tket.circuit.Package.from_bytes(hugr_pkg_raw.to_bytes())
                         
-                        # Use binary envelope
-                        tk2_circ = tket.circuit.Tk2Circuit.from_bytes(hugr_pkg.to_bytes())
-                        circuit = tk2_circ.to_tket1()
-                        
-                        # If circuit is empty, it might be because we need to select a function
-                        if circuit.n_gates == 0:
-                            # Try to find the first non-empty function in the package
-                            # Guppy packages often have the logic in a function named after the evaluator
-                            for func_name in tk2_circ.functions:
-                                sub_circ = tk2_circ.to_tket1(func_name)
-                                if sub_circ.n_gates > 0:
-                                    circuit = sub_circ
-                                    print(f"  found non-empty function: {func_name}")
+                        # Navigate modules to find the circuit function
+                        for mod in pack.modules:
+                            try:
+                                tk2_c = tket.circuit.Tk2Circuit(mod)
+                                tmp_c = tk2_c.to_tket1()
+                                if tmp_c.n_gates > 0:
+                                    circuit = tmp_c
+                                    print(f"  found circuit in HUGR module")
                                     break
+                            except Exception:
+                                continue
                         
-                        print(f"  converted HUGR to pytket Circuit via tket.circuit")
+                        if circuit is None:
+                            print("  (HUGR package contains no Gates)")
                     except Exception as exc:
-                        # Fallback for older environments
-                        try:
-                            from tket2 import hugr_to_circuit
-                            hugr_pkg = circ_ref.download_hugr()
-                            circuit = hugr_to_circuit(hugr_pkg)
-                            print(f"  converted HUGR to pytket Circuit via legacy tket2")
-                        except Exception:
-                            print(f"  (failed to convert HUGR: {exc})")
+                        print(f"  (failed to convert HUGR: {exc})")
             except Exception as exc:
                 print(f"  (download failed: {exc})")
 
         if circuit is not None:
             render_circuit_text(circuit)
-            html_path = out_dir / f"circuit_{args.job_id[:8]}_{idx}.html"
-            render_circuit_html(circuit, html_path)
+            out_file = out_dir / f"circuit_{args.job_id[:8]}_{idx}.html"
+            from pytket.circuit.display import render_circuit_as_html
+            render_circuit_as_html(circuit, str(out_file))
+            print(f"  → saved {out_file}  ({out_file.stat().st_size} bytes)")
         else:
             print("  ⚠  Could not obtain a pytket Circuit for rendering.")
             print("     (HUGR programs may not yet support back-conversion)")
 
-        # Also download and summarise the execution result
+        # Print result counts if available
         try:
-            result_data = res_item.download_result()
-            counts = result_data.get_counts()
-            print(f"  counts: {dict(counts)}")
+            res_data = res_item.download_result()
+            # Handle standard pytket results and QsysResults
+            if hasattr(res_data, "get_counts"):
+                counts = res_data.get_counts()
+                print("\nResult Counts:")
+                pprint(counts)
+            elif hasattr(res_data, "results"):
+                # Guppy QsysResult case
+                print(f"\nResult: {len(res_data.results)} shots collected.")
         except Exception as exc:
-            print(f"  (could not download result: {exc})")
+            print(f"  (could not process result counts: {exc})")
 
         print()
 
