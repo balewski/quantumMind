@@ -11,7 +11,7 @@ def inspect_hugr(job_id):
     print(f"Package has {len(pack.modules)} modules")
     for i, mod in enumerate(pack.modules):
         print(f"\n--- Module {i} ---")
-        print(f"  Entrypoint: {mod.entrypoint}, Op: {mod.entrypoint_op(mod.entrypoint)}")
+        print(f"  Entrypoint: {mod.entrypoint}")
         
         # Path 1: Mermaid (Best for browser/Live Editor)
         try:
