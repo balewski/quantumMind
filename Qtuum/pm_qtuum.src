@@ -1,5 +1,6 @@
 #!/bin/bash
 #  salloc -q interactive -C cpu -t 4:00:00 -A nstaff 
+source ~/.ssh/qtuum.creds 
 
 IMG=balewski/ubu24-x86-qtuum:p4a  # includes tket2
 
@@ -13,7 +14,7 @@ BASE_DIR=exploreQEC   # here git has home
 DATA_VAULT=${CFSH}/quantDataVault2026
 DATA_DIR=/dataQEC_tmp
 
-WORK_DIR1=/exploreQEC/qiskit/work2026
+WORK_DIR1=/quantumMind/Qtuum
 WORK_DIR2=/exploreQEC/qiskit
 
 echo "The number of arguments is: $#"
@@ -30,6 +31,8 @@ for var in "$@"; do
 done
 
 podman-hpc run -it \
+    -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
+   -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
    -e LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgomp.so.1 \
    --volume $HOME:/home \
    --volume $CFSH/qcrank_light:/qcrank_light \
@@ -38,9 +41,7 @@ podman-hpc run -it \
    --volume $CFSH/$BASE_DIR:/$BASE_DIR \
    --volume $CFSH/$WORK_DIR1:$WORK_DIR1 \
    --volume $CFSH/$WORK_DIR2:$WORK_DIR2 \
-   --workdir  $WORK_DIR2  \
+   --workdir  $WORK_DIR1  \
    $IMG /bin/bash
 
 
-#   -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
-#   -e MY_QTUUM_PASS=$MY_QTUUM_PASS \

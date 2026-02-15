@@ -41,9 +41,10 @@ if __name__ == "__main__":
     #print(my_credentials)
 
     # none of this 3 blow are needed if all works as it should
-    if 0: # works
+    if 1: # works
         activate_qtuum_api()
-        #exit(0)
+        print(' you should be able to talk to Nexus w/o passing creds')
+        exit(0)
 
     if 0: # works too, but need manual typing 
         qnx.login_with_credentials()        
