@@ -176,12 +176,12 @@ def main():
                         # Try the new 'tket' package first (renamed from tket2)
                         import tket.circuit
                         hugr_pkg = circ_ref.download_hugr()
-                        # The Rust bridge expects a dict, not a raw string. 
-                        # Guppy Package -> JSON String -> Dict
-                        hugr_dict = json.loads(hugr_pkg.to_json())
-                        tk2_circ = tket.circuit.Tk2Circuit(hugr_dict)
+                        
+                        # Use the "HUGR envelope" binary method (avoids JSON/dict panics)
+                        # hugr_pkg (guppy Package) -> bytes -> Tk2Circuit
+                        tk2_circ = tket.circuit.Tk2Circuit.from_bytes(hugr_pkg.to_bytes())
                         circuit = tk2_circ.to_tket1()
-                        print(f"  converted HUGR to pytket Circuit via tket.circuit")
+                        print(f"  converted HUGR to pytket Circuit via tket.circuit.from_bytes")
                     except ImportError:
                         # Fallback for older environments still using 'tket2'
                         try:
