@@ -24,4 +24,6 @@ def inspect_hugr(job_id):
                 print(f"  Child {child}: could not convert ({e})")
 
 if __name__ == "__main__":
+    project = qnx.projects.get_or_create(name='feb-guppy')
+    qnx.context.set_active_project(project)
     inspect_hugr(sys.argv[1])
