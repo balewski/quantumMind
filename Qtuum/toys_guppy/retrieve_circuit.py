@@ -173,26 +173,34 @@ def main():
                 # Case B: HUGR program from Guppy
                 elif "HUGRRef" in str(type(circ_ref)):
                     try:
-                        # Try the new 'tket' package first (renamed from tket2)
                         import tket.circuit
                         hugr_pkg = circ_ref.download_hugr()
                         
-                        # Use the "HUGR envelope" binary method (avoids JSON/dict panics)
-                        # hugr_pkg (guppy Package) -> bytes -> Tk2Circuit
+                        # Use binary envelope
                         tk2_circ = tket.circuit.Tk2Circuit.from_bytes(hugr_pkg.to_bytes())
                         circuit = tk2_circ.to_tket1()
-                        print(f"  converted HUGR to pytket Circuit via tket.circuit.from_bytes")
-                    except ImportError:
-                        # Fallback for older environments still using 'tket2'
+                        
+                        # If circuit is empty, it might be because we need to select a function
+                        if circuit.n_gates == 0:
+                            # Try to find the first non-empty function in the package
+                            # Guppy packages often have the logic in a function named after the evaluator
+                            for func_name in tk2_circ.functions:
+                                sub_circ = tk2_circ.to_tket1(func_name)
+                                if sub_circ.n_gates > 0:
+                                    circuit = sub_circ
+                                    print(f"  found non-empty function: {func_name}")
+                                    break
+                        
+                        print(f"  converted HUGR to pytket Circuit via tket.circuit")
+                    except Exception as exc:
+                        # Fallback for older environments
                         try:
                             from tket2 import hugr_to_circuit
                             hugr_pkg = circ_ref.download_hugr()
                             circuit = hugr_to_circuit(hugr_pkg)
                             print(f"  converted HUGR to pytket Circuit via legacy tket2")
-                        except ImportError:
-                            print("  ⚠  HUGRRef found but neither 'tket' nor 'tket2' is installed.")
-                    except Exception as exc:
-                        print(f"  (failed to convert HUGR: {exc})")
+                        except Exception:
+                            print(f"  (failed to convert HUGR: {exc})")
             except Exception as exc:
                 print(f"  (download failed: {exc})")
 
