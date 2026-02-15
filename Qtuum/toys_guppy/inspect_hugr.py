@@ -11,31 +11,32 @@ def inspect_hugr(job_id):
     print(f"Package has {len(pack.modules)} modules")
     for i, mod in enumerate(pack.modules):
         print(f"\n--- Module {i} ---")
-        # Try Path 1: Tk2Circuit from_bytes (The modern envelope way)
+        print(f"  Entrypoint: {mod.entrypoint}, Op: {mod.entrypoint_op(mod.entrypoint)}")
+        
+        # Path 1: Mermaid (Best for browser/Live Editor)
         try:
-            tk2 = tket.circuit.Tk2Circuit.from_bytes(mod.to_bytes())
-            print(f"  Path 1 (from_bytes): Success! {tk2.to_tket1().n_gates} gates")
+            mermaid_str = mod.render_mermaid()
+            m_file = f"hugr_mod_{i}.mmd"
+            with open(m_file, "w") as f:
+                f.write(mermaid_str)
+            print(f"  Path 3 (Mermaid): Saved {m_file} (Paste into mermaid.live)")
         except Exception as e:
-            print(f"  Path 1 (from_bytes): Fail ({e})")
+            print(f"  Path 3 (Mermaid): Fail ({e})")
 
-        # Try Path 1b: Tk2Circuit from_str (The text envelope way)
-        try:
-            tk2 = tket.circuit.Tk2Circuit.from_str(mod.to_str())
-            print(f"  Path 1b (from_str): Success! {tk2.to_tket1().n_gates} gates")
-        except Exception as e:
-            print(f"  Path 1b (from_str): Fail ({e})")
-
-        # Try Path 2: Fallback to Graphviz visualization
-        try:
-            digraph = mod.render_dot()
-            dot_file = f"hugr_mod_{i}.dot"
-            digraph.save(dot_file)
-            print(f"  Path 2 (Graphviz): Saved {dot_file}")
-            # Try to render to PNG using the digraph object directly
-            png_file = digraph.render(f"hugr_mod_{i}", format="png", cleanup=True)
-            print(f"  Path 2 (Graphviz): Rendered {png_file}")
-        except Exception as e:
-            print(f"  Path 2 (Graphviz): Fail ({e})")
+        # Path 4: Brute force search for Gates in children
+        for child in mod.children(mod.module_root):
+            try:
+                tk2 = tket.circuit.Tk2Circuit.from_model(mod, child)
+                t1 = tk2.to_tket1()
+                if t1.n_gates > 0:
+                    print(f"  --> Found gates in child {child}! Gates: {t1.n_gates}")
+                    # Try to save this specific part
+                    from pytket.circuit.display import render_circuit_as_html
+                    out = f"sub_circuit_{i}_{child}.html"
+                    render_circuit_as_html(t1, out)
+                    print(f"      Saved partial plot to {out}")
+            except Exception:
+                continue
 
 
 if __name__ == "__main__":
