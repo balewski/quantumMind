@@ -15,14 +15,11 @@ def inspect_hugr(job_id):
         # Path 1: Mermaid (using the tket.circuit helper)
         try:
             m_file = f"hugr_mod_{i}.mmd"
-            # Defensive import/check to avoid panics during top-level calls
-            import tket.circuit
             mermaid_str = tket.circuit.render_circuit_mermaid(mod)
             with open(m_file, "w") as f:
                 f.write(mermaid_str)
             print(f"  Path 1 (Mermaid): Saved {m_file}")
         except Exception as e:
-             # This often panics with "AttributeError: 'Hugr' object has no attribute 'to_dict'"
             print(f"  Path 1 (Mermaid): Skipped (Internal bridge error: {e})")
 
         # Path 2: Recursive search for gates in the tree
