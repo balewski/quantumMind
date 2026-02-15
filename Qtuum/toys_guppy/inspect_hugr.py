@@ -11,24 +11,29 @@ def inspect_hugr(job_id):
     print(f"Package has {len(pack.modules)} modules")
     for i, mod in enumerate(pack.modules):
         print(f"\n--- Module {i} ---")
-        # Try Path 1: Tk2Circuit from_str
+        # Try Path 1: Tk2Circuit from_bytes (The modern envelope way)
         try:
-            tk2 = tket.circuit.Tk2Circuit.from_str(mod.to_json())
-            print(f"  Path 1 (from_str): Success! {tk2.to_tket1().n_gates} gates")
+            tk2 = tket.circuit.Tk2Circuit.from_bytes(mod.to_bytes())
+            print(f"  Path 1 (from_bytes): Success! {tk2.to_tket1().n_gates} gates")
         except Exception as e:
-            print(f"  Path 1 (from_str): Fail ({e})")
+            print(f"  Path 1 (from_bytes): Fail ({e})")
+
+        # Try Path 1b: Tk2Circuit from_str (The text envelope way)
+        try:
+            tk2 = tket.circuit.Tk2Circuit.from_str(mod.to_str())
+            print(f"  Path 1b (from_str): Success! {tk2.to_tket1().n_gates} gates")
+        except Exception as e:
+            print(f"  Path 1b (from_str): Fail ({e})")
 
         # Try Path 2: Fallback to Graphviz visualization
         try:
-            dot_str = mod.render_dot()
+            digraph = mod.render_dot()
             dot_file = f"hugr_mod_{i}.dot"
-            with open(dot_file, "w") as f:
-                f.write(dot_str)
+            digraph.save(dot_file)
             print(f"  Path 2 (Graphviz): Saved {dot_file}")
-            # Try to convert to PNG if dot is available
-            import subprocess
-            subprocess.run(["dot", "-Tpng", dot_file, "-o", dot_file.replace(".dot", ".png")])
-            print(f"  Path 2 (Graphviz): Rendered {dot_file.replace('.dot', '.png')}")
+            # Try to render to PNG using the digraph object directly
+            png_file = digraph.render(f"hugr_mod_{i}", format="png", cleanup=True)
+            print(f"  Path 2 (Graphviz): Rendered {png_file}")
         except Exception as e:
             print(f"  Path 2 (Graphviz): Fail ({e})")
 
