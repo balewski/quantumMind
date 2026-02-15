@@ -165,12 +165,24 @@ def main():
         circuit = None
         if circ_ref is not None:
             try:
-                circuit = circ_ref.download_circuit()
-                print(f"  downloaded pytket Circuit")
-            except AttributeError:
-                print("  (input ref is HUGR — download_circuit() not available)")
+                # Case A: Native pytket Circuit
+                if hasattr(circ_ref, "download_circuit"):
+                    circuit = circ_ref.download_circuit()
+                    print(f"  downloaded pytket Circuit")
+                
+                # Case B: HUGR program from Guppy
+                elif "HUGRRef" in str(type(circ_ref)):
+                    try:
+                        from tket2 import hugr_to_circuit
+                        hugr_pkg = circ_ref.download_hugr()
+                        circuit = hugr_to_circuit(hugr_pkg)
+                        print(f"  converted HUGR to pytket Circuit via tket2")
+                    except ImportError:
+                        print("  ⚠  HUGRRef found but 'tket2' is not installed.")
+                    except Exception as exc:
+                        print(f"  (failed to convert HUGR: {exc})")
             except Exception as exc:
-                print(f"  (download_circuit failed: {exc})")
+                print(f"  (download failed: {exc})")
 
         if circuit is not None:
             render_circuit_text(circuit)
