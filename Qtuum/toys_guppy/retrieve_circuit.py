@@ -186,7 +186,8 @@ def main():
                         # Navigate modules to find the circuit function
                         for mod in pack.modules:
                             try:
-                                tk2_c = tket.circuit.Tk2Circuit(mod)
+                                # Use from_model to avoid the to_dict serialization panic
+                                tk2_c = tket.circuit.Tk2Circuit.from_model(mod)
                                 tmp_c = tk2_c.to_tket1()
                                 if tmp_c.n_gates > 0:
                                     circuit = tmp_c
