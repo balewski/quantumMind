@@ -1,58 +1,54 @@
-import qnexus as qnx
-import tket.circuit
+#!/usr/bin/env python3
+"""
+Inspect & visualize a HUGR circuit fetched from Quantinuum Nexus.
+
+Usage:
+    python3 inspect_hugr.py <job_id>
+
+Produces (in out/ directory):
+    hugr_<tag>_mod<i>.dot   – Graphviz DOT source
+    hugr_<tag>_mod<i>.png   – Rendered PNG image
+"""
+
+__author__ = "Jan Balewski"
+__email__ = "janstar1122@gmail.com"
+
+import os
 import sys
 
+import qnexus as qnx
+
+OUT_DIR = "out"
+
+
 def inspect_hugr(job_id):
+    tag = job_id.split("-")[0]  # e.g. "0c1c9000"
+    os.makedirs(OUT_DIR, exist_ok=True)
+
     ref = qnx.jobs.get(id=job_id)
     results = qnx.jobs.results(ref)
-    hugr_pkg_raw = results[0].get_input().download_hugr()
-    pack = tket.circuit.Package.from_bytes(hugr_pkg_raw.to_bytes())
-    
-    print(f"Package has {len(pack.modules)} modules")
-    for i, mod in enumerate(pack.modules):
-        print(f"\n--- Module {i} ---")
-        
-        # Path 1: Mermaid (using the tket.circuit helper)
-        try:
-            m_file = f"hugr_mod_{i}.mmd"
-            mermaid_str = tket.circuit.render_circuit_mermaid(mod)
-            with open(m_file, "w") as f:
-                f.write(mermaid_str)
-            print(f"  Path 1 (Mermaid): Saved {m_file}")
-        except BaseException as e:
-             # Catching BaseException because PanicException can skip standard Exception
-            print(f"  Path 1 (Mermaid): Skipped due to internal panic/error: {e}")
+    hugr_pkg = results[0].get_input().download_hugr()  # hugr.package.Package
 
-        # Path 2: Recursive search for gates in the tree
-        def find_gates(node, depth=0):
-            try:
-                # We try both from_model and from_bytes for the specific node
-                tk2 = tket.circuit.Tk2Circuit.from_model(mod, node)
-                t1 = tk2.to_tket1()
-                if t1.n_gates > 0:
-                    print(f"{'  '*depth}--> [Node {node}] Found {t1.n_gates} gates!")
-                    out = f"sub_circuit_{i}_{node}.html"
-                    from pytket.circuit.display import render_circuit_as_html
-                    render_circuit_as_html(t1, out)
-                    print(f"{'  '*depth}    Saved plot to {out}")
-                elif t1.n_qubits > 0:
-                     print(f"{'  '*depth}    [Node {node}] Empty circuit with {t1.n_qubits} qubits")
-            except BaseException:
-                pass
-            
-            # Recurse to children
-            try:
-                children = list(mod.children(node))
-                for child in children:
-                    find_gates(child, depth + 1)
-            except Exception:
-                pass
+    print(f"Package has {len(hugr_pkg.modules)} modules")
+    for i, mod in enumerate(hugr_pkg.modules):
+        print(f"\n--- Module {i}  ({mod.num_nodes()} nodes) ---")
 
-        print("  Searching for gates in HUGR tree...")
-        try:
-            find_gates(mod.module_root)
-        except Exception as e:
-            print(f"  Tree search failed: {e}")
+        base = os.path.join(OUT_DIR, f"hugr_{tag}_mod{i}")
+        digraph = mod.render_dot()  # graphviz.Digraph
+
+        # Save DOT source
+        dot_file = base + ".dot"
+        with open(dot_file, "w") as f:
+            f.write(digraph.source)
+        print(f"  DOT saved: {dot_file}")
+
+        # Render PNG via graphviz Python package (quiet=True suppresses dot warnings)
+        digraph.render(base, format="png", cleanup=False, quiet=True)
+        print(f"  PNG saved: {base}.png")
+
+    print(f"\nDone. Output in {OUT_DIR}/")
+    print(f"  open {OUT_DIR}/hugr_{tag}_mod0.png")
+    print(f"  or paste .dot into https://dreampuf.github.io/GraphvizOnline/")
 
 
 if __name__ == "__main__":
