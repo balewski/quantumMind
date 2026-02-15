@@ -5,14 +5,14 @@ source /Users/balewski/.ssh/qtuum.creds bert
 env |grep MY_QTUUM  # activate to see the creds
 
 #IMG=balewski/ubu24-qtuum:p3c  # guppy 0.21.6
-IMG=balewski/ubu24-qtuum:p3f  # includes guppy 0.21.8 
+IMG=balewski/ubu24-qtuum:p3m  # includes: guppy 0.21.8 , Pytket  2.13.0
 
 echo launch image $IMG
 echo you are launching Docker image ...  remeber to exit
 
 
 JNB_PORT=''
-WORK_DIR=/qtuum
+WORK_DIR=/qtuum/toys_guppy
 DATA_VAULT=/shared_volumes/dataVault2025
 
 echo "The number of arguments is: $#"
@@ -20,19 +20,15 @@ echo "The number of arguments is: $#"
 for var in "$@"; do
   echo "The length of argument '$var' is: ${#var}"
   if [[ "jnb" ==  $var ]];  then
-      #echo added  $JNB_PORT
-     #echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $RP "
-     JNB_PORT="    -p 8833:8833 "
-     echo added  $JNB_PORT
-     echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833"
+      JNB_PORT="    -p 8837:8837 "
+      echo added  $JNB_PORT
+      echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8837"
      
   fi
   # ... more ...
 done
     
-podman run -it \
-    -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
-    -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
+eval podman run -it \
     --volume /shared_volumes/quantumMind/Qtuum:$WORK_DIR \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume /shared_volumes/qcrank_light:/qcrank_light \
@@ -48,6 +44,8 @@ podman run -it \
 # /qtuum_wrk/hqs-api-examples/notebooks  \
 #     --volume /docker_volumes/qcrank_wrk:/qcrank_wrk \
 #     --volume /shared_volumes/quantumPath:/quantumPath \
+#     -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
+#    -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
 
 
 # first time

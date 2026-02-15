@@ -1,6 +1,6 @@
 #!/bin/bash
 #  salloc -q interactive -C cpu -t 4:00:00 -A nstaff 
-source ~/.ssh/qtuum.creds 
+source ~/.ssh/qtuum.creds  bert
 
 IMG=balewski/ubu24-x86-qtuum:p4a  # includes tket2
 
@@ -22,16 +22,15 @@ echo "The number of arguments is: $#"
 for var in "$@"; do
   echo "The length of argument '$var' is: ${#var}"
   if [[ "jnb" ==  $var ]];  then
-      #JNB_PORT="    --publish 8833:8833 "
       JNB_PORT="    -p 8833:8833 "
-     echo added  $JNB_PORT
-     echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833 "
+      echo added  $JNB_PORT
+      echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  8833 "
   fi
   # ... more ...
 done
 
 podman-hpc run -it \
-    -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
+   -e MY_QTUUM_NAME=$MY_QTUUM_NAME \
    -e MY_QTUUM_PASS=$MY_QTUUM_PASS \
    -e LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgomp.so.1 \
    --volume $HOME:/home \
