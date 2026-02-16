@@ -13,7 +13,7 @@ ENV TZ=America/Los_Angeles
 # Update the OS and install required packages
 RUN echo "1a-AAAAAAAAAAAAAAAAAAAAAAAAAAAAA OS update" && \
     apt-get update && \
-    apt-get install -y locales autoconf automake gcc g++ make vim wget ssh openssh-server sudo git emacs aptitude build-essential xterm python3-pip python3-tk python3-scipy python3-dev iputils-ping net-tools screen feh hdf5-tools python3-bitstring plocate graphviz tzdata x11-apps python3-venv dnsutils iputils-ping libgomp1 curl cmake pkg-config && \
+    apt-get install -y locales autoconf automake gcc g++ make vim wget ssh openssh-server sudo git emacs aptitude build-essential xterm python3-pip python3-tk python3-scipy python3-dev iputils-ping net-tools screen feh hdf5-tools python3-bitstring plocate graphviz tzdata x11-apps python3-venv dnsutils iputils-ping libgomp1 curl cmake pkg-config libclang-dev && \
     apt-get clean
 
 # Create a virtual environment for Python packages to avoid the externally managed environment issue
@@ -50,7 +50,11 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:$PATH"
 
 # Install tket stack: guppylang-internals imports tket_exts at runtime.
-RUN /opt/venv/bin/pip install conan && \
+RUN /opt/venv/bin/pip uninstall -y conan && \
+    /opt/venv/bin/pip install "conan>=2.0" && \
+    printf '#!/bin/bash\nPYTHONPATH= /opt/venv/bin/python3 -c "from conans.conan import run; import sys; sys.exit(run())" "$@"\n' > /opt/venv/bin/conan && \
+    chmod +x /opt/venv/bin/conan && \
+    /opt/venv/bin/conan --version && \
     /opt/venv/bin/conan profile detect && \
     /opt/venv/bin/pip install pytket pytket-quantinuum qnexus pytket-qiskit qiskit-aer selene_sim tket tket-exts
 RUN pip download --no-deps guppylang==0.21.8 -d /tmp && \
@@ -65,8 +69,6 @@ RUN pip install types-tqdm
 
 # Install pyqir
 RUN pip install pyqir
-
-#RUN apt-get install -y     x11-apps 
 
 # Final cleanup
 RUN apt-get clean
