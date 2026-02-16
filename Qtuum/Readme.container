@@ -1,0 +1,41 @@
+The image build is progressing through the final stages. Here is a summary of what the balewski/ubu24-qtuum:p3z image contains:
+
+guppylang                 0.21.8
+guppylang-internals       0.27.0
+pytket                    2.13.0
+pytket-qir                0.27.1
+pytket-qiskit             0.77.0
+pytket-quantinuum         0.57.0
+tket                      0.12.16
+tket_eccs                 0.5.1
+tket-exts                 0.12.2
+conan                     2.25.2
+selene-core               0.2.4
+selene-hugr-qis-compiler  0.2.10
+selene-sim                0.2.10
+qnexus                    0.39.0
+
+
+1. Robust Quantinuum & Guppy Stack
+Guppy (0.21.8): The latest version of the Quantinuum Guppy compiler.
+Quantum Nexus (qnexus): Full integration for job submission and retrieval.
+Tket 2 Engine: The new Rust-based compiler backend (tket) built from source during the image creation.
+
+2. Full Visualization Support (Plotting)
+Unlike previous ARM versions, this image includes the real tket library rather than a mock.
+Includes libclang-dev and a custom Conan 2.x wrapper, which was the "magic fix" needed to let the Rust build toolchain correctly link the C++ components for circuit plotting.
+Supports converting HUGR/GUGR data to standard pytket circuits for HTML or Mermaid visualization.
+
+3. Native ARM64 Optimization
+Rust Toolchain Integrated: Fully configured with rustup to manage native builds for M-series Macs.
+Conan 2.0+: Configured with an optimized ARM v8 profile for modern GCC 13/14 compatibility.
+OpenMP Support: Includes libgomp1 for parallel execution of emulators/simulators.
+
+4. Comprehensive Environment
+Base: Ubuntu 24.04 (Noble Numbat).
+Python 3.12 Virtual Env: Located at /opt/venv, isolated but fully configured with global symlinks for critical tools (like Conan).
+Math/Scientific Tools: numpy, scipy, pandas, scikit-learn, matplotlib, and networkx.
+Status Check: It is currently finishing the Installing Build Dependencies phase for the final python packages. Once done, you’ll be able to run 
+retrieve_circuit.py
+ natively on your laptop and see the actual quantum gate plots from Guppy jobs.
+

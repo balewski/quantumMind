@@ -5,7 +5,7 @@ source /Users/balewski/.ssh/qtuum.creds bert
 env |grep MY_QTUUM  # activate to see the creds
 
 #IMG=balewski/ubu24-qtuum:p3c  # guppy 0.21.6
-IMG=balewski/ubu24-qtuum:p3m  # includes: guppy 0.21.8 , Pytket  2.13.0
+IMG=balewski/ubu24-qtuum:p3z  # includes: guppy 0.21.8 , Pytket  2.13.0
 
 echo launch image $IMG
 echo you are launching Docker image ...  remeber to exit
