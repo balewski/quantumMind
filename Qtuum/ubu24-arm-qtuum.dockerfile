@@ -1,8 +1,8 @@
 FROM ubuntu:24.04
 # Quantinuum
 
-# podman build   -f ubu24-arm-qtuum.dockerfile -t balewski/ubu24-qtuum:p3g --platform linux/arm64   
-# PM: real      7m42.406s
+# podman build   -f ubu24-arm-qtuum.dockerfile -t balewski/ubu24-qtuum:p3d --platform linux/arm64   
+# laptop: cpu 15:20.79 total
 # for omp_get_num_threads:  #      -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
 
 
@@ -58,13 +58,8 @@ RUN /opt/venv/bin/pip uninstall -y conan && \
     /opt/venv/bin/conan profile detect && \
     /opt/venv/bin/pip install pytket pytket-quantinuum qnexus pytket-qiskit qiskit-aer selene_sim tket tket-exts
 RUN pip download --no-deps guppylang==0.21.8 -d /tmp && \
-    if [ -f /tmp/guppylang-0.21.8.tar.gz ]; then \
-        mkdir -p /tmp/guppylang_src && \
-        tar -xzf /tmp/guppylang-0.21.8.tar.gz -C /tmp/guppylang_src --strip-components=1 && \
-        pip install --no-deps /tmp/guppylang_src; \
-    else \
-        pip install --no-deps /tmp/guppylang-0.21.8-*.whl; \
-    fi
+       pip install --no-deps /tmp/guppylang-0.21.8-*.whl
+    
 RUN pip install types-tqdm
 
 # Install pyqir
