@@ -12,7 +12,7 @@ echo you are launching Docker image ...  remeber to exit
 
 
 JNB_PORT=''
-WORK_DIR=/qtuum/toys_guppy
+WORK_DIR=/qtuum
 DATA_VAULT=/shared_volumes/dataVault2025
 
 echo "The number of arguments is: $#"
@@ -28,7 +28,7 @@ for var in "$@"; do
   # ... more ...
 done
     
-eval podman run -it \
+podman run -it --rm \
     --volume /shared_volumes/quantumMind/Qtuum:$WORK_DIR \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume /shared_volumes/qcrank_light:/qcrank_light \
@@ -37,6 +37,7 @@ eval podman run -it \
     -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
     --workdir $WORK_DIR  $JNB_PORT  \
     --user $(id -u):$(id -g) \
+    -e DISPLAY=host.containers.internal:0 \
     $IMG /bin/bash
 
 

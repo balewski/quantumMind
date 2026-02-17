@@ -236,4 +236,27 @@ def import_QPY_circs(inpFF):
     return qcL
 
 
+#...!...!..................
+def draw_circuit_png(qc, outName, title=None, fold=120, figsize=(20, 8)):
+    """Save a circuit diagram as PNG.
+
+    Args:
+        qc: QuantumCircuit to draw
+        outName: full output file path (e.g. 'out/meas/steane_ase_r1_ideal.png')
+        title: optional title string for the plot
+        fold: line fold width for circuit drawing
+        figsize: figure size tuple
+    """
+    import matplotlib.pyplot as plt
+    outDir = os.path.dirname(outName)
+    if outDir:
+        os.makedirs(outDir, exist_ok=True)
+    print(f"Saving circuit  feh {outName}...")
+    fig = plt.figure(figsize=figsize)
+    qc.draw('mpl', ax=plt.gca(), fold=fold)
+    if title:
+        plt.title(title, fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(outName)
+    plt.close()
 

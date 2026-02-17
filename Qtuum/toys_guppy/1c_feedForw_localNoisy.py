@@ -25,7 +25,8 @@ from guppylang import guppy
 from guppylang.std.builtins import result
 from guppylang.std.quantum import cx, h, measure, qubit, x
 from selene_sim.backends.bundled_error_models import DepolarizingErrorModel
-
+from toolbox.Util_Guppy import guppy_to_qiskit
+from toolbox.Util_QiskitV2 import draw_circuit_png
 
 # ---- Guppy circuit definitions ----
 
@@ -111,11 +112,16 @@ def postprocess_shots(sim_result, label=""):
         print(f'  {", ".join(key)}: {cnt}')
 
 
+
 # ---- main ----
 
 def main():
+    qcQi=guppy_to_qiskit(my_circ_fn,nq=3)
+    draw_circuit_png(qcQi,outName='out/1cfeed.png',title='first Gupy circ')
+    print(qcQi)
     print("check:", my_circ_fn.check())
-    shots = 20
+    
+    shots = 10
 
     # Build evaluator for the chosen circuit
     prog1 = build_evaluator(my_circ_fn)
