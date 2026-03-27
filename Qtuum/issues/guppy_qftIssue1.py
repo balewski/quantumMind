@@ -13,17 +13,18 @@ from collections import Counter
 from pprint import pprint
 
 from guppylang import guppy
-from guppylang.std.builtins import result
+from guppylang.std.builtins import result, comptime
 from guppylang.std.quantum import h, rz, crz, cx, measure, measure_array, qubit, pi, array
 from guppylang.std.mem import mem_swap
 
-from selene_sim.backends.bundled_error_models import DepolarizingErrorModel
+from qiskit import transpile
 from toolbox.Util_Guppy import guppy_to_qiskit
 
 # ---- Guppy circuit definitions ----
 
-INP_INT =5
-NQ_VAL = 4
+# 2 gloabl variables I do not want to have
+
+INP_INT = 7  
 nq = guppy.nat_var("nq")
 
 @guppy
@@ -139,35 +140,14 @@ def get_main_bench(nq: int):
 
 # ---- Helpers for simulation ----
  
-
-# ---- Helpers for simulation ----
-
-def build_error_model(p_1q=0.001, p_2q=0.01, p_meas=0.001, p_init=0.001, seed=None):
-    model = DepolarizingErrorModel(
-        p_1q=p_1q, p_2q=p_2q, p_meas=p_meas, p_init=p_init,
-        random_seed=seed,
-    )
-    print(f"Error model: DepolarizingErrorModel(p_1q={p_1q}, p_2q={p_2q}, p_meas={p_meas}, p_init={p_init})")
-    return model
-
 def run_ideal(guppy_prog, nq, shots, seed=42):
     # QFT requires statevector_sim because of arbitrary rotations.
     emulator = guppy_prog.emulator(n_qubits=nq).statevector_sim().with_seed(seed)
     return emulator.with_shots(shots).run()
 
-def run_noisy(guppy_prog, error_model, nq, shots, seed=42):
-    emulator = (guppy_prog.emulator(n_qubits=nq)
-                .with_error_model(error_model)
-                .with_seed(seed))
-    return emulator.with_shots(shots).run()
-
-def postprocess_shots(sim_result, nq, correct_int=None, label=""):
-    if correct_int is None:
-        correct_int = INP_INT
-        
+def postprocess_shots(sim_result, nq, label=""):
     shots = sim_result.results
-    total_shots = len(shots)
-    print(f"\n--- {label}: {total_shots} shots ---")
+    print(f"\n--- {label}: {len(shots)} shots ---")
     
     counts = Counter()
     for shot in shots:
@@ -176,56 +156,39 @@ def postprocess_shots(sim_result, nq, correct_int=None, label=""):
         bitstr = "".join(str(entries[f"b{i}"]) for i in reversed(range(nq)))
         counts[bitstr] += 1
     
-    success_shots = 0
     # Sort and print
     for bitstr, cnt in counts.most_common():
         val = int(bitstr, 2)
-        if val == correct_int:
-            success_shots += cnt
         print(f"  {bitstr} (dec={val:2d}): {cnt}")
 
-    if total_shots > 0:
-        incorrect_shots = total_shots - success_shots
-        prob = success_shots / total_shots
-        err_prob = incorrect_shots / total_shots
         
-        incorrect_states_seen = sum(1 for bitstr in counts if int(bitstr, 2) != correct_int)
-        total_states_space = 2**nq
-        err_err = np.sqrt(prob * (1 - prob) / total_shots)
-        
-        print(f"\nIncorrect states: {incorrect_states_seen} of {total_states_space}, total probability: {err_prob:.4f} ({incorrect_shots}/{total_shots})")
-        print(f"QFT nq:{nq}   prob: {prob:.4f} +/- {err_err:.4f},   Success: {success_shots}")
-
 # ---- Main Execution ----
 
 def main():
 
-
+    n_q = 4
+    
     # 1. Check Guppy Program
-    main_qft_bench = get_main_bench(NQ_VAL)
+    main_qft_bench = get_main_bench(n_q)
     print("\nChecking Guppy program...")
     print("  iqft_n check:", iqft_n.check())
     print("  qft_prep_n check:", qft_prep_n.check())
     print("  main_qft_bench check:", main_qft_bench.check())
 
 
-    if NQ_VAL <5:
-        circQi=guppy_to_qiskit(main_qft_bench,nq=NQ_VAL)
-        print(circQi)
-   
+    circQi=guppy_to_qiskit(main_qft_bench,nq=n_q)
+    print(circQi)
+    qcQi_transp = transpile(circQi, basis_gates=['u', 'rzz'], optimization_level=3)
+    print("\nGuppy Circuit (transpiled to U & Rzz):")
+    #print(qcQi_transp.draw(output='text', idle_wires=False))
+
     # 3. Execution
     num_shots = 100
-    print(f"\nRunning simulations (inpInt={INP_INT}, nq={NQ_VAL}, shots={num_shots}) ...")
+    print(f"\nRunning simulations (inpInt={INP_INT}, nq={n_q}, shots={num_shots}) ...")
     
     # Ideal
-    ideal_result = run_ideal(main_qft_bench, nq=NQ_VAL, shots=num_shots)
-    postprocess_shots(ideal_result, NQ_VAL, label="Ideal")
-
-    
-    # Noisy
-    error_model = build_error_model(p_1q=0.001, p_2q=0.01, p_meas=0.01)
-    noisy_result = run_noisy(main_qft_bench, error_model, nq=NQ_VAL, shots=num_shots)
-    postprocess_shots(noisy_result, NQ_VAL, label="Noisy")
+    ideal_result = run_ideal(main_qft_bench, nq=n_q, shots=num_shots)
+    postprocess_shots(ideal_result, n_q, label="Ideal")
 
 if __name__ == "__main__":
     main()
