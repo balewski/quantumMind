@@ -2,6 +2,8 @@
 __author__ = "Jan Balewski"
 __email__ = "janstar1122@gmail.com"
 
+# spaggetti code
+
 from guppylang import guppy
 from guppylang.std.builtins import result
 from guppylang.std.quantum import cx, h, measure, qubit, x
@@ -10,6 +12,8 @@ import os, secrets
 import qnexus as qnx
 from time import time, sleep
 from pytket.backends.backendresult import BasisOrder
+from toolbox.Util_Guppy import guppy_to_qiskit
+
 
 '''
 reference:  https://docs.quantinuum.com/guppy/getting_started.html
@@ -19,7 +23,7 @@ reference:  https://docs.quantinuum.com/guppy/getting_started.html
 
 
 @guppy
-def simple_circuit() -> qubit:
+def simple_circ() -> qubit:
     q1, q2 = qubit(), qubit()
 
     h(q1)
@@ -32,33 +36,39 @@ def simple_circuit() -> qubit:
         x(q2)
 
     return q2
-print('check:',simple_circuit.check())
+print('check:',simple_circ.check())
 
 # For execution, we can write a function that invokes the circuit and consumes the produced qubit via a measurement. The outcome is recorded for later evaluation as well.
 
 
-
 @guppy
-def evaluate() -> None:
-    q = simple_circuit()
+def full_circ() -> None:
+    q = simple_circ()
     result("q2", measure(q))
 
 
+# print the circuits using -->TKet -->Qiskit transformations
+print('\nsimple_circ')
+circQi=guppy_to_qiskit(simple_circ,nq=3)
+print(circQi)
+
+print('\nfull_circ')
+circQi=guppy_to_qiskit(full_circ,nq=3)
+print(circQi)
+
 # Finally, we can emulate our circuit implementation using the stabilizer simulator. Our program is executed for a single shot using the run method.
 
+print('M: run stabilizer_sim()...')
 shots=5
-emulator = evaluate.emulator(n_qubits=2).stabilizer_sim().with_seed(3)
+emulator = full_circ.emulator(n_qubits=2).stabilizer_sim().with_seed(3)
 sim_result = emulator.with_shots(shots).run()
 #print(list(sim_result.results))
 
 pprint(sim_result.results)
 
 # Compile to HUGR IR
-hugr_pkg = evaluate.compile()  # compile the full program
+hugr_pkg = full_circ.compile()  # compile the full program
 print('hugr done')
-
-# Print circuit
-print('\n--- Circuit ---')
 
 
 if 1:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Feed-forward demo using Guppy (Quantinuum's Python-embedded quantum language).
+(organize code)
 
 Circuit: prepare a Bell pair (H + CX), mid-circuit measure q1,
 conditionally apply X on q2 to disentangle it → q2 always collapses to |0⟩.
@@ -33,6 +34,7 @@ from guppylang import guppy
 from guppylang.std.builtins import result
 from guppylang.std.quantum import cx, h, measure, qubit, x
 
+from toolbox.Util_Guppy import guppy_to_qiskit
 
 # ---- Guppy circuit definitions ----
 
@@ -158,7 +160,10 @@ def main():
     print("check:", my_circ_fn.check())
     shots=10
     # Build evaluator for the chosen circuit
-    prog1 = build_evaluator(my_circ_fn)   
+    prog1 = build_evaluator(my_circ_fn)       
+
+    circQi=guppy_to_qiskit(my_circ_fn,nq=3)
+    print(circQi)
 
     # Local emulation
     run_emulation(prog1, n_qubits=2, shots=shots)
