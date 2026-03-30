@@ -13,7 +13,7 @@ echo you are launching Docker image ...  remeber to exit
 
 JNB_PORT=''
 WORK_DIR=/qtuum
-DATA_VAULT=/shared_volumes/dataVault2025
+DATA_VAULT=/shared_volumes/dataVault2026
 
 echo "The number of arguments is: $#"
 #  encoded variables:    jnb
@@ -32,9 +32,7 @@ eval podman run -it --rm \
     --volume /shared_volumes/quantumMind/Qtuum:$WORK_DIR \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume /shared_volumes/qcrank_light:/qcrank_light \
-    --volume $DATA_VAULT:/dataVault2025 \
-    -e Qtuum_dataVault=/dataVault2025/dataQtuum_tmp \
-    -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
+    --volume $DATA_VAULT:/dataVault2026 \
     -e MY_QTUUM_NAME=\"$MY_QTUUM_NAME\" \
     -e MY_QTUUM_PASS=\"$MY_QTUUM_PASS\" \
     --workdir $WORK_DIR  $JNB_PORT  \
@@ -47,7 +45,7 @@ eval podman run -it --rm \
 # /qtuum_wrk/hqs-api-examples/notebooks  \
 #     --volume /docker_volumes/qcrank_wrk:/qcrank_wrk \
 #     --volume /shared_volumes/quantumPath:/quantumPath \
-
+#     -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
 
 # first time
 #
