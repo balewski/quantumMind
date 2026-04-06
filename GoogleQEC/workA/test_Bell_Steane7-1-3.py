@@ -175,7 +175,7 @@ if __name__ == "__main__":
     print(f"  Total shots: {results['num_shots']}")
     print(f"  Logical error rate: {results['logical_error_rate']:.8f}")
     print(f"  95% CI: ± {1.96 * results['logical_error_rate_std']:.8f}")
-    mmm
+    
     if results['logical_error_rate'] > 0:
         suppression = results['phys_error_rate'] / results['logical_error_rate']
         print(f"  Suppression factor: {suppression:.2f}x")
