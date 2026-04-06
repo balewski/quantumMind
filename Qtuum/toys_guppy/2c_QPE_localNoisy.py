@@ -14,11 +14,10 @@ __email__ = "janstar1122@gmail.com"
 
 import numpy as np
 from collections import Counter
-from pprint import pprint
 
 from guppylang import guppy
 from guppylang.std.angles import pi
-from guppylang.std.quantum import qubit, h, rz, crz, cx, x, measure_array, discard_array
+from guppylang.std.quantum import qubit, h, crz, x, measure_array, discard_array
 from guppylang.std.builtins import result, array, comptime
 from guppylang.std.mem import mem_swap
 
@@ -59,48 +58,42 @@ def prepare_trivial_eigenstate() -> array[qubit, 2]:
     x(q1)
     return array(q0, q1)
 
-n = guppy.nat_var("n")
+def get_main_bench(m_q: int):
+    """Returns a Guppy program specialized to the requested measurement-register size."""
 
-@guppy
-def inverse_qft(qs: array[qubit, n]) -> None:
-    """General Inverse QFT on n qubits."""
-    for k in range(n // 2):
-        mem_swap(qs[k], qs[n - k - 1])
-    for i in range(n):
-        h(qs[n - i - 1])
-        for j in range(n - i - 1):
-            crz(qs[n - i - 1], qs[n - i - j - 2], -pi / (2 ** (j + 1)))
+    @guppy
+    def inverse_qft(qs: array[qubit, comptime(m_q)]) -> None:
+        """General Inverse QFT on m_q qubits."""
+        for k in range(comptime(m_q // 2)):
+            mem_swap(qs[k], qs[comptime(m_q) - k - 1])
+        for i in range(comptime(m_q)):
+            h(qs[comptime(m_q) - i - 1])
+            for j in range(comptime(m_q) - i - 1):
+                crz(qs[comptime(m_q) - i - 1], qs[comptime(m_q) - i - j - 2], -pi / (2 ** (j + 1)))
 
-@guppy
-def phase_estimation(measured: array[qubit, n], state: array[qubit, 2]) -> None:
-    """Standard QPE algorithm."""
-    for i in range(n):
-        h(measured[i])
-    
-    # Apply controlled unitaries
-    for n_index in range(n):
-        control_index: int = n - n_index - 1
-        for _ in range(2**n_index):
-            controlled_u(measured[control_index], state[0], state[1])
-            
-    inverse_qft(measured)
+    @guppy
+    def phase_estimation(measured: array[qubit, comptime(m_q)], state: array[qubit, 2]) -> None:
+        """Standard QPE algorithm."""
+        for i in range(comptime(m_q)):
+            h(measured[i])
 
-@guppy
-def main_qpe_bench() -> None:
-    """Entry point for QPE on 4 measurement qubits."""
-    state = prepare_trivial_eigenstate()
+        for n_index in range(comptime(m_q)):
+            control_index: int = comptime(m_q) - n_index - 1
+            for _ in range(2**n_index):
+                controlled_u(measured[control_index], state[0], state[1])
 
-    #measured = array(qubit(), qubit(), qubit())  # 3q
-    #measured = array(qubit(), qubit(), qubit(), qubit())  # 4q
-    measured = array(qubit(), qubit(), qubit(), qubit(), qubit())  # 5q
-    
-    phase_estimation(measured, state)
-    
-    # State qubits must be discarded as they are not measured
-    discard_array(state)
-    
-    # Final measurement
-    result("c", measure_array(measured))
+        inverse_qft(measured)
+
+    @guppy
+    def main_qpe_bench() -> None:
+        state = prepare_trivial_eigenstate()
+        measured = array(qubit() for _ in range(comptime(m_q)))
+
+        phase_estimation(measured, state)
+        discard_array(state)
+        result("c", measure_array(measured))
+
+    return main_qpe_bench
 
 # ---- Helpers for simulation ----
 
@@ -123,17 +116,14 @@ def run_noisy(guppy_prog, error_model, n_qubits, shots, seed=42):
     return emulator.with_shots(shots).run()
 
 def postprocess_qpe(sim_result, nq, correct_bitstr="0001", label=""):
-    shots = sim_result.results
-    total = len(shots)
+    shots_list = sim_result.collated_shots()
+    total = len(shots_list)
     print(f"\n--- {label}: {total} shots ---")
     
     counts = Counter()
-    for shot in shots:
-        # For QPE, the result is in "c" as an array of bools
-        entries = dict(shot.entries)
-        bits = entries["c"]
-        # Convert bool array to bitstring (MSB on left: bits[0]...bits[n-1])
-        bitstr = "".join("1" if b else "0" for b in bits)
+    for shot in shots_list:
+        bits = shot.get("c", [[]])[0]
+        bitstr = "".join(str(int(b)) for b in bits)
         counts[bitstr] += 1
     
     # Calculate total success across the entire dataset
@@ -158,6 +148,7 @@ def main():
     sq = 2  # state qubits
     total_q = mq + sq
     correct_bitstr = "0001" + "0" * (mq - 4)
+    main_qpe_bench = get_main_bench(mq)
     
 
     print(f"Checking Guppy QPE program... mq={mq}, sq={sq}, total_q={total_q}, correct_bitstr={correct_bitstr}")

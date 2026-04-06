@@ -235,13 +235,11 @@ if __name__ == '__main__':
     # Static type check and compile
     gu_prog.check()
  
-
-    # print the circuits using -->TKet -->Qiskit transformations
-    circQi=guppy_to_qiskit(gu_prog,nq=args.num_qubits)
-
     if 'i' in args.printCirc:
+        # print the circuits using -->TKet -->Qiskit transformations
+        circQi=guppy_to_qiskit(gu_prog,nq=args.num_qubits)
         print(circQi.draw())
-    print('ideal gates:',circQi.count_ops())    
+        print('ideal gates:',circQi.count_ops())    
  
     
     if args.backend=='ideal':

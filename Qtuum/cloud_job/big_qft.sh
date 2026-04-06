@@ -11,7 +11,8 @@ shots=1000
 iniState=3  
 
 nqL=" 6 10 14 18 22 24 " # 26 28
-nqL="  26 28 "
+nqL="   30  32"
+#nqL=" 24 26 28 "
 
 #  ./submit_qtuum_zoo.py   --basePath  $basePath --taskType qft 17 --num_qubits 10  --num_shots 500 -b Helios-1E -E
 
