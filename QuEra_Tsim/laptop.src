@@ -1,0 +1,39 @@
+#!/bin/bash
+
+IMG=ubu24-quera-tsim:p1f
+
+echo launch image $IMG
+echo you are launching Podman image ...  remeber to exit
+
+JNB_PORT=''
+QCRANK=''
+WORK_DIR=/tsim
+DATA_VAULT=/shared_volumes/dataVault2026
+
+echo "The number of arguments is: $#"
+#  encoded variables:    jnb
+PORT=8835
+for var in "$@"; do
+  echo "The length of argument '$var' is: ${#var}"
+  if [[ "jnb" ==  $var ]];  then
+      JNB_PORT=" -p  ${PORT}:${PORT}"
+      echo added  $JNB_PORT
+      echo "  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $PORT "
+  fi
+  # ... more ...
+done
+
+#echo podman run -it  $JNB_PORT  $IMG /bin/bash
+
+
+eval podman run -it \
+    --volume /shared_volumes/quantumMind/QuEra_Tsim:/tsim \
+    --volume /shared_volumes/quantumMind:/quantumMind \
+    --volume $DATA_VAULT:/dataVault2026 \
+    --workdir $WORK_DIR  \
+    --user $(id -u):$(id -g) \
+    -e DISPLAY=host.containers.internal:0 \
+    $JNB_PORT $IMG #/bin/bash
+
+# In Mac terminal: xhost + 127.0.0.1
+

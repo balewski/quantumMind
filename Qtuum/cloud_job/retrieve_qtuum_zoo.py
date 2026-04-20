@@ -73,6 +73,7 @@ def retrieve_qtuum_job(md,bigD):
         'num_shots': sbm['num_shots'],
         'cost_hqc': getattr(jobStatus, 'cost', -1.1),
         'job_id': ref_exec.id,
+	'backend': sbm['backend'],
     }
     qa['status']=str(stat)
     qa['num_circ']=nCirc
