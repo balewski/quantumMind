@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-#  podman build  --network=host -f ubu24-stim-qec.dockerfile -t balewski/ubu24-stim-qec:p2   --platform linux/arm64     --no-cache  ..
+#  podman build  --network=host -f ubu24-stim-qec.dockerfile -t ubu24-stim-qec:p1   --platform linux/arm64     --no-cache  ..
 #
 #   --platform linux/amd64   works w/o LD_PRELOAD  but generates WARNING: image platform (linux/amd64) does not match the expected platform (linux/arm64)
 # for omp_get_num_threads:  #      -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \

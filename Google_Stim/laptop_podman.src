@@ -1,15 +1,12 @@
 #!/bin/bash
 
-
-IMG=balewski/ubu24-stim-qec:p2
+IMG=ubu24-stim-qec:p1 
 
 echo launch image $IMG
 echo you are launching Podman image ...  remeber to exit
 
-
 PORT=8835
 JNB_PORT=''
-QCRANK=''
 DATA_VAULT=/shared_volumes/dataVault2025
 
 # persistent cache on the host
@@ -17,21 +14,18 @@ MPL_HOST_CACHE=/Users/balewski/shared_volumes/mpl-cache
 
 for var in "$@"; do
   if [[ "jnb" ==  $var ]];  then
-      JNB_PORT=" -p  ${PORT}:${PORT}"
+      JNB_PORT="-p  ${PORT}:${PORT}"
       echo added  $JNB_PORT
       echo "  cd notebooks;  jupyter notebook --ip 0.0.0.0 --no-browser --allow-root --port  $PORT "
-  fi
-  if [[ "qcrank" ==  $var ]];  then
-      QCRANK=" --volume /shared_volumes/qcrank_light:/qcrank_light "
   fi
 done
 
 eval podman run -it --rm \
-    --volume /shared_volumes/quantumMind/GoogleQEC:/qec \
+    --volume /shared_volumes/quantumMind/Google_Stim:/stim \
     --volume /shared_volumes/quantumMind:/quantumMind \
     --volume $DATA_VAULT:/dataVault2025 \
     --volume /shared_volumes/mpl-cache:/mplcache \
-    --workdir /qec \
+    --workdir /stim \
     --user $(id -u):$(id -g) \
     --env MPLDEBUG=0 \
     --env MPLLOGLEVEL=WARNING \
