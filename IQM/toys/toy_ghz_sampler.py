@@ -44,6 +44,7 @@ print('access IQM backend ...')
 # os.environ["IQM_TOKEN"] is set already
 #provider=IQMProvider(url="https://cocos.resonance.meetiqm.com/garnet")
 provider=IQMProvider(url="https://cocos.resonance.meetiqm.com/syrius")
+provider=IQMProvider(url="https://cocos.resonance.meetiqm.com/emerald")
 backend2 = provider.get_backend()
 
 print('got backend:',backend2.name)
@@ -53,8 +54,10 @@ qcT = transpile(qc, backend2)
 print(qcT.draw('text', idle_wires=False))
 print('M: transpiled GHZ(nq=%d) gates count:'%nq, qcT.count_ops())
 qcETL=(qcT,)
-stop1
 sampler = Sampler(mode=backend2, options=options)
+
+crashes_next_line :  ValueError: Classical register c0 is of size 0, which is not allowed
+
 job = sampler.run(qcETL)
 result=job.result()
 counts=result[0].data.meas.get_counts()

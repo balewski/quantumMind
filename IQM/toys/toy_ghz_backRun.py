@@ -22,8 +22,9 @@ def create_ghz(n):
     qc.measure_all()
     return qc
 
-nq=6  ; nshot=2000
-qpuName='garnet' ; topo='grid20q'
+nq=6  ; nshot=1000
+qpuName='emerald' ; topo='grid54q'
+#qpuName='garnet' ; topo='grid20q'
 #qpuName='sirius' ; topo='star16q'
 #qpuName='deneb' ; topo='star6q'
 

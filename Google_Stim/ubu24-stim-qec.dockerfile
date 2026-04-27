@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-#  podman build  --network=host -f ubu24-stim-qec.dockerfile -t ubu24-stim-qec:p1   --platform linux/arm64     --no-cache  ..
+#  podman build  --network=host -f ubu24-stim-qec.dockerfile -t ubu24-stim-qec:p2b   --platform linux/arm64     --no-cache  ..
 #
 #   --platform linux/amd64   works w/o LD_PRELOAD  but generates WARNING: image platform (linux/amd64) does not match the expected platform (linux/arm64)
 # for omp_get_num_threads:  #      -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
@@ -41,7 +41,7 @@ RUN /opt/venv/bin/pip install  pymatching sinter
 # Install additional Python libraries
 RUN echo "2d-AAAAAAAAAAAAAAAAAAAAAAAAAAAAA python libs" && \
     /opt/venv/bin/pip install --upgrade pip && \
-    /opt/venv/bin/pip install matplotlib h5py scipy jupyter notebook bitstring lmfit pytest scikit-learn networkx[default]   pandas 
+    /opt/venv/bin/pip install matplotlib h5py scipy jupyter notebook bitstring lmfit pytest scikit-learn networkx[default] pandas statsmodels
 
 
 # Final cleanup
