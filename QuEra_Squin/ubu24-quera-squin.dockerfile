@@ -1,8 +1,9 @@
 FROM ubuntu:24.04
 
-#  podman build --network=host -f ubu24-arm-quera-squin.dockerfile -t ubu24-arm-quera-squin:p1a --platform linux/arm64 
+#  podman-hpc build  -f ubu24-quera-squin.dockerfile -t ubu24-quera-squin:p1d
 # --no-cache tells Podman not to use any cached layers
 # on PM use 'podman-hpc' instead of 'podman' and all should work
+# additionaly do 1 time: podman-hpc migrate balewski/ubuXX-qiskit-qml:p1
 
 # Set non-interactive mode for apt-get
 ARG DEBIAN_FRONTEND=noninteractive
@@ -29,11 +30,14 @@ RUN echo "2a-AAAAAAAAAAAAAAAAAAAAAAAAAAAAA python libs" && \
 # QuEra SQUIN lives in bloqade-circuit. Install the circuit package directly
 # instead of the umbrella "bloqade" metapackage, which currently pulls desktop
 # visualization dependencies that complicate ARM builds.
-RUN pip install -U bloqade-circuit
+# Pin pyqrack-cpu to <2.0: bloqade passes 'qubitCount' (camelCase) which was
+# renamed to 'qubit_count' in pyqrack-cpu 2.0, breaking DynamicMemorySimulator.
+RUN echo "3a-AAAAAAAAAAAAAAAAAAAAAAAAAAAAA Squin libs" && \
+    pip install "pyqrack-cpu<2.0" && \
+    pip install -U bloqade-circuit cirq "qpsolvers[open_source_solvers]"
 
-# Fail the build early if SQUIN is not importable on ARM.
-RUN python -c "from bloqade import squin; print('verified', squin.__name__)"
-
+# Fail the build early if SQUIN and cirq are not importable.
+RUN python -c "from bloqade import cirq_utils, squin; import cirq; print('verified squin:', squin.__name__); print('verified cirq:', cirq.__version__)"
 
 # Final cleanup
 RUN apt-get clean
