@@ -23,6 +23,13 @@ time.
   - Erasure is applied after each 2-qubit gate checkpoint.
   - Splits final counts into shots with and without detected erasure markers.
 
+- `ghz3.py`
+  - Bell-state sampler using Bloqade's Gemini Cirq noise pipeline.
+  - Converts SQUIN to Cirq, applies `--zone_type 1` or `--zone_type 2`, then
+    loads the noisy circuit back into SQUIN for PyQrack sampling.
+  - `--atom_loss` is implemented as one explicit SQUIN qubit-loss checkpoint
+    before measurement because Gemini Cirq models do not currently inject atom loss.
+
 - `qft1.py`
   - Ideal inverse-QFT decoding benchmark.
   - Manually prepares the Fourier product state for integer `-k/--freq`.
@@ -38,12 +45,20 @@ time.
   - Provides circuit printing, one-shot PyQrack sampling, bitstring conversion,
     loss/erasure summaries, probability validation, and count formatting.
 
+- `dump_noiseModel.py`
+  - Standalone inspector for Gemini one- and two-zone noise models.
+  - Uses `--zone_type` to select the model and `--atom_loss` to rewrite all
+    loss-like parameters before dumping public fields.
+  - Exports helper functions reused by `ghz3.py`.
+
 ## Common Examples
 
 ```bash
 ./bell1.py --shots 1000
 ./ghz1.py -q 5 --shots 1000
 ./ghz2.py -q 5 --noise_1q 0.01 --noise_2q 0.02 --noise_erasure 0.03
+./ghz3.py --zone_type 1 --atom_loss 0.05
 ./qft1.py -q 3 -k 5 -n 2000
 ./qft2.py -q 3 -k 5 --noise_1q 0.01 --noise_2q 0.02 --noise_readout 0.01
+./dump_noiseModel.py --zone_type 2 --atom_loss 0.02
 ```

@@ -5,6 +5,7 @@ sampling, erasure-count splitting, probability validation, and count formatting.
 """
 
 import inspect
+import time
 from collections import Counter
 from typing import Any
 
@@ -21,14 +22,14 @@ def outcome_to_bitstring(outcome: ilist.IList[MeasurementResult, Any]) -> str:
         if callable(is_lost):
             is_lost = is_lost()
         if is_lost:
-            bits.append("L")
+            bits.append("e")
             continue
 
         value = getattr(measurement, "value", measurement)
         value_name = getattr(value, "name", "")
         name = getattr(measurement, "name", value_name).lower()
         if "lost" in name or "loss" in name or "erasure" in name:
-            bits.append("L")
+            bits.append("e")
             continue
 
         if value == 0:
@@ -63,7 +64,11 @@ def run_kernel_shots(
     else:
         emulator = DynamicMemorySimulator(loss_m_result=loss_m_result)
     task = emulator.task(kernel, args=kernel_args)
-    return Counter(outcome_to_bitstring(task.run()) for _ in range(shots))
+    start = time.perf_counter()
+    counts = Counter(outcome_to_bitstring(task.run()) for _ in range(shots))
+    elapsed = time.perf_counter() - start
+    print(f"sampling of {shots} shots took {elapsed:.1f} sec")
+    return counts
 
 
 def get_lost_measurement_result() -> Any | None:
@@ -81,8 +86,8 @@ def validate_probability(name: str, value: float) -> None:
 
 
 def print_loss_summary(counts: dict[str, int]) -> None:
-    loss_shots = sum(count for bitstring, count in counts.items() if "L" in bitstring)
-    lost_qubits = sum(bitstring.count("L") * count for bitstring, count in counts.items())
+    loss_shots = sum(count for bitstring, count in counts.items() if "e" in bitstring)
+    lost_qubits = sum(bitstring.count("e") * count for bitstring, count in counts.items())
     print(f"loss shots: {loss_shots}")
     print(f"lost qubit measurements: {lost_qubits}")
 
@@ -91,7 +96,7 @@ def split_erasure_counts(counts: dict[str, int]) -> tuple[dict[str, int], dict[s
     no_erasure = {}
     with_erasure = {}
     for bitstring, count in counts.items():
-        if "L" in bitstring:
+        if "e" in bitstring:
             with_erasure[bitstring] = count
         else:
             no_erasure[bitstring] = count

@@ -22,42 +22,47 @@ from Util_Squin import (
 )
 
 
-@squin.kernel
-def main(
-    n: int,
-    noise_1q: float,
-    noise_2q: float,
-    noise_erasure: float,
-    noise_readout: float,
-) -> ilist.IList[MeasurementResult, Any]:
-    q = squin.qalloc(n)
+def generate_ghz_noise_program(default_num_qubits: int = 2):
+    @squin.kernel
+    def ghz_noise_prog(
+        n: int,
+        noise_1q: float,
+        noise_2q: float,
+        noise_erasure: float,
+        noise_readout: float,
+    ) -> ilist.IList[MeasurementResult, Any]:
+        q = squin.qalloc(n)
 
-    # Prepare the GHZ branch point, then apply optional 1Q depolarizing noise.
-    squin.h(q[0])
-    squin.depolarize(p=noise_1q, qubit=q[0])
+        # Prepare the GHZ branch point, then apply optional 1Q depolarizing noise.
+        squin.h(q[0])
+        squin.depolarize(p=noise_1q, qubit=q[0])
 
-    # Extend the GHZ chain; each CX can be followed by optional 2Q depolarizing noise.
-    for i in range(n - 1):
-        squin.cx(q[i], q[i + 1])
-        squin.depolarize2(noise_2q, q[i], q[i + 1])
-        # One independent erasure/loss trial per qubit after each 2Q gate.
-        # With many 2Q gates, total loss probability compounds across checkpoints.
-        squin.broadcast.qubit_loss(noise_erasure, q)
+        # Extend the GHZ chain; each CX can be followed by optional 2Q depolarizing noise.
+        for i in range(n - 1):
+            squin.cx(q[i], q[i + 1])
+            squin.depolarize2(noise_2q, q[i], q[i + 1])
+            # One independent erasure/loss trial per qubit after each 2Q gate.
+            # With many 2Q gates, total loss probability compounds across checkpoints.
+            squin.broadcast.qubit_loss(noise_erasure, q)
 
-    # Model readout error as a classical-looking bit flip just before measurement.
-    squin.broadcast.bit_flip(noise_readout, q)
-    return squin.broadcast.measure(q)
+        # Model readout error as a classical-looking bit flip just before measurement.
+        squin.broadcast.bit_flip(noise_readout, q)
+        return squin.broadcast.measure(q)
+
+    return ghz_noise_prog, default_num_qubits
 
 
-def run() -> None:
+def main() -> None:
+    ghz_noise_prog, default_num_qubits = generate_ghz_noise_program()
+
     parser = argparse.ArgumentParser()
     prs = parser.add_argument
     prs("--shots", type=int, default=1000)
-    prs("-q", "--qubits", type=int, default=2, help="number of qubits")
+    prs("-q", "--qubits", type=int, default=default_num_qubits, help="number of qubits")
     prs("-v", "--verb", type=int, default=1, help="increase output verbosity")
     prs("--noise_1q", type=float, default=0.0, help="1-qubit depolarizing probability")
     prs("--noise_2q", type=float, default=0.0, help="2-qubit depolarizing probability")
-    prs("--noise_erasure", type=float, default=0.0, help="independent per-qubit loss probability after each 2-qubit gate")
+    prs("--noise_erasure", type=float, default=0.5, help="independent per-qubit loss probability after each 2-qubit gate")
     prs("--noise_readout", type=float, default=0.0, help="readout bit-flip probability")
     args = parser.parse_args()
     for arg in vars(args):  print( 'myArg:',arg, getattr(args, arg))
@@ -76,7 +81,7 @@ def run() -> None:
         args.noise_erasure,
         args.noise_readout,
     )
-    print_kernel_circuit(main, kernel_args, args.verb)
+    print_kernel_circuit(ghz_noise_prog, kernel_args, args.verb)
 
     # run_kernel_shots uses PyQrack DynamicMemorySimulator: state-vector shots,
     # not a density-matrix simulator. Each task.run() produces one noisy shot.
@@ -85,7 +90,7 @@ def run() -> None:
     print("Simulator: PyQrack DynamicMemorySimulator (state vector, stochastic noise)")
     lost_result = get_lost_measurement_result()
     counts = run_kernel_shots(
-        main, kernel_args, args.shots, loss_m_result=lost_result
+        ghz_noise_prog, kernel_args, args.shots, loss_m_result=lost_result
     )
     print(f"Noisy {args.qubits}-qubit GHZ shot results ({args.shots} shots)")
     print(
@@ -113,4 +118,4 @@ def run() -> None:
 
 
 if __name__ == "__main__":
-    run()
+    main()

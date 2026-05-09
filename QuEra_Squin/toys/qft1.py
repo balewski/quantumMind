@@ -15,37 +15,38 @@ from kirin.dialects import ilist
 from Util_Squin import print_kernel_circuit, run_kernel_shots
 
 
-@squin.kernel
-def apply_cphase(angle: float, control: Qubit, target: Qubit) -> None:
-    squin.shift(angle / 2.0, control)
-    squin.cx(control, target)
-    squin.shift(-angle / 2.0, target)
-    squin.cx(control, target)
-    squin.shift(angle / 2.0, target)
+def generate_qft_program(default_num_qubits: int = 3):
+    @squin.kernel
+    def apply_cphase(angle: float, control: Qubit, target: Qubit) -> None:
+        squin.shift(angle / 2.0, control)
+        squin.cx(control, target)
+        squin.shift(-angle / 2.0, target)
+        squin.cx(control, target)
+        squin.shift(angle / 2.0, target)
 
+    @squin.kernel
+    def apply_inverse_qft(q: ilist.IList[Qubit, Any], n: int) -> None:
+        for target_offset in range(n):
+            target = n - 1 - target_offset
+            for control in range(target + 1, n):
+                angle = -np.pi / (2 ** (control - target))
+                apply_cphase(angle, q[control], q[target])
+            squin.h(q[target])
 
-@squin.kernel
-def apply_inverse_qft(q: ilist.IList[Qubit, Any], n: int) -> None:
-    for target_offset in range(n):
-        target = n - 1 - target_offset
-        for control in range(target + 1, n):
-            angle = -np.pi / (2 ** (control - target))
-            apply_cphase(angle, q[control], q[target])
-        squin.h(q[target])
+    @squin.kernel
+    def qft_prog(n: int, freq: int) -> ilist.IList[MeasurementResult, Any]:
+        q = squin.qalloc(n)
 
+        # Prepare QFT(|freq>) as a product state, avoiding a costly forward QFT.
+        for j in range(n):
+            angle = 2 * np.pi * freq / (2 ** (n - j))
+            squin.h(q[j])
+            squin.shift(angle, q[j])
 
-@squin.kernel
-def main(n: int, freq: int) -> ilist.IList[MeasurementResult, Any]:
-    q = squin.qalloc(n)
+        apply_inverse_qft(q, n)
+        return squin.broadcast.measure(q)
 
-    # Prepare QFT(|freq>) as a product state, avoiding a costly forward QFT.
-    for j in range(n):
-        angle = 2 * np.pi * freq / (2 ** (n - j))
-        squin.h(q[j])
-        squin.shift(angle, q[j])
-
-    apply_inverse_qft(q, n)
-    return squin.broadcast.measure(q)
+    return qft_prog, default_num_qubits
 
 
 def print_phase_table(num_qubits: int, freq: int) -> None:
@@ -72,12 +73,15 @@ def post_process_counts(counts: dict[str, int], args: argparse.Namespace) -> Non
         print(f"  |{state}> : {count}{mark}")
 
 
-def run() -> None:
+def main() -> None:
+    qft_prog, default_num_qubits = generate_qft_program()
+
     parser = argparse.ArgumentParser(description="SQUIN inverse-QFT fidelity benchmark")
-    parser.add_argument("-q", "--qubits", type=int, default=3, help="number of qubits")
-    parser.add_argument("-k", "--freq", type=int, default=1, help="input frequency to decode")
-    parser.add_argument("-n", "--shots", type=int, default=2000, help="number of shots")
-    parser.add_argument("-v", "--verb", type=int, default=1, help="increase output verbosity")
+    prs = parser.add_argument
+    prs("-q", "--qubits", type=int, default=default_num_qubits, help="number of qubits")
+    prs("-k", "--freq", type=int, default=1, help="input frequency to decode")
+    prs("-n", "--shots", type=int, default=2000, help="number of shots")
+    prs("-v", "--verb", type=int, default=1, help="increase output verbosity")
     args = parser.parse_args()
 
     if args.qubits < 1:
@@ -87,10 +91,10 @@ def run() -> None:
 
     kernel_args = (args.qubits, args.freq)
     print_phase_table(args.qubits, args.freq)
-    print_kernel_circuit(main, kernel_args, args.verb)
+    print_kernel_circuit(qft_prog, kernel_args, args.verb)
 
     print("Simulator: PyQrack DynamicMemorySimulator (state vector, ideal)")
-    counts = run_kernel_shots(main, kernel_args, args.shots)
+    counts = run_kernel_shots(qft_prog, kernel_args, args.shots)
 
     print(f"\n--- Benchmarking inverse QFT (Size={args.qubits}) ---")
     print(f"Input Frequency: {args.freq}")
@@ -99,4 +103,4 @@ def run() -> None:
 
 
 if __name__ == "__main__":
-    run()
+    main()
