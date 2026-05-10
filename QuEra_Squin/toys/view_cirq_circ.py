@@ -29,17 +29,8 @@ class ViewNoisyCirqCirc:
         return self._circuit_sections_text(circuit_text, lineLen)
 
     def gate_aliases(self) -> str:
-        """Return alphabetized gate-alias definitions."""
-        if not self.aliases:
-            return ""
-        return self._format_alias_definitions(self.aliases)
-
-    @staticmethod
-    def resolve_print_width(length: int) -> int:
-        """Return requested width or terminal width minus two columns."""
-        if length is not None:
-            return length
-        return max(1, shutil.get_terminal_size().columns - 2)
+        """Return alphabetized gate-alias definitions or an empty string."""
+        return self._format_alias_definitions(self.aliases) if self.aliases else ""
 
     @staticmethod
     def _replace_token_keep_width(line: str, old: str, new: str) -> str:
@@ -217,25 +208,26 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     prs = parser.add_argument
     prs("--name", required=True, help="path to the saved Cirq text circuit")
-    prs("--lenght", "--length", dest="length", type=int, default=None,
+    prs("--lineLen", type=int, default=None,
         help="horizontal circuit section width; default is terminal width - 2; use 0 for no splitting")
     prs("--wireLen", type=int, default=2,
         help="maximum length for idle wire stretches between active columns")
     prs("-v", "--verb", type=int, default=2,
         help="verbosity: 1 circuit only, 2 print gate aliases above circuit")
     args = parser.parse_args()
+    if args.lineLen is None:
+        args.lineLen = max(10, shutil.get_terminal_size().columns - 2)
 
     for arg in vars(args):
         print("myArg:", arg, getattr(args, arg))
 
     cirq_text = Path(args.name).read_text()
     viewer = ViewNoisyCirqCirc(cirq_text)
-    aliases_text = viewer.gate_aliases()
-    if args.verb >= 2 and aliases_text:
-        print(aliases_text)
-        print()
+    if args.verb >= 2 :
+        print(viewer.gate_aliases()+'\n')
+    
     print(f"circuit: {Path(args.name).name}")
-    print(viewer.emit_circ(ViewNoisyCirqCirc.resolve_print_width(args.length), args.wireLen))
+    print(viewer.emit_circ(args.lineLen, args.wireLen))
 
 
 if __name__ == "__main__":
