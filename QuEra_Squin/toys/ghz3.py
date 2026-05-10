@@ -45,7 +45,7 @@ def apply_gemini_noise(kernel_prog: Any, zone_type: int, atom_loss: float, verb:
     # Bloqade's Gemini Cirq models currently do not inject atom loss, so
     # atom_loss is also applied explicitly as a SQUIN qubit_loss channel below.
     noise_model = select_noise_model(zone_type)
-    if atom_loss != 0.0:
+    if atom_loss > 0.0:
         noise_model = set_loss_parameters(noise_model, atom_loss)
     if verb > 1:
         print(f"\n{noise_model_name(zone_type)} parameters:")
@@ -91,7 +91,6 @@ def main() -> None:
     print_kernel_circuit(noisy_prog, noisy_args, args.verb)
 
     # Run the noisy simulation
-    # Thrust 1 & 2: Sampling provides the realistic datasets needed for ML training [cite: 75, 81]
     lost_result = get_lost_measurement_result()
     if args.atom_loss > 0:
         if lost_result is None:
