@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-#  podman-hpc build  -f ubu24-quera-squin.dockerfile -t ubu24-quera-squin:p1d
+#  podman-hpc build  -f ubu24-x86-quera-squin.dockerfile -t ubu24-x86-quera-squin:p1d
 # --no-cache tells Podman not to use any cached layers
 # on PM use 'podman-hpc' instead of 'podman' and all should work
 # additionaly do 1 time: podman-hpc migrate ubuXX-qiskit-qml:p1
